@@ -1,0 +1,21 @@
+[package]
+name = "csln_model"
+version = "0.1.0"
+edition = "2021"
+description = "Next-gen CSL model in Rust."
+repository = "https://github.com/bdarcus/csln"
+license = "MIT OR Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "csln-schemas"
+path = "src/make_schemas.rs"
+
+[dependencies]
+schemars = "0.8.12"
+serde = "1.0.162"
+serde_derive = "1.0.162"
+serde_json = "1.0.96"
+serde_yaml = "0.9.21"
+edtf = "0.2.0"
