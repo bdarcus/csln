@@ -11,33 +11,73 @@ pub enum StyleTemplate {
 // TODO align with TS
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct StyleTemplateContributor {
-    pub contributor: String,
+    pub contributor: Contributors,
     pub form: ContributorForm,
 }
 
-// TODO align with TS
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub enum ContributorForm {
+    // REVIEW
     Long,
     Short,
+}
+
+// move this to another shared file
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub enum Contributors {
+    Author,
+    Editor,
+    Translator,
+    Director,
+    Recipient,
+    Interviewer,
+    Interviewee,
+    Inventor,
+    Counsel,
+    Composer,
+    WordsBy,
+    Artist,
+    Performer,
+    Presenter,
+    Commenter,
+    Producer,
+    CastMember,
+    Sponsor,
+    CitedAuthor,
+    ContainerAuthor,
+    OriginalAuthor,
+    CollectionEditor,
+    EditorialDirector,
+    ReviewedAuthor,
+    IssuingAuthority,
+    Accessed,
+    FictitiousAuthor,
+    Cartographer,
+    Compiler,
+    Cosponsor,
+    Scriptwriter,
 }
 
 // TODO align with TS
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct StyleTemplateDate {
-    pub date: String,
+    pub date: Dates,
     pub form: DateForm,
 }
 
-// TODO align with TS
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub enum Dates {
+    Issued,
+    Accessed,
+    OriginalPublished,
+}
+
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub enum DateForm {
-    Text,
-    Numeric,
-    Roman,
-    Ordinal,
-    Short,
-    Long,
+    Year,
+    YearMonth,
+    Full,
+    MonthDay,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
