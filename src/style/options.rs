@@ -52,10 +52,9 @@ pub enum LocalizationScope {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct Disambiguation {
-    #[serde(rename = "addNames")]
     pub add_names: Option<AddNames>,
-    #[serde(rename = "addYearSuffix")]
     pub add_year_suffix: Option<bool>,
 }
 
@@ -133,32 +132,46 @@ pub enum SortDirection {
 #[derive(Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StyleContributors {
-    pub names: ContributorOptions,
-    pub et_al: EtAlOptions,
+    pub display_as_sort: Option<DisplayAsSort>,
+    pub shorten: ShortenListOptions,
     pub delimiter: DelimiterOptions,
     pub and: AndOptions,
     pub label: LabelOptions,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
-pub enum ContributorOptions {
+pub enum DisplayAsSort {
     All,
     First,
-    FirstLast,
     Last,
-    LastFirst,
     None,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
-pub enum EtAlOptions {
-    Never,
+pub enum ContributorOptions {
+    All,
+    First,
+    None,
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub struct ShortenListOptions {
+    pub min: Option<u32>,
+    pub use_first: Option<u32>,
+    pub et_al: Option<AndOptions>,
+    pub delimiter_precedes_last: Option<DelimiterListOptions>,
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub enum DelimiterListOptions {
+    /// Delimiter is only used if preceding name is inverted as a result of the`asSort` parameter. E.g. with `asSort` set to “first”.
+    AfterInvertedName,
+    /// Delimiter is always used when more than two, regardless of shortening.
     Always,
-    Min,
-    Min2,
-    Min3,
-    Min4,
-    Min5,
+    /// Delimiter is never used.
+    Never,
+    /// The delimiter is only used when shortening is applied.
+    Contextual,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
@@ -222,16 +235,38 @@ pub enum ShortTitleOptions {
 
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct StyleTemplateDate {
-    pub date: String,
-    pub form: DateForm,
+    pub date: Option<DateStyle>,
+    pub time: Option<TimeStyle>,
+    pub month: Option<MonthStyle>,
+    pub year: Option<YearStyle>,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
-pub enum DateForm {
-    Text,
+pub enum YearStyle {
     Numeric,
-    Roman,
-    Ordinal,
+    TwoDigit,
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub enum MonthStyle {
+    Numeric,
+    Long,
+    Short,
+    Narrow,
+    TwoDigit,
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub enum TimeStyle {
+    Full,
+    Short,
+    Medium,
+    Long,
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub enum DateStyle {
+    Full,
     Short,
     Long,
 }
