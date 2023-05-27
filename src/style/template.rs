@@ -1,5 +1,26 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::fmt;
+
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub struct Rendering {
+    emph: Option<bool>,
+    strong: Option<bool>,
+    prefix: Option<String>,
+    suffix: Option<String>,
+    wrap: Option<WrapPunctuation>,
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub enum WrapPunctuation {
+    #[serde(rename = "parentheses")]
+    Parentheses,
+    #[serde(rename = "brackets")]
+    Brackets,
+    #[serde(rename = "braces")]
+    Braces,
+}
 
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub enum StyleTemplate {
@@ -8,21 +29,39 @@ pub enum StyleTemplate {
     Title(StyleTemplateTitle),
 }
 
-// TODO align with TS
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct StyleTemplateContributor {
     pub contributor: Contributors,
     pub form: ContributorForm,
+    pub rendering: Option<Rendering>,
+    // the string to apply the formatting instructions to
+    pub value: String,
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub struct StyleTemplateDate {
+    pub date: String,
+    pub form: DateForm,
+    pub rendering: Option<Rendering>,
+    // the string to apply the formatting instructions to
+    pub value: String,
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub struct StyleTemplateTitle {
+    pub title: String,
+    pub form: TitleForm,
+    pub rendering: Option<Rendering>,
+    // the string to apply the formatting instructions to
+    pub value: String,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub enum ContributorForm {
-    // REVIEW
     Long,
     Short,
 }
 
-// move this to another shared file
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub enum Contributors {
     Author,
@@ -36,33 +75,12 @@ pub enum Contributors {
     Counsel,
     Composer,
     WordsBy,
-    Artist,
-    Performer,
-    Presenter,
-    Commenter,
-    Producer,
-    CastMember,
-    Sponsor,
-    CitedAuthor,
-    ContainerAuthor,
-    OriginalAuthor,
-    CollectionEditor,
-    EditorialDirector,
-    ReviewedAuthor,
-    IssuingAuthority,
-    Accessed,
-    FictitiousAuthor,
-    Cartographer,
-    Compiler,
-    Cosponsor,
-    Scriptwriter,
 }
 
-// TODO align with TS
 #[derive(Deserialize, Serialize, JsonSchema)]
-pub struct StyleTemplateDate {
-    pub date: Dates,
-    pub form: DateForm,
+pub enum TitleForm {
+    Short,
+    Long,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
@@ -80,14 +98,58 @@ pub enum DateForm {
     MonthDay,
 }
 
-#[derive(Deserialize, Serialize, JsonSchema)]
-pub struct StyleTemplateTitle {
-    pub title: String,
-    pub form: TitleForm,
+/// Traits for rendering the different fields
+
+pub trait Render {
+    fn render(&self) -> String;
 }
 
-#[derive(Deserialize, Serialize, JsonSchema)]
-pub enum TitleForm {
-    Short,
-    Long,
+impl fmt::Display for Contributors {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Contributors::Author => write!(f, "Author"),
+            Contributors::Editor => write!(f, "Editor"),
+            Contributors::Translator => write!(f, "Translator"),
+            Contributors::Director => write!(f, "Director"),
+            Contributors::Recipient => write!(f, "Recipient"),
+            Contributors::Interviewer => write!(f, "Interviewer"),
+            Contributors::Interviewee => write!(f, "Interviewee"),
+            Contributors::Inventor => write!(f, "Inventor"),
+            Contributors::Counsel => write!(f, "Counsel"),
+            Contributors::Composer => write!(f, "Composer"),
+            Contributors::WordsBy => write!(f, "Words by"),
+        }
+    }
+}
+
+// impl Render for StyleTemplateContributor {
+//     fn render(&self) -> String {
+//         // Render the contributor field based on the form
+//         match self.form {
+//             ContributorForm::Long => format!("{}: {}", self.contributor, self.as_ref().unwrap().value.as_ref().unwrap()),
+//             ContributorForm::Short => self.as_ref().unwrap().value.as_ref().unwrap().clone(),
+//         }
+//     }
+// }
+
+impl Render for StyleTemplateDate {
+    fn render(&self) -> String {
+        // Render the date field based on the form
+        match self.form {
+            DateForm::Year => format!("{}: {}", self.date, self.value),
+            DateForm::YearMonth => self.value.clone(),
+            DateForm::Full => self.value.clone(),
+            DateForm::MonthDay => self.value.clone(),
+        }
+    }
+}
+
+impl Render for StyleTemplateTitle {
+    fn render(&self) -> String {
+        // Render the title field based on the form
+        match self.form {
+            TitleForm::Long => format!("{}: {}", self.title, self.value),
+            TitleForm::Short => self.value.clone(),
+        }
+    }
 }
