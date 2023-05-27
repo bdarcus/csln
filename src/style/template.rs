@@ -23,7 +23,7 @@ pub enum WrapPunctuation {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
-pub enum StyleTemplate {
+pub enum StyleTemplateComponent {
     Contributor(StyleTemplateContributor),
     Date(StyleTemplateDate),
     Title(StyleTemplateTitle),

@@ -6,7 +6,7 @@ mod options;
 use options::StyleOptions;
 
 mod template;
-use template::StyleTemplate;
+use template::StyleTemplateComponent;
 
 /// A Style.
 #[derive(Deserialize, Serialize, JsonSchema)]
@@ -22,16 +22,18 @@ pub struct Style {
     pub bibliography: Option<StyleBibliography>,
 }
 
+pub type StyleTemplate = Vec<StyleTemplateComponent>;
+
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct StyleBibliography {
     pub options: Option<StyleOptions>,
-    pub template: Vec<StyleTemplate>,
+    pub template: StyleTemplate,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct StyleCitation {
     pub options: Option<StyleOptions>,
-    pub template: Vec<StyleTemplate>,
+    pub template: StyleTemplate,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
