@@ -2,14 +2,14 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-mod options;
+pub mod options;
 use options::StyleOptions;
 
 mod template;
 use template::StyleTemplateComponent;
 
 /// A Style.
-#[derive(Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct Style {
     /// Style metadata.
     pub info: StyleInfo,
@@ -24,19 +24,19 @@ pub struct Style {
 
 pub type StyleTemplate = Vec<StyleTemplateComponent>;
 
-#[derive(Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct StyleBibliography {
     pub options: Option<StyleOptions>,
     pub template: StyleTemplate,
 }
 
-#[derive(Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct StyleCitation {
     pub options: Option<StyleOptions>,
     pub template: StyleTemplate,
 }
 
-#[derive(Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct StyleInfo {
     /// The categories the style belongs to; for purposes of indexing.
     pub categories: Option<Vec<StyleCategory>>,
@@ -48,7 +48,7 @@ pub struct StyleInfo {
     pub title: Option<String>,
 }
 
-#[derive(Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub enum StyleCategory {
     #[serde(rename = "biology")]
     Biology,
