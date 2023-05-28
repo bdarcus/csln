@@ -13,12 +13,10 @@ pub struct Rendering {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum WrapPunctuation {
-    #[serde(rename = "parentheses")]
     Parentheses,
-    #[serde(rename = "brackets")]
     Brackets,
-    #[serde(rename = "braces")]
     Braces,
 }
 
@@ -57,12 +55,14 @@ pub struct StyleTemplateTitle {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum ContributorForm {
     Long,
     Short,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum Contributors {
     Author,
     Editor,
@@ -78,12 +78,14 @@ pub enum Contributors {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum TitleForm {
     Short,
     Long,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum Dates {
     Issued,
     Accessed,
@@ -91,6 +93,7 @@ pub enum Dates {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum DateForm {
     Year,
     YearMonth,

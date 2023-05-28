@@ -36,23 +36,21 @@ pub struct Localization {
 /// "per-item" uses the locale of the reference item, and "global" uses the target language
 /// across all references.
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum Scope {
-    #[serde(rename = "global")]
     Global,
-    #[serde(rename = "per-item")]
     PerItem,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum LocalizationScope {
-    #[serde(rename = "global")]
     Global,
-    #[serde(rename = "per-item")]
     PerItem,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "kebab-case")]
 pub struct Disambiguation {
     pub add_names: Option<AddNames>,
     pub add_year_suffix: Option<bool>,
@@ -67,12 +65,10 @@ pub struct Substitution {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum Substitute {
-    #[serde(rename = "editor")]
     Editor,
-    #[serde(rename = "title")]
     Title,
-    #[serde(rename = "translator")]
     Translator,
 }
 
@@ -140,6 +136,7 @@ pub struct StyleContributors {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum DisplayAsSort {
     All,
     First,
@@ -148,6 +145,7 @@ pub enum DisplayAsSort {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum ContributorOptions {
     All,
     First,
@@ -163,6 +161,7 @@ pub struct ShortenListOptions {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum DelimiterListOptions {
     /// Delimiter is only used if preceding name is inverted as a result of the`asSort` parameter. E.g. with `asSort` set to “first”.
     AfterInvertedName,
@@ -175,6 +174,7 @@ pub enum DelimiterListOptions {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum DelimiterOptions {
     Comma,
     SemiColon,
@@ -189,12 +189,14 @@ pub enum DelimiterOptions {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum AndOptions {
     Text,
     Symbol,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum LabelOptions {
     Long,
     Short,
@@ -202,7 +204,7 @@ pub enum LabelOptions {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "kebab-case")]
 pub struct StyleTitles {
     pub title: TitleOptions,
     pub subtitle: SubtitleOptions,
@@ -210,6 +212,7 @@ pub struct StyleTitles {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum TitleOptions {
     CapitalizeAll,
     CapitalizeFirst,
@@ -218,6 +221,7 @@ pub enum TitleOptions {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum SubtitleOptions {
     CapitalizeAll,
     CapitalizeFirst,
@@ -226,6 +230,7 @@ pub enum SubtitleOptions {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum ShortTitleOptions {
     CapitalizeAll,
     CapitalizeFirst,
@@ -242,12 +247,14 @@ pub struct StyleTemplateDate {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum YearStyle {
     Numeric,
     TwoDigit,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum MonthStyle {
     Numeric,
     Long,
@@ -257,6 +264,7 @@ pub enum MonthStyle {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum TimeStyle {
     Full,
     Short,
@@ -265,6 +273,7 @@ pub enum TimeStyle {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum DateStyle {
     Full,
     Short,
@@ -278,6 +287,7 @@ pub struct StyleTemplateTitle {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum TitleForm {
     Short,
     Long,
@@ -290,6 +300,7 @@ pub struct StyleTemplateContributors {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum ContributorForm {
     Long,
     Short,
