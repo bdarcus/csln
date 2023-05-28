@@ -22,7 +22,32 @@ pub enum WrapPunctuation {
 pub enum StyleTemplateComponent {
     Contributor(StyleTemplateContributor),
     Date(StyleTemplateDate),
+    List(StyleTemplateList),
     Title(StyleTemplateTitle),
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub struct StyleTemplateList {
+    pub delimiter: Option<DelimiterPunctuation>,
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+    pub wrap: Option<WrapPunctuation>,
+    pub items: Vec<StyleTemplateComponent>,
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum DelimiterPunctuation {
+    Comma,
+    Semicolon,
+    Period,
+    Colon,
+    Ampersand,
+    VerticalLine,
+    Slash,
+    Hyphen,
+    Space,
+    None,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
@@ -30,8 +55,6 @@ pub struct StyleTemplateContributor {
     pub contributor: Contributors,
     pub form: ContributorForm,
     pub rendering: Option<Rendering>,
-    // the string to apply the formatting instructions to
-    pub value: String,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
@@ -39,8 +62,6 @@ pub struct StyleTemplateDate {
     pub date: String,
     pub form: DateForm,
     pub rendering: Option<Rendering>,
-    // the string to apply the formatting instructions to
-    pub value: String,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
@@ -48,8 +69,6 @@ pub struct StyleTemplateTitle {
     pub title: String,
     pub form: TitleForm,
     pub rendering: Option<Rendering>,
-    // the string to apply the formatting instructions to
-    pub value: String,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
