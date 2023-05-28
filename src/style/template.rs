@@ -1,7 +1,5 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::fmt;
-
 
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct Rendering {
