@@ -5,7 +5,7 @@ use schemars::JsonSchema;
 
 use crate::bibliography::InputBibliography as Bibliography;
 use crate::bibliography::InputReference;
-use crate::style::StyleTemplateComponent; // FIX
+use crate::style::template::StyleTemplateComponent; // FIX
 use crate::style::options::{SortOrder, StyleOptions, StyleSorting, StyleSortGroupKey};
 use crate::style::Style;
 
