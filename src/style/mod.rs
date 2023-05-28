@@ -8,7 +8,7 @@ use options::StyleOptions;
 pub mod template;
 use template::StyleTemplateComponent;
 
-/// A Style.
+/// The CSL-Next style model.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct Style {
     /// Style metadata.

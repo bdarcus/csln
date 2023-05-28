@@ -20,9 +20,10 @@ pub enum WrapPunctuation {
     Braces,
 }
 
-/// The Tepmlate component model. Each component is for a specific datatype.
+/// The Template component model. Each item is for a specific datatype.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
+#[serde(untagged)]
 pub enum StyleTemplateComponent {
     Contributor(StyleTemplateContributor),
     Date(StyleTemplateDate),
@@ -116,9 +117,16 @@ pub enum DateForm {
 /// A title component, to render a title.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct StyleTemplateTitle {
-    pub title: String,
-    pub form: TitleForm,
+    pub title: Titles,
+    pub form: Option<TitleForm>,
     pub rendering: Option<Rendering>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum Titles {
+    Title,
+    ContainerTitle,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]

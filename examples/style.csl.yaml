@@ -1,12 +1,13 @@
-# yaml-language-server: $schema=/home/bruce/Code/csl-next.js/schemas/csl-style-schema.json
+# yaml-language-server: $schema=../schemas/style.json
 ---
 # this is a flatter model, relying more heavily on parameters
-title: APA
+info:
+  title: APA
 templates:
   title-apa:
     - title: title
   author-apa-full:
-    - contributors: author
+    - contributor: author
   container-apa:
     - title: container-title
   howpublished-apa:
