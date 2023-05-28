@@ -109,18 +109,18 @@ pub enum YearSuffixOptions {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct StyleSorting {
     pub key: StyleSortGroupKey,
-    pub direction: SortDirection,
+    pub order: SortOrder,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub enum StyleSortGroupKey {
     Title,
     Author,
-    Issued,
+    Year,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-pub enum SortDirection {
+pub enum SortOrder {
     Ascending,
     Descending,
 }

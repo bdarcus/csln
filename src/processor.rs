@@ -4,7 +4,7 @@ use std::option::Option;
 
 use crate::bibliography::InputBibliography as Bibliography;
 use crate::bibliography::InputReference;
-use crate::style::options::{StyleOptions, StyleSorting};
+use crate::style::options::{SortOrder, StyleOptions, StyleSorting, StyleSortGroupKey};
 use crate::style::Style;
 
 /*
@@ -43,19 +43,85 @@ impl StyleOptions {
 }
 
 impl Processor {
-    fn get_proc_references(&self) -> Vec<ProcReference> {
+    pub fn get_proc_references(&self) -> Vec<ProcReference> {
         // here return a vector of ProcReference structs from the bibliography
         // use iter and map to construct the vector
         // for each reference in the bibliography, construct a ProcReference
-        self.bibliography
+        let proc_references = self.bibliography
             .values()
             .cloned()
             .map(|input_reference| ProcReference {
                 data: input_reference,
                 proc_hints: None,
             })
-            .collect()
+            .collect();
+
+        self.sort_proc_references(proc_references)
     }
+
+    pub fn sort_proc_references (&self, proc_references: Vec<ProcReference>) -> Vec<ProcReference> {
+        let mut proc_references = proc_references;
+        let sort_config = self.style.options.as_ref().expect("Style options not found").get_sort_config();
+        for sort in sort_config {
+            let key = match sort.key {
+                StyleSortGroupKey::Author => "author",
+                StyleSortGroupKey::Year => "year",
+                StyleSortGroupKey::Title => "title",
+            };
+            let order = match sort.order {
+                SortOrder::Ascending => "Ascending",
+                SortOrder::Descending => "Descending",
+            };
+            match key {
+                "author" => {
+                    proc_references.sort_by(|a, b| {
+                        let a_author = a.data.author.as_ref().unwrap().join(" ").to_lowercase();
+                        let b_author = b.data.author.as_ref().unwrap().join(" ").to_lowercase();
+                        if order == "Ascending" {
+                            a_author.cmp(&b_author)
+                        } else {
+                            b_author.cmp(&a_author)
+                        }
+                    });
+                },
+                "year" => {
+                    proc_references.sort_by(|a, b| {
+                        let a_year = a.data.issued.parse::<i32>().unwrap();
+                        let b_year = b.data.issued.parse::<i32>().unwrap();
+                        if order == "Ascending" {
+                            a_year.cmp(&b_year)
+                        } else {
+                            b_year.cmp(&a_year)
+                        }
+                    });
+                },
+                "title" => {
+                    proc_references.sort_by(|a, b| {
+                        let a_title = a.data.title.to_lowercase();
+                        let b_title = b.data.title.to_lowercase();
+                        if order == "Ascending" {
+                            a_title.cmp(&b_title)
+                        } else {
+                            b_title.cmp(&a_title)
+                        }
+                    });
+                },
+                _ => {
+                    proc_references.sort_by(|a, b| {
+                        let a_author = a.data.author.as_ref().unwrap().join(" ").to_lowercase();
+                        let b_author = b.data.author.as_ref().unwrap().join(" ").to_lowercase();
+                        if order == "Ascending" {
+                            a_author.cmp(&b_author)
+                        } else {
+                            b_author.cmp(&a_author)
+                        }
+                    });
+                }
+            }
+        }
+        proc_references
+    }
+    
 
     pub fn new(style: Style, bibliography: Bibliography, locale: String) -> Processor {
         Processor {

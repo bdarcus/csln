@@ -25,5 +25,5 @@ fn main() {
     let bibliography = Bibliography::new();
     
     let processor = Processor::new(style, bibliography, bibliography_path.to_string());
-    println!("{:?}", processor);
+    println!("{:?}", processor.get_proc_references());
 }
