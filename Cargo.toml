@@ -12,6 +12,10 @@ license = "MIT OR Apache-2.0"
 name = "csln-schemas"
 path = "src/make_schemas.rs"
 
+[[bin]]
+name = "csln"
+path = "src/cli.rs"
+
 [dependencies]
 schemars = "0.8.12"
 serde = "1.0.162"

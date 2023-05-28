@@ -1,16 +1,13 @@
-use std::fmt;
+use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
+use std::option::Option;
 
-mod template;
-use template::{Contributors, DateForm, TitleForm, StyleTemplateDate, StyleTemplateTitle};
-mod bibliography;
-use bibliography::Bibliography;
-mod style;
-use style::Style;
-mod reference;
-use reference::InputReference;
+use crate::bibliography::InputBibliography as Bibliography;
+use crate::bibliography::InputReference;
+use crate::style::options::StyleSorting;
+use crate::style::Style;
 
-
-/* 
+/*
 This is the processor code for rendering templates.
 
 The basic design is the same as the csl-next typescript implementation:
@@ -20,49 +17,57 @@ The processor takes a style, a bibliography, and a locale, and renders the outpu
 The primary target is an AST, represented by the ProcRerence struct.
  */
 
-
-
 /// The processor struct, which takes a style, a bibliography, and a locale, and renders the output.
-#[derive(debug::Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Processor {
     style: Style,
     bibliography: Bibliography,
-    locale: string,
+    locale: String,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ProcHints {
     procValue: String,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ProcReference {
     pub data: Option<InputReference>,
     pub procHints: Option<ProcHints>,
 }
 
-/// Traits for rendering the different template components.
+impl Processor {
+    fn getProcReferences(&self) -> Vec<ProcReference> {
+        // here return a vector of ProcReference structs from the bibliography
+        // use iter and map to construct the vector
+        // for each reference in the bibliography, construct a ProcReference
+        self.bibliography
+            .values()
+            .cloned()
+            .map(|input_reference| ProcReference {
+                data: Some(input_reference),
+                procHints: None,
+            })
+            .collect()
+    }
 
-/// Retrun a list of references as ProcReference structs.
-#[derive(debug::Debug)]
-pub impl getReferences for Processor {
-    impl Processor {
-        fn getReferences(&self) -> Vec<ProcReference> {
-            self.bibliography
-                .references
-                .iter()
-                .map(|reference| ProcReference {
-                    data: Some(reference.clone()),
-                    procHints: None,
-                })
-                .collect()
+    pub fn new(style: Style, bibliography: Bibliography, locale: String) -> Processor {
+        Processor {
+            style,
+            bibliography,
+            locale,
         }
     }
-}
 
-#[derive(debug::Debug)]
-pub impl groupReferences for Processor {
-    //  REVIEW: created by copilot with instructions from me; need to test and review
-    fn groupReferences(&self) -> Vec<ProcReference>;
-    fn groupReferences(&self, references: Vec<ProcReference>, group_keys: Vec<String>) -> Vec<ProcReference> {
+    pub fn render(&self) -> String {
+        let proc_references = self.getProcReferences();
+        let grouped_references = self.groupReferences(proc_references);
+        let rendered_references = self.renderReferences(grouped_references);
+        let rendered_bibliography = self.renderBibliography(rendered_references);
+        rendered_bibliography
+    }
+
+    pub fn groupReferences(&self, references: Vec<ProcReference>) -> Vec<ProcReference> {
         let mut grouped_references: Vec<ProcReference> = Vec::new();
         let mut group_index: usize = 0;
         let mut group_length: usize = 0;
@@ -73,15 +78,18 @@ pub impl groupReferences for Processor {
                 procValue: String::new(),
             };
 
-            for group_key in &group_keys {
+            for group_key in &self.style.group_keys {
                 let group_value = match group_key.as_str() {
                     "author" => reference
                         .data
                         .as_ref()
                         .unwrap()
-                        .author
+                        .as_ref().unwrap()
+                        .map(|v| v.clone())
+                        .unwrap_or_default()
                         .clone()
-                        .unwrap_or_default(),
+                        .unwrap_or_default()
+                        .join(", "),
                     "title" => reference
                         .data
                         .as_ref()
@@ -119,20 +127,21 @@ pub impl groupReferences for Processor {
             }
 
             proc_hints.procValue = format!("{} ({})", proc_hints.procValue, group_length);
-            proc_hints.procValue = proc_hints.procValue.trim().to_string();
+            proc_hints.procValue = format!("{} {}", group_index, proc_hints.procValue);
 
-            let mut new_reference = reference.clone();
-            new_reference.procHints = Some(proc_hints);
-            grouped_references.push(new_reference);
+            let mut grouped_reference = reference.clone();
+            grouped_reference.procHints = Some(proc_hints);
+            grouped_references.push(grouped_reference);
         }
 
         grouped_references
     }
-}
 
-#[derive(debug::Debug)]
-pub impl sortReferences for Processor {
-    fn sortReferences(&self, references: Vec<ProcReference>, sort_objects: Vec<SortObject>) -> Vec<ProcReference> {
+    pub fn sortReferences(
+        &self,
+        references: Vec<ProcReference>,
+        sort_objects: Vec<StyleSorting>,
+    ) -> Vec<ProcReference> {
         let mut sorted_references = references.clone();
         for sort_object in sort_objects {
             match sort_object.key.as_str() {
@@ -160,8 +169,28 @@ pub impl sortReferences for Processor {
                 }
                 "date" => {
                     sorted_references.sort_by(|a, b| {
-                        let a_date = a.data.as_ref().unwrap().issued.clone().unwrap_or_default().date_parts.clone().unwrap_or_default();
-                        let b_date = b.data.as_ref().unwrap().issued.clone().unwrap_or_default().date_parts.clone().unwrap_or_default();
+                        let a_date = a
+                            .data
+                            .as_ref()
+                            .unwrap()
+                            .issued
+                            .clone()
+                            .unwrap_or_default()
+                            .date_parts
+                            .clone()
+                            .unwrap_or_default()
+                            .join("-");
+                        let b_date = b
+                            .data
+                            .as_ref()
+                            .unwrap()
+                            .issued
+                            .clone()
+                            .unwrap_or_default()
+                            .date_parts
+                            .clone()
+                            .unwrap_or_default()
+                            .join("-");
                         if sort_object.direction == "asc" {
                             a_date.cmp(&b_date)
                         } else {
@@ -174,58 +203,101 @@ pub impl sortReferences for Processor {
         }
         sorted_references
     }
-}
 
-pub trait Render {
-    fn render(&self) -> String;
-}
+    fn renderReferences(&self, references: Vec<ProcReference>) -> Vec<ProcReference> {
+        let mut rendered_references: Vec<ProcReference> = Vec::new();
+        let mut rendered_reference: ProcReference;
+        let mut rendered_reference_data: InputReference;
+        let mut rendered_reference_data_value: String;
 
-impl fmt::Display for Contributors {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Contributors::Author => write!(f, "Author"),
-            Contributors::Editor => write!(f, "Editor"),
-            Contributors::Translator => write!(f, "Translator"),
-            Contributors::Director => write!(f, "Director"),
-            Contributors::Recipient => write!(f, "Recipient"),
-            Contributors::Interviewer => write!(f, "Interviewer"),
-            Contributors::Interviewee => write!(f, "Interviewee"),
-            Contributors::Inventor => write!(f, "Inventor"),
-            Contributors::Counsel => write!(f, "Counsel"),
-            Contributors::Composer => write!(f, "Composer"),
-            Contributors::WordsBy => write!(f, "Words by"),
+        for reference in references {
+            rendered_reference = reference.clone();
+            rendered_reference_data = reference.data.unwrap();
+            rendered_reference_data_value = String::new();
+
+            for variable in self.style.variables.clone() {
+                let variable_value = match variable.key.as_str() {
+                    "author" => rendered_reference_data
+                        .author
+                        .clone()
+                        .unwrap_or_default()
+                        .join(", "),
+                    "title" => rendered_reference_data.title.clone().unwrap_or_default(),
+                    "date" => rendered_reference_data
+                        .issued
+                        .clone()
+                        .unwrap_or_default()
+                        .date_parts
+                        .clone()
+                        .unwrap_or_default()
+                        .join("-"),
+                    _ => String::new(),
+                };
+
+                if rendered_reference_data_value.is_empty() {
+                    rendered_reference_data_value = variable_value.clone();
+                } else {
+                    rendered_reference_data_value =
+                        format!("{} {}", rendered_reference_data_value, variable_value);
+                }
+            }
+
+            rendered_reference.data = Some(rendered_reference_data);
+            rendered_references.push(rendered_reference);
         }
+
+        rendered_references
     }
-}
 
-// impl Render for StyleTemplateContributor {
-//     fn render(&self) -> String {
-//         // Render the contributor field based on the form
-//         match self.form {
-//             ContributorForm::Long => format!("{}: {}", self.contributor, self.as_ref().unwrap().value.as_ref().unwrap()),
-//             ContributorForm::Short => self.as_ref().unwrap().value.as_ref().unwrap().clone(),
-//         }
-//     }
-// }
+    fn renderReference(&self, reference: ProcReference) -> String {
+        let mut rendered_reference: String = String::new();
+        let mut rendered_reference_data: InputReference;
+        let mut rendered_reference_data_value: String;
 
-impl Render for StyleTemplateDate {
-    fn render(&self) -> String {
-        // Render the date field based on the form
-        match self.form {
-            DateForm::Year => format!("{}: {}", self.date, self.value),
-            DateForm::YearMonth => self.value.clone(),
-            DateForm::Full => self.value.clone(),
-            DateForm::MonthDay => self.value.clone(),
+        rendered_reference_data = reference.data.unwrap();
+        rendered_reference_data_value = String::new();
+
+        for variable in self.style.variables.clone() {
+            let variable_value = match variable.key.as_str() {
+                "author" => rendered_reference_data
+                    .author
+                    .clone()
+                    .unwrap_or_default()
+                    .join(", "),
+                "title" => rendered_reference_data.title.clone().unwrap_or_default(),
+                "date" => rendered_reference_data
+                    .issued
+                    .clone()
+                    .unwrap_or_default()
+                    .date_parts
+                    .clone()
+                    .unwrap_or_default()
+                    .join("-"),
+                _ => String::new(),
+            };
+
+            if rendered_reference_data_value.is_empty() {
+                rendered_reference_data_value = variable_value.clone();
+            } else {
+                rendered_reference_data_value =
+                    format!("{} {}", rendered_reference_data_value, variable_value);
+            }
         }
+
+        rendered_reference = rendered_reference_data_value;
+
+        rendered_reference
     }
-}
 
-impl Render for StyleTemplateTitle {
-    fn render(&self) -> String {
-        // Render the title field based on the form
-        match self.form {
-            TitleForm::Long => format!("{}: {}", self.title, self.value),
-            TitleForm::Short => self.value.clone(),
+    fn renderBibliography(&self, references: Vec<ProcReference>) -> String {
+        let mut rendered_bibliography: String = String::new();
+        let mut rendered_reference: String;
+
+        for reference in references {
+            rendered_reference = self.renderReference(reference);
+            rendered_bibliography = format!("{}\n{}", rendered_bibliography, rendered_reference);
         }
+
+        rendered_bibliography
     }
 }
