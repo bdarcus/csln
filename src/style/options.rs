@@ -119,7 +119,7 @@ pub enum StyleSortGroupKey {
     Issued,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub enum SortDirection {
     Ascending,
     Descending,

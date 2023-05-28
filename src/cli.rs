@@ -19,10 +19,11 @@ fn main() {
     }
 
     let style_path = &args[1];
-    let bibliography_path = &args[2];
-
     let style = load_style_from_yaml(style_path);
-    let bibliography = Bibliography::new(bibliography_path.to_string());
-    let processor = Processor::new(style, bibliography);
+
+    let bibliography_path = &args[2];
+    let bibliography = Bibliography::new();
+    
+    let processor = Processor::new(style, bibliography, bibliography_path.to_string());
     println!("{:?}", processor);
 }
