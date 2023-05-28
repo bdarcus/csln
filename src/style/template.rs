@@ -1,6 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+/// Rendering instructions for a template component.
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct Rendering {
     emph: Option<bool>,
@@ -10,6 +11,7 @@ pub struct Rendering {
     wrap: Option<WrapPunctuation>,
 }
 
+/// The punctuation to wrap a template component in.
 #[derive(Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum WrapPunctuation {
@@ -18,6 +20,7 @@ pub enum WrapPunctuation {
     Braces,
 }
 
+/// The Tepmlate component model. Each component is for a specific datatype.
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub enum StyleTemplateComponent {
     Contributor(StyleTemplateContributor),
@@ -26,6 +29,7 @@ pub enum StyleTemplateComponent {
     Title(StyleTemplateTitle),
 }
 
+/// To render is a list of more than one item; primarily to enable use of a delimiter to join the items.
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct StyleTemplateList {
     pub delimiter: Option<DelimiterPunctuation>,
@@ -35,6 +39,7 @@ pub struct StyleTemplateList {
     pub items: Vec<StyleTemplateComponent>,
 }
 
+/// The punctuation to use as a delimiter between items in a list.
 #[derive(Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum DelimiterPunctuation {
@@ -50,24 +55,12 @@ pub enum DelimiterPunctuation {
     None,
 }
 
+/// A contributor component, to render a list of contributors.
+// TODO incomplete
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct StyleTemplateContributor {
     pub contributor: Contributors,
     pub form: ContributorForm,
-    pub rendering: Option<Rendering>,
-}
-
-#[derive(Deserialize, Serialize, JsonSchema)]
-pub struct StyleTemplateDate {
-    pub date: String,
-    pub form: DateForm,
-    pub rendering: Option<Rendering>,
-}
-
-#[derive(Deserialize, Serialize, JsonSchema)]
-pub struct StyleTemplateTitle {
-    pub title: String,
-    pub form: TitleForm,
     pub rendering: Option<Rendering>,
 }
 
@@ -94,11 +87,12 @@ pub enum Contributors {
     WordsBy,
 }
 
+/// A date component, to render a date.
 #[derive(Deserialize, Serialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum TitleForm {
-    Short,
-    Long,
+pub struct StyleTemplateDate {
+    pub date: String,
+    pub form: DateForm,
+    pub rendering: Option<Rendering>,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
@@ -117,3 +111,19 @@ pub enum DateForm {
     Full,
     MonthDay,
 }
+
+/// A title component, to render a title.
+#[derive(Deserialize, Serialize, JsonSchema)]
+pub struct StyleTemplateTitle {
+    pub title: String,
+    pub form: TitleForm,
+    pub rendering: Option<Rendering>,
+}
+
+#[derive(Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum TitleForm {
+    Short,
+    Long,
+}
+

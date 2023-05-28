@@ -154,8 +154,8 @@ pub enum ContributorOptions {
 
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct ShortenListOptions {
-    pub min: Option<u32>,
-    pub use_first: Option<u32>,
+    pub min: Option<u8>,
+    pub use_first: Option<u8>,
     pub et_al: Option<AndOptions>,
     pub delimiter_precedes_last: Option<DelimiterListOptions>,
 }
