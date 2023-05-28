@@ -1,4 +1,5 @@
-
+mod template;
+use template::{Contributors, DateForm, TitleForm, StyleTemplateDate, StyleTemplateTitle};
 
 /// Traits for rendering the different fields
 
