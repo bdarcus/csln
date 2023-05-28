@@ -5,7 +5,7 @@ use std::collections::HashMap;
 pub mod options;
 use options::StyleOptions;
 
-mod template;
+pub mod template;
 use template::StyleTemplateComponent;
 
 /// A Style.

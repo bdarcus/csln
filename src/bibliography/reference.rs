@@ -8,6 +8,7 @@ pub struct InputReference {
     pub title: String,
     pub author: Option<Vec<String>>,
     pub editor: Option<Vec<String>>,
+    pub translator: Option<Vec<String>>,
     pub issued: String,
     pub publisher: Option<Vec<String>>,
     pub url: String,

@@ -22,6 +22,7 @@ pub enum WrapPunctuation {
 
 /// The Tepmlate component model. Each component is for a specific datatype.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum StyleTemplateComponent {
     Contributor(StyleTemplateContributor),
     Date(StyleTemplateDate),
@@ -90,7 +91,7 @@ pub enum Contributors {
 /// A date component, to render a date.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct StyleTemplateDate {
-    pub date: String,
+    pub date: Dates,
     pub form: DateForm,
     pub rendering: Option<Rendering>,
 }
