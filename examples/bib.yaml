@@ -1,0 +1,111 @@
+---
+info:
+  id: my-style
+  title: My Style
+  description: A custom citation style for my project
+  categories:
+   - science
+   - social science
+template:
+  template: |
+    {{author}}. {{year}}. {{title}}. {{publisher}}.
+  macros:
+    publisher: |
+      {{#if container-title}}
+        {{container-title}}, 
+      {{/if}}
+      {{#if publisher-place}}
+        {{publisher-place}}: 
+      {{/if}}
+      {{publisher}}
+citation:
+  sort:
+    - Author
+    - Title
+  et_al:
+    use_all: false
+    threshold: 3
+  delimiter:
+    prefix: "("
+    suffix: ")"
+  and:
+    term: "and"
+    delimiter:
+      prefix: " "
+      suffix: " "
+  prefix: ""
+  suffix: ""
+  year_suffix:
+    term: ","
+    delimiter:
+      prefix: " "
+      suffix: " "
+  after_punctuation: true
+  entry_spacing: true
+  second_field_align: true
+bibliography:
+  sort:
+    - Author
+    - Title
+  et_al:
+    use_all: false
+    threshold: 3
+  delimiter:
+    prefix: "("
+    suffix: ")"
+  and:
+    term: "and"
+    delimiter:
+      prefix: " "
+      suffix: " "
+  prefix: ""
+  suffix: ""
+  hanging_indent: true
+  entry_spacing: true
+  second_field_align: true
+options:
+  citation:
+    sort:
+      - Author
+      - Title
+    et_al:
+      use_all: false
+      threshold: 3
+    delimiter:
+      prefix: "("
+      suffix: ")"
+    and:
+      term: "and"
+      delimiter:
+        prefix: " "
+        suffix: " "
+    prefix: ""
+    suffix: ""
+    year_suffix:
+      term: ","
+      delimiter:
+        prefix: " "
+        suffix: " "
+    after_punctuation: true
+    entry_spacing: true
+    second_field_align: true
+  bibliography:
+    sort:
+      - Author
+      - Title
+    et_al:
+      use_all: false
+      threshold: 3
+    delimiter:
+      prefix: "("
+      suffix: ")"
+    and:
+      term: "and"
+      delimiter:
+        prefix: " "
+        suffix: " "
+    prefix: ""
+    suffix: ""
+    hanging_indent: true
+    entry_spacing: true
+    second_field_align: true

@@ -1,0 +1,415 @@
+---
+# mostly autoconverted from 1.0 locale
+# does not fully match current model
+# REVIEW: the str property?
+translators:
+  - Andrew Dunning
+  - Sebastian Karcher
+  - Rintze M. Zelle
+style-options:
+  punctuation-in-quote: 'true'
+terms:
+  - str: accessed
+    name: accessed
+  - str: and
+    name: and
+  - str: and others
+    name: and others
+  - str: anonymous
+    name: anonymous
+  - str: anon.
+    name: anonymous
+    form: short
+  - str: at
+    name: at
+  - str: available at
+    name: available at
+  - str: by
+    name: by
+  - str: circa
+    name: circa
+  - str: c.
+    name: circa
+    form: short
+  - str: cited
+    name: cited
+  - name: edition
+    single: edition
+    multiple: editions
+  - str: ed.
+    name: edition
+    form: short
+  - str: et al.
+    name: et-al
+  - str: forthcoming
+    name: forthcoming
+  - str: from
+    name: from
+  - str: ibid.
+    name: ibid
+  - str: in
+    name: in
+  - str: in press
+    name: in press
+  - str: internet
+    name: internet
+  - str: interview
+    name: interview
+  - str: letter
+    name: letter
+  - str: no date
+    name: no date
+  - str: n.d.
+    name: no date
+    form: short
+  - str: online
+    name: online
+  - str: presented at the
+    name: presented at
+  - name: reference
+    single: reference
+    multiple: references
+  - name: reference
+    form: short
+    single: ref.
+    multiple: refs.
+  - str: retrieved
+    name: retrieved
+  - str: scale
+    name: scale
+  - str: version
+    name: version
+  - str: AD
+    name: ad
+  - str: BC
+    name: bc
+  - str: “
+    name: open-quote
+  - str: ”
+    name: close-quote
+  - str: ‘
+    name: open-inner-quote
+  - str: ’
+    name: close-inner-quote
+  - str: –
+    name: page-range-delimiter
+  - str: th
+    name: ordinal
+  - str: st
+    name: ordinal-01
+  - str: nd
+    name: ordinal-02
+  - str: rd
+    name: ordinal-03
+  - str: th
+    name: ordinal-11
+  - str: th
+    name: ordinal-12
+  - str: th
+    name: ordinal-13
+  - str: first
+    name: long-ordinal-01
+  - str: second
+    name: long-ordinal-02
+  - str: third
+    name: long-ordinal-03
+  - str: fourth
+    name: long-ordinal-04
+  - str: fifth
+    name: long-ordinal-05
+  - str: sixth
+    name: long-ordinal-06
+  - str: seventh
+    name: long-ordinal-07
+  - str: eighth
+    name: long-ordinal-08
+  - str: ninth
+    name: long-ordinal-09
+  - str: tenth
+    name: long-ordinal-10
+  - name: book
+    single: book
+    multiple: books
+  - name: chapter
+    single: chapter
+    multiple: chapters
+  - name: column
+    single: column
+    multiple: columns
+  - name: figure-locator
+    single: figure
+    multiple: figures
+  - name: folio
+    single: folio
+    multiple: folios
+  - name: issue
+    single: number
+    multiple: numbers
+  - name: line
+    single: line
+    multiple: lines
+  - name: note
+    single: note
+    multiple: notes
+  - name: opus
+    single: opus
+    multiple: opera
+  - name: page
+    single: page
+    multiple: pages
+  - name: number-of-pages
+    single: page
+    multiple: pages
+  - name: paragraph
+    single: paragraph
+    multiple: paragraphs
+  - name: part
+    single: part
+    multiple: parts
+  - name: section
+    single: section
+    multiple: sections
+  - name: sub-verbo
+    single: sub verbo
+    multiple: sub verbis
+  - name: verse
+    single: verse
+    multiple: verses
+  - name: volume
+    single: volume
+    multiple: volumes
+  - name: book
+    form: short
+    single: bk.
+    multiple: bks.
+  - name: chapter
+    form: short
+    single: chap.
+    multiple: chaps.
+  - name: column
+    form: short
+    single: col.
+    multiple: cols.
+  - name: figure-locator
+    form: short
+    single: fig.
+    multiple: figs.
+  - name: folio
+    form: short
+    single: fol.
+    multiple: fols.
+  - name: issue
+    form: short
+    single: no.
+    multiple: nos.
+  - name: line
+    form: short
+    single: l.
+    multiple: ll.
+  - name: note
+    form: short
+    single: n.
+    multiple: nn.
+  - name: opus
+    form: short
+    single: op.
+    multiple: opp.
+  - name: page
+    form: short
+    single: p.
+    multiple: pp.
+  - name: number-of-pages
+    form: short
+    single: p.
+    multiple: pp.
+  - name: paragraph
+    form: short
+    single: para.
+    multiple: paras.
+  - name: part
+    form: short
+    single: pt.
+    multiple: pts.
+  - name: section
+    form: short
+    single: sec.
+    multiple: secs.
+  - name: sub-verbo
+    form: short
+    single: s.v.
+    multiple: s.vv.
+  - name: verse
+    form: short
+    single: v.
+    multiple: vv.
+  - name: volume
+    form: short
+    single: vol.
+    multiple: vols.
+  - name: paragraph
+    form: symbol
+    single: ¶
+    multiple: ¶¶
+  - name: section
+    form: symbol
+    single: §
+    multiple: §§
+  - name: director
+    single: director
+    multiple: directors
+  - name: editor
+    single: editor
+    multiple: editors
+  - name: editorial-director
+    single: editor
+    multiple: editors
+  - name: illustrator
+    single: illustrator
+    multiple: illustrators
+  - name: translator
+    single: translator
+    multiple: translators
+  - name: editortranslator
+    single: editor & translator
+    multiple: editors & translators
+  - name: director
+    form: short
+    single: dir.
+    multiple: dirs.
+  - name: editor
+    form: short
+    single: ed.
+    multiple: eds.
+  - name: editorial-director
+    form: short
+    single: ed.
+    multiple: eds.
+  - name: illustrator
+    form: short
+    single: ill.
+    multiple: ills.
+  - name: translator
+    form: short
+    single: tran.
+    multiple: trans.
+  - name: editortranslator
+    form: short
+    single: ed. & tran.
+    multiple: eds. & trans.
+  - str: by
+    name: container-author
+    form: verb
+  - str: directed by
+    name: director
+    form: verb
+  - str: edited by
+    name: editor
+    form: verb
+  - str: edited by
+    name: editorial-director
+    form: verb
+  - str: illustrated by
+    name: illustrator
+    form: verb
+  - str: interview by
+    name: interviewer
+    form: verb
+  - str: to
+    name: recipient
+    form: verb
+  - str: by
+    name: reviewed-author
+    form: verb
+  - str: translated by
+    name: translator
+    form: verb
+  - str: edited & translated by
+    name: editortranslator
+    form: verb
+  - str: dir. by
+    name: director
+    form: verb-short
+  - str: ed. by
+    name: editor
+    form: verb-short
+  - str: ed. by
+    name: editorial-director
+    form: verb-short
+  - str: illus. by
+    name: illustrator
+    form: verb-short
+  - str: trans. by
+    name: translator
+    form: verb-short
+  - str: ed. & trans. by
+    name: editortranslator
+    form: verb-short
+  - str: January
+    name: month-01
+  - str: February
+    name: month-02
+  - str: March
+    name: month-03
+  - str: April
+    name: month-04
+  - str: May
+    name: month-05
+  - str: June
+    name: month-06
+  - str: July
+    name: month-07
+  - str: August
+    name: month-08
+  - str: September
+    name: month-09
+  - str: October
+    name: month-10
+  - str: November
+    name: month-11
+  - str: December
+    name: month-12
+  - str: Jan.
+    name: month-01
+    form: short
+  - str: Feb.
+    name: month-02
+    form: short
+  - str: Mar.
+    name: month-03
+    form: short
+  - str: Apr.
+    name: month-04
+    form: short
+  - str: May
+    name: month-05
+    form: short
+  - str: Jun.
+    name: month-06
+    form: short
+  - str: Jul.
+    name: month-07
+    form: short
+  - str: Aug.
+    name: month-08
+    form: short
+  - str: Sep.
+    name: month-09
+    form: short
+  - str: Oct.
+    name: month-10
+    form: short
+  - str: Nov.
+    name: month-11
+    form: short
+  - str: Dec.
+    name: month-12
+    form: short
+  - str: Spring
+    name: season-01
+  - str: Summer
+    name: season-02
+  - str: Autumn
+    name: season-03
+  - str: Winter
+    name: season-04
+ 

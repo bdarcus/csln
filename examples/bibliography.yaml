@@ -1,0 +1,36 @@
+doe1:
+  type: book
+  title: The Title
+  author:
+    - name: Doe, Jane
+  issued: '2023-10'
+smith1:
+  type: book
+  title: The Title
+  author:
+    - name: Smith, Sam
+  issued: '2023-10'
+doe2:
+  type: book
+  title: The Title
+  author:
+    - name: Doe, Jane
+  issued: '2023'
+doe3:
+  type: article
+  title: The Title
+  author:
+    - name: Doe, Jane
+  issued: '2022'
+un:
+  type: article
+  title: The Title
+  author:
+    - name: United Nations
+      parse: false
+  issued: '2020'
+
+
+
+
+
