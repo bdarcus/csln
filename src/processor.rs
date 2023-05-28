@@ -1,20 +1,22 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::option::Option;
+use schemars::JsonSchema;
 
 use crate::bibliography::InputBibliography as Bibliography;
 use crate::bibliography::InputReference;
+use crate::style::StyleTemplateComponent; // FIX
 use crate::style::options::{SortOrder, StyleOptions, StyleSorting, StyleSortGroupKey};
 use crate::style::Style;
 
 /*
-This is the processor code for rendering templates.
+This is the processor code.
 
 The basic design is the same as the csl-next typescript implementation:
 
 The processor takes a style, a bibliography, and a locale, and renders the output.
 
-The primary target is an AST, represented by the ProcRerence struct.
+The primary target is a JSON AST, represented by the ProcTemplate struct.
  */
 
 /// The processor struct, which takes a style, a bibliography, and a locale, and renders the output.
@@ -25,12 +27,28 @@ pub struct Processor {
     locale: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub struct ProcHints {
     proc_value: String,
+    disamb_condition: Option<bool>,
+    group_index: Option<u8>,
+    group_length: Option<u8>,
+    group_key: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+// write a ProcTemplate struct that will be used to render the output.
+// this struct will be used to render the output.
+// the struct will have two fields: a ProcReference and a ProcHints.
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub struct ProcTemplate {
+    pub template_component: StyleTemplateComponent,
+    pub proc_hints: Option<ProcHints>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub struct ProcReference {
     pub data: InputReference,
     pub proc_hints: Option<ProcHints>,
