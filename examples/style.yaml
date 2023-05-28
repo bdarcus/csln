@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=/home/bruce/Code/csln/schemas/style.json
+# yaml-language-server: $schema=../schemas/style.json
 ---
 info:
   id: one
@@ -6,10 +6,11 @@ info:
   categories:
     - biology
     - science
-templates:
-  apa-title:
-    - Title:
-        form: Short
-        title: title
-        value: ""
+options:
+  sort:
+    - key: Author
+      order: Descending
+citation: 
+  template:
+    - Date: Issued
 
