@@ -61,7 +61,7 @@ pub struct ProcReference {
 
 impl StyleOptions {
     pub fn get_sort_config(&self) -> &[StyleSorting] {
-        self.sort.as_ref().map_or(&[], |s| s.as_slice())
+        self.sort.as_slice()
     }
 }
 

@@ -13,7 +13,7 @@ pub struct Rendering {
 
 /// The punctuation to wrap a template component in.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "camelCase")]
 pub enum WrapPunctuation {
     Parentheses,
     Brackets,
@@ -22,7 +22,6 @@ pub enum WrapPunctuation {
 
 /// The Template component model. Each item is for a specific datatype.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
 #[serde(untagged)]
 pub enum StyleTemplateComponent {
     Contributor(StyleTemplateContributor),
@@ -67,14 +66,14 @@ pub struct StyleTemplateContributor {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "camelCase")]
 pub enum ContributorForm {
     Long,
     Short,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "camelCase")]
 pub enum Contributors {
     Author,
     Editor,
@@ -123,16 +122,15 @@ pub struct StyleTemplateTitle {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "camelCase")]
 pub enum Titles {
     Title,
     ContainerTitle,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "camelCase")]
 pub enum TitleForm {
     Short,
     Long,
 }
-
