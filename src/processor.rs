@@ -1,5 +1,4 @@
-use chrono::format::strftime::StrftimeItems;
-use chrono::DateTime;
+use chrono::NaiveDate;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -85,11 +84,9 @@ impl Processor {
 
     pub fn sort_proc_references(&self, proc_references: Vec<ProcReference>) -> Vec<ProcReference> {
         let mut proc_references = proc_references;
-        let sort_config = self
+        let sort_config: &[StyleSorting] = self
             .style
             .options
-            .as_ref()
-            .expect("Style options not found")
             .get_sort_config();
         for sort in sort_config {
             let key = match sort.key {
@@ -115,8 +112,8 @@ impl Processor {
                 }
                 "year" => {
                     proc_references.sort_by(|a, b| {
-                        let a_year = a.data.issued.parse::<i32>().unwrap();
-                        let b_year = b.data.issued.parse::<i32>().unwrap();
+                        let a_year = a.data.issued.as_ref().unwrap().parse::<i32>().unwrap();
+                        let b_year = b.data.issued.as_ref().unwrap().parse::<i32>().unwrap();
                         if order == "Ascending" {
                             a_year.cmp(&b_year)
                         } else {
@@ -126,8 +123,8 @@ impl Processor {
                 }
                 "title" => {
                     proc_references.sort_by(|a, b| {
-                        let a_title = a.data.title.to_lowercase();
-                        let b_title = b.data.title.to_lowercase();
+                        let a_title = a.data.title.as_ref().unwrap().to_lowercase();
+                        let b_title = b.data.title.as_ref().unwrap().to_lowercase();
                         if order == "Ascending" {
                             a_title.cmp(&b_title)
                         } else {
@@ -161,34 +158,38 @@ impl Processor {
 }
 
 impl ProcReference {
-    /// When given a StyleTemplateContributor, format the specifiied contributor using the ProcReference data, and returning a string.
-    pub fn format_contributors(&self, template_component: StyleTemplateContributor) -> String {
-        // mostly done with istructions to copilot, so need to review and test
+    
+    fn format_names(names: Vec<String>) -> String {
+        let mut name_string = String::new();
+        if names.len() == 1 {
+            name_string = names[0].to_string();
+        } else if names.len() == 2 {
+            name_string = names.join(" and ");
+        } else if names.len() > 2 {
+            let last_author = names.last().unwrap();
+            let other_authors = &names[..names.len() - 1];
+            name_string = other_authors.join(", ");
+            name_string.push_str(", and ");
+            name_string.push_str(&last_author);
+        }
+        name_string
+    }
+
+    pub fn _format_contributors(&self, template_component: StyleTemplateContributor) -> String {
         match template_component.contributor {
             Contributors::Author => {
-                let mut authors = self
+                let authors = self
                     .data
                     .author
                     .as_ref()
-                    .unwrap()
+                    .unwrap_or(&Vec::new())
                     .iter()
-                    .map(|author| author.to_string())
+                    .map(|name| name.to_string())
                     .collect::<Vec<String>>();
-                let mut author_string = String::new();
-                if authors.len() == 1 {
-                    author_string = authors[0].to_string();
-                } else if authors.len() == 2 {
-                    author_string = authors.join(" and ");
-                } else if authors.len() > 2 {
-                    let last_author = authors.pop().unwrap();
-                    author_string = authors.join(", ");
-                    author_string.push_str(", and ");
-                    author_string.push_str(&last_author);
-                }
-                author_string
+                ProcReference::format_names(authors)
             }
             Contributors::Editor => {
-                let mut editors = self
+                let editors = self
                     .data
                     .editor
                     .as_ref()
@@ -196,21 +197,10 @@ impl ProcReference {
                     .iter()
                     .map(|editor| editor.to_string())
                     .collect::<Vec<String>>();
-                let mut editor_string = String::new();
-                if editors.len() == 1 {
-                    editor_string = editors[0].to_string();
-                } else if editors.len() == 2 {
-                    editor_string = editors.join(" and ");
-                } else if editors.len() > 2 {
-                    let last_editor = editors.pop().unwrap();
-                    editor_string = editors.join(", ");
-                    editor_string.push_str(", and ");
-                    editor_string.push_str(&last_editor);
-                }
-                editor_string
+                ProcReference::format_names(editors)
             }
             Contributors::Translator => {
-                let mut translators = self
+                let translators = self
                     .data
                     .translator
                     .as_ref()
@@ -218,18 +208,7 @@ impl ProcReference {
                     .iter()
                     .map(|translator| translator.to_string())
                     .collect::<Vec<String>>();
-                let mut translator_string = String::new();
-                if translators.len() == 1 {
-                    translator_string = translators[0].to_string();
-                } else if translators.len() == 2 {
-                    translator_string = translators.join(" and ");
-                } else if translators.len() > 2 {
-                    let last_translator = translators.pop().unwrap();
-                    translator_string = translators.join(", ");
-                    translator_string.push_str(", and ");
-                    translator_string.push_str(&last_translator);
-                }
-                translator_string
+                ProcReference::format_names(translators)
             }
             crate::style::template::Contributors::Director => todo!(),
             crate::style::template::Contributors::Recipient => todo!(),
@@ -238,36 +217,27 @@ impl ProcReference {
             crate::style::template::Contributors::Inventor => todo!(),
             crate::style::template::Contributors::Counsel => todo!(),
             crate::style::template::Contributors::Composer => todo!(),
-            crate::style::template::Contributors::WordsBy => todo!(),
+            crate::style::template::Contributors::Publisher => todo!(),
         }
     }
 
-    pub fn format_date(
-        &self,
-        template_component: StyleTemplateDate,
-    ) -> String {
-        let date = match template_component.date {
-            Dates::Issued => {
-                let issued = || self.data.issued.to_owned();
-                issued
-            }
+    pub fn _format_date(&self, template_component: StyleTemplateDate) -> String {
+        let date_string: &str = match template_component.date {
+            Dates::Issued => self.data.issued.as_ref().unwrap(),
             Dates::Accessed => todo!(),
             Dates::OriginalPublished => todo!(),
         };
 
-        let format_string = match template_component.form {
+        let format_string: &str = match template_component.form {
             DateForm::Year => "%Y",
             DateForm::YearMonth => "%Y-%m",
             DateForm::Full => "%Y-%m-%d",
             DateForm::MonthDay => "%m-%d",
         };
 
-        let format_items = StrftimeItems::new(format_string);
-
-        let date_time = DateTime::parse_from_rfc3339(&date()).unwrap();
-
-        let formatted_date = date_time.format_with_items(format_items).to_string();
-
+        // use EDTF instead?
+        let date: NaiveDate = NaiveDate::parse_from_str(date_string, "%Y-%m-%d").unwrap();
+        let formatted_date: String = date.format(format_string).to_string();
         formatted_date
     }
 }

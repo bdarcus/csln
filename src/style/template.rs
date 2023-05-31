@@ -79,13 +79,13 @@ pub enum Contributors {
     Editor,
     Translator,
     Director,
+    Publisher,
     Recipient,
     Interviewer,
     Interviewee,
     Inventor,
     Counsel,
     Composer,
-    WordsBy,
 }
 
 /// A date component, to render a date.

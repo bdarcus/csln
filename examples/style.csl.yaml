@@ -1,6 +1,5 @@
 # yaml-language-server: $schema=../schemas/style.json
 ---
-# this is a flatter model, relying more heavily on parameters
 info:
   title: APA
 templates:
@@ -8,86 +7,18 @@ templates:
     - title: title
   author-apa-full:
     - contributor: author
+      form: long
   container-apa:
-    - title: container-title
+    - title: containerTitle
   howpublished-apa:
-    - contributors: publisher
-      wrap: parentheses
-options:
-  # all of the below parameter options will have reasonable defaults
-  # localized date formatting config
-  dates:
-    date: long
-    month: long
-    time: long
-    year: numeric
-  contributors:
-    andAs: text
-    role:
+    - contributor: publisher
       form: short
       wrap: parentheses
-    shorten:
-      delimiterPrecedesEtAl: contextual
-      delimiterPrecedesLast: contextual
-  # REVIEW: I think this belongs in `group`
-  disambiguate:
-    addNames: all-with-initials
-    addYearSuffix: true
-  sort:
-    - key: author
-      order: ascending
-    - key: year
-      order: ascending
-  group:
-    # be explicit about grouping, which is core logic
-    - author
-    - year
-  # pave the way for multilingual support
-  localization:
-    scope: global
-  # again: put this on a parameter
-  substitute:
-    author:
-      - editor
-      - translator
-      - title # this still needs work
 citation:
-  options:
-    # There's only so many ways to sort and group, so let's just itemize them.
-    # At least for me, however, this is a PITA to program.
-    sort:
-      - key: author
-        order: ascending
-      - key: year
-        order: descending # in CSL 1.0, we have this global, but it's specific to citations
-    group:
-      - author
-      - year
-  integral:
-    options:
-      group:
-        - author
-    template:
-      - templateKey: author-apa
-      - wrap: parentheses
-        template:
-          - templateKey: year
-          - templateKey: locators-apa
-  nonIntegral:
-    template:
-      - wrap: parentheses
-        delimiter: colon
-        templates:
-          - templateKey: year
-          - templateKey: locators-apa
-bibliography:
   template:
-    - delimiter: space
-      templates:
-      - templateKey: author-apa-full
-      - date: issued
-        format: year
-        wrap: parentheses
-      - templateKey: title-apa
-      - templateKey: container-apa
-      - templateKey: howpublished-apa
+    - contributor: author
+      form: short
+bibliography: 
+  template:
+    - contributor: author
+      form: long

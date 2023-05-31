@@ -1,5 +1,4 @@
 use schemars::schema_for;
-use serde_json;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -23,9 +22,8 @@ fn main() {
     let mut bib_file = File::create("schemas/bibliography.json").unwrap();
     style_file.write_all(style_json_output.as_bytes()).unwrap();
     bib_file.write_all(bib_json_output.as_bytes()).unwrap();
-    println!("{}", "Wrote style schema to schemas/style.json");
+    println!("Wrote style schema to schemas/style.json");
     println!(
-        "{}",
         "Wrote bibliography schema to schemas/bibliography.json"
     );
 }

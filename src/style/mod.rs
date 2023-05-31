@@ -15,7 +15,8 @@ pub struct Style {
     pub info: StyleInfo,
     pub templates: Option<HashMap<String, StyleTemplate>>,
     /// Parameter groups.
-    pub options: Option<StyleOptions>,
+    #[serde(default)]
+    pub options: StyleOptions,
     /// The citation specification.
     pub citation: Option<StyleCitation>,
     /// The bibliography specification.

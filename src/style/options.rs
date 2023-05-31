@@ -1,6 +1,8 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use super::template::Contributors;
+
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(default)]
 pub struct StyleOptions {
@@ -37,7 +39,6 @@ impl Default for StyleOptions {
             },
             dates: StyleDate { 
                 month: MonthOptions::Long,
-                year_suffix: YearSuffixOptions::Never,
             },
             disambiguate: Disambiguation {
                 add_names: AddNames::All, // REVIEW: Is this the right default?
@@ -75,7 +76,7 @@ pub struct Localization {
 /// "per-item" uses the locale of the reference item, and "global" uses the target language
 /// across all references.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", untagged)]
 pub enum LocalizationScope {
     Global,
     PerItem,
@@ -97,7 +98,7 @@ pub struct Substitution {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", untagged)]
 pub enum Substitute {
     Editor,
     Title,
@@ -105,7 +106,7 @@ pub enum Substitute {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", untagged)]
 pub enum AddNames {
     All,
     AllWithInitials,
@@ -118,7 +119,6 @@ pub enum AddNames {
 #[serde(rename_all = "camelCase")]
 pub struct StyleDate {
     pub month: MonthOptions,
-    pub year_suffix: YearSuffixOptions,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
@@ -143,7 +143,7 @@ pub struct StyleSorting {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "lowercase", untagged)]
 pub enum StyleSortGroupKey {
     Title,
     Author,
@@ -151,7 +151,7 @@ pub enum StyleSortGroupKey {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "lowercase", untagged)]
 pub enum SortOrder {
     Ascending,
     Descending,
@@ -168,7 +168,7 @@ pub struct StyleContributors {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "lowercase", untagged)]
 pub enum DisplayAsSort {
     All,
     First,
@@ -177,7 +177,7 @@ pub enum DisplayAsSort {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "lowercase", untagged)]
 pub enum ContributorOptions {
     All,
     First,
@@ -328,7 +328,7 @@ pub enum TitleForm {
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct StyleTemplateContributors {
-    pub contributors: ContributorRoles,
+    pub contributors: Contributors,
     pub form: ContributorForm,
 }
 

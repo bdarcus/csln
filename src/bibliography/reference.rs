@@ -4,14 +4,14 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct InputReference {
-    pub id: String,
-    pub title: String,
+    pub id: Option<String>,
+    pub title: Option<String>,
     pub author: Option<Vec<String>>,
     pub editor: Option<Vec<String>>,
     pub translator: Option<Vec<String>>,
-    pub issued: String,
+    pub issued: Option<String>,
     pub publisher: Option<Vec<String>>,
-    pub url: String,
-    pub accessed: String,
-    pub note: String
+    pub url: Option<String>,
+    pub accessed: Option<String>,
+    pub note: Option<String>,
 }

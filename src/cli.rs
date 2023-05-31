@@ -18,12 +18,12 @@ fn main() {
         panic!("Please provide the path of the style and bibliography files as command line arguments.");
     }
 
-    let style_path = &args[1];
-    let style = load_style_from_yaml(style_path);
+    let style_path: &String = &args[1];
+    let style: Style = load_style_from_yaml(style_path);
 
-    let bibliography_path = &args[2];
-    let bibliography = Bibliography::new();
+    let bibliography_path: &String = &args[2];
+    let bibliography: std::collections::HashMap<String, bibliography::InputReference> = Bibliography::new();
     
-    let processor = Processor::new(style, bibliography, bibliography_path.to_string());
+    let processor: Processor = Processor::new(style, bibliography, bibliography_path.to_string());
     println!("{:?}", processor.get_proc_references());
 }
