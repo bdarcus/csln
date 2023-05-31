@@ -1,0 +1,20 @@
+[package]
+name = "csln-style"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "csln_style" 
+test = true
+doctest = true
+bench = true
+doc = true
+edition = "2021"       # The edition of the target.
+crate-type = ["lib"]   # The crate types to generate.
+
+[dependencies]
+schemars = "0.8.12"
+serde = "1.0.162"
+serde_derive = "1.0.162"
+serde_json = "1.0.96"
+serde_yaml = "0.9.21"

@@ -1,0 +1,21 @@
+[package]
+name = "csln-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "csln-schemas"
+path = "src/makeschemas.rs"
+
+[[bin]]
+name = "csln"
+path = "src/main.rs"
+
+
+[dependencies]
+clap = { version = "4.3.0", features = ["derive"] }
+schemars = "0.8.12"
+serde_json = "1.0.68"
+style = { path = "../style", package = "csln-style" }
+bibliography = { path = "../bibliography", package = "csln-bibliography" }
+processor = { path = "../processor", package = "csln-processor" }

@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../schemas/style.json
+---
+info:
+  title: APA
+templates:
+  title-apa:
+    - title: title
+  author-apa-full:
+    - contributor: author
+      form: long
+  container-apa:
+    - title: containerTitle
+  howpublished-apa:
+    - contributor: publisher
+      form: short
+      wrap: parentheses
+citation:
+  template:
+    - contributor: author
+      form: short
+bibliography: 
+  template:
+    - contributor: author
+      form: long
