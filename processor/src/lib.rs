@@ -1,8 +1,8 @@
-use std::fs;
 use chrono::NaiveDate;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
+use std::fs;
 use std::option::Option;
 
 use bibliography::InputBibliography as Bibliography;
@@ -24,43 +24,25 @@ The primary target is a JSON AST, represented by the ProcTemplate struct.
  */
 
 pub fn load_style_from_file(style_path: &str) -> Style {
+    let contents = fs::read_to_string(style_path).expect("Failed to read style file");
     if style_path.ends_with(".json") {
-        load_style_from_json(style_path)
+        serde_json::from_str(&contents).expect("Failed to parse JSON")
     } else if style_path.ends_with(".yaml") || style_path.ends_with(".yml") {
-        load_style_from_yaml(style_path)
+        serde_yaml::from_str(&contents).expect("Failed to parse YAML")
     } else {
         panic!("Style file must be in YAML or JSON format")
     }
-}
-
-fn load_style_from_yaml(style_path: &str) -> Style {
-    let contents = fs::read_to_string(style_path).expect("Failed to read style file");
-    serde_yaml::from_str(&contents).expect("Failed to parse YAML")
-}
-
-fn load_style_from_json(style_path: &str) -> Style {
-    let contents = fs::read_to_string(style_path).expect("Failed to read style file");
-    serde_json::from_str(&contents).expect("Failed to parse JSON")
 }
 
 pub fn load_bibliography_from_file(bib_path: &str) -> Bibliography {
+    let contents = fs::read_to_string(bib_path).expect("Failed to read bibliography file");
     if bib_path.ends_with(".json") {
-        load_bib_from_json(bib_path)
+        serde_json::from_str(&contents).expect("Failed to parse JSON")
     } else if bib_path.ends_with(".yaml") || bib_path.ends_with(".yml") {
-        load_bib_from_yaml(bib_path)
+        serde_yaml::from_str(&contents).expect("Failed to parse YAML")
     } else {
         panic!("Style file must be in YAML or JSON format")
     }
-}
-
-fn load_bib_from_yaml(bib_path: &str) -> Bibliography {
-    let contents = fs::read_to_string(bib_path).expect("Failed to read style file");
-    serde_yaml::from_str(&contents).expect("Failed to parse YAML")
-}
-
-fn load_bib_from_json(bib_path: &str) -> Bibliography {
-    let contents = fs::read_to_string(bib_path).expect("Failed to read style file");
-    serde_json::from_str(&contents).expect("Failed to parse JSON")
 }
 
 /// The processor struct, which takes a style, a bibliography, and a locale, and renders the output.
