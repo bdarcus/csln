@@ -51,7 +51,8 @@ impl Default for StyleOptions {
                 key: StyleSortGroupKey::Author,
                 order: SortOrder::Ascending,
             }],
-            group: vec![StyleSortGroupKey::Author],
+            group: vec![StyleSortGroupKey::Author,
+                        StyleSortGroupKey::Year],
             substitute: Substitution {
                 author: vec![Substitute::Editor, Substitute::Translator, Substitute::Title],
             },

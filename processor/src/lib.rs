@@ -1,12 +1,10 @@
 use chrono::NaiveDate;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 use std::option::Option;
-use itertools::Itertools;
-use itertools::GroupBy;
-use core::slice::Iter;
 
 use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
@@ -75,7 +73,6 @@ pub struct ProcHints {
     group_key: String,
 }
 
-// add a default function for ProcHints
 impl Default for ProcHints {
     fn default() -> Self {
         ProcHints {
@@ -87,9 +84,6 @@ impl Default for ProcHints {
     }
 }
 
-// write a ProcTemplate struct that will be used to render the output.
-// this struct will be used to render the output.
-// the struct will have two fields: a ProcReference and a ProcHints.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub struct ProcTemplate {
@@ -101,48 +95,67 @@ pub struct ProcTemplate {
 #[serde(rename_all = "kebab-case")]
 pub struct ProcReference {
     pub data: InputReference,
-    pub proc_hints: Option<ProcHints>,
+    pub proc_hints: ProcHints,
 }
 
 impl Processor {
-    pub fn get_proc_references(&self) -> Vec<ProcReference> {
-        // here return a vector of ProcReference structs from the bibliography
-        // use iter and map to construct the vector
-        // for each reference in the bibliography, construct a ProcReference
-        let proc_references = self
+    pub fn get_all_proc_references(&self) -> Vec<ProcReference> {
+        let prefs = self
             .bibliography
             .values()
             .cloned()
             .map(|input_reference| ProcReference {
                 data: input_reference,
-                proc_hints: None,
+                proc_hints: ProcHints {
+                    disamb_condition: false,
+                    group_index: 0,
+                    group_length: 0,
+                    group_key: "".to_string(),
+                },
             })
             .collect();
 
-        self.sort_proc_references(proc_references)
+        let sorted_prefs: Vec<ProcReference> = self.sort_proc_references(prefs);
+        let grouped_prefs: HashMap<String, Vec<ProcReference>> =
+            self.group_proc_references(sorted_prefs);
+        let mut proc_references: Vec<ProcReference> = Vec::new();
+        grouped_prefs.iter().for_each(|(group_key, group)| {
+            let group_len = group.len();
+            group.iter().enumerate().for_each(|(group_index, proc_reference)| {
+                let phints = ProcHints {
+                    disamb_condition: group_len > 1,
+                    group_index: (group_index + 1) as u8,
+                    group_length: group_len,
+                    group_key: group_key.to_string(),
+                };
+                let proc_reference = ProcReference {
+                    data: proc_reference.data.clone(),
+                    proc_hints: phints,
+                };
+                proc_references.push(proc_reference);
+            });
+        });
+        proc_references
     }
 
-    // Create three functions.
-    // First, make_group_key:
-    // Take a vector StyleGroupKey and concatenate the values returned from the respective field data using string_for_key.
-    // Second, string_for_key:
-    // When given a key return the string value from ProcReference::data.
-    // Third, group_proc_references:
-    // Group the vector returned by Processor::get_proc_references and add a ProcHint to each, consisting of group_index, group_length, and group_key; return a new vector of ProcReference.
-    // Hint: use itertools::group_by.
-    // Finally, add a test to processor_test.rs to confirm correct ProcHint::group_index, values using the examples/bibliography.yaml.
+    pub fn get_proc_references(&self) -> Vec<ProcReference> {
+        let all_proc_references = self.get_all_proc_references();
+        // additional processing goes here
+        all_proc_references
+    }
+
     fn make_group_key(&self, proc_reference: &ProcReference) -> String {
-        let mut group_key = String::new();
         let group_key_config: &[StyleSortGroupKey] = self.style.options.get_group_key_config();
-        for key in group_key_config {
-            let key = match key {
+        let group_key = group_key_config
+            .iter()
+            .map(|key| match key {
                 StyleSortGroupKey::Author => "author",
                 StyleSortGroupKey::Year => "year",
                 StyleSortGroupKey::Title => "title",
-            };
-            let value = self.string_for_key(proc_reference, key);
-            group_key.push_str(&value);
-        }
+            })
+            .map(|key| self.string_for_key(proc_reference, key))
+            .collect::<Vec<String>>()
+            .join(":");
         group_key
     }
 
@@ -155,18 +168,21 @@ impl Processor {
         }
     }
 
-    // use itertools::group_by
-    // use self.make_group_key to make the key for group_by
-    // retrun a GroupBy<key, ProcReference>
-    fn group_proc_references(&self) -> GroupBy<&str, Iter<ProcReference>, fn(&ProcReference) -> String> {
-        let proc_references = self.get_proc_references();
-        let group_proc_references = proc_references
-            .into_iter()
-            .group_by(|proc_reference| self.make_group_key(proc_reference).as_str())
-            .collect();
-        group_proc_references
+    // REVIEW not fond of using mutable variables here, but can't figure out Itertools:group_by
+    pub fn group_proc_references(
+        &self,
+        proc_references: Vec<ProcReference>,
+    ) -> HashMap<String, Vec<ProcReference>> {
+        let mut proc_references = proc_references;
+        let mut group_map: HashMap<String, Vec<ProcReference>> = HashMap::new();
+        for proc_reference in proc_references.iter_mut() {
+            let group_key = self.make_group_key(proc_reference);
+            let group = group_map.entry(group_key).or_insert(Vec::new());
+            group.push(proc_reference.clone());
+        }
+        group_map
     }
-    
+
     pub fn sort_proc_references(&self, proc_references: Vec<ProcReference>) -> Vec<ProcReference> {
         let mut proc_references = proc_references;
         let sort_config: &[StyleSorting] = self.style.options.get_sort_config();
@@ -251,7 +267,7 @@ impl ProcReference {
             let other_authors = &names[..names.len() - 1];
             name_string = other_authors.join(", ");
             name_string.push_str(", and ");
-            name_string.push_str(&last_author);
+            name_string.push_str(last_author);
         }
         name_string
     }
