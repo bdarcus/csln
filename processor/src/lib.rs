@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::fs;
 use std::option::Option;
+use itertools::Itertools;
+use itertools::GroupBy;
+use core::slice::Iter;
 
 use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
@@ -53,14 +56,35 @@ pub struct Processor {
     locale: String,
 }
 
+/// The intermedia representation of a StyleTemplateComponent, which is used to render the output.
+/// This struct will have two fields: a StyleComponent and a ProcHints.
+/// The ProcHints field will be used to store information about the reference that is used to render the output.
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ProcTemplateComponent {
+    template_component: StyleTemplateComponent,
+    proc_hints: Option<ProcHints>,
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub struct ProcHints {
-    proc_value: String,
-    disamb_condition: Option<bool>,
-    group_index: Option<u8>,
-    group_length: Option<u8>,
-    group_key: Option<String>,
+    disamb_condition: bool,
+    group_index: u8,
+    group_length: usize,
+    group_key: String,
+}
+
+// add a default function for ProcHints
+impl Default for ProcHints {
+    fn default() -> Self {
+        ProcHints {
+            disamb_condition: false, // TODO need to dynamically set this
+            group_index: 1,
+            group_length: 1,
+            group_key: "".to_string(), // TODO fix this
+        }
+    }
 }
 
 // write a ProcTemplate struct that will be used to render the output.
@@ -98,6 +122,51 @@ impl Processor {
         self.sort_proc_references(proc_references)
     }
 
+    // Create three functions.
+    // First, make_group_key:
+    // Take a vector StyleGroupKey and concatenate the values returned from the respective field data using string_for_key.
+    // Second, string_for_key:
+    // When given a key return the string value from ProcReference::data.
+    // Third, group_proc_references:
+    // Group the vector returned by Processor::get_proc_references and add a ProcHint to each, consisting of group_index, group_length, and group_key; return a new vector of ProcReference.
+    // Hint: use itertools::group_by.
+    // Finally, add a test to processor_test.rs to confirm correct ProcHint::group_index, values using the examples/bibliography.yaml.
+    fn make_group_key(&self, proc_reference: &ProcReference) -> String {
+        let mut group_key = String::new();
+        let group_key_config: &[StyleSortGroupKey] = self.style.options.get_group_key_config();
+        for key in group_key_config {
+            let key = match key {
+                StyleSortGroupKey::Author => "author",
+                StyleSortGroupKey::Year => "year",
+                StyleSortGroupKey::Title => "title",
+            };
+            let value = self.string_for_key(proc_reference, key);
+            group_key.push_str(&value);
+        }
+        group_key
+    }
+
+    fn string_for_key(&self, proc_reference: &ProcReference, key: &str) -> String {
+        match key {
+            "author" => proc_reference.data.author.as_ref().unwrap().join(" "),
+            "year" => proc_reference.data.issued.as_ref().unwrap().to_string(),
+            "title" => proc_reference.data.title.as_ref().unwrap().to_string(),
+            _ => panic!("Invalid key"),
+        }
+    }
+
+    // use itertools::group_by
+    // use self.make_group_key to make the key for group_by
+    // retrun a GroupBy<key, ProcReference>
+    fn group_proc_references(&self) -> GroupBy<&str, Iter<ProcReference>, fn(&ProcReference) -> String> {
+        let proc_references = self.get_proc_references();
+        let group_proc_references = proc_references
+            .into_iter()
+            .group_by(|proc_reference| self.make_group_key(proc_reference).as_str())
+            .collect();
+        group_proc_references
+    }
+    
     pub fn sort_proc_references(&self, proc_references: Vec<ProcReference>) -> Vec<ProcReference> {
         let mut proc_references = proc_references;
         let sort_config: &[StyleSorting] = self.style.options.get_sort_config();

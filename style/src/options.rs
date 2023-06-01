@@ -59,6 +59,27 @@ impl Default for StyleOptions {
     }
 }
 
+impl StyleOptions {
+    pub fn get_group_key_config(&self) -> &[StyleSortGroupKey] {
+        self.group.as_slice()
+    }
+    pub fn get_contributors_config(&self) -> &StyleContributors {
+        &self.contributors
+    }
+    pub fn get_disambiguation_config(&self) -> &Disambiguation {
+        &self.disambiguate
+    }
+    pub fn get_localization_config(&self) -> &Localization {
+        &self.localization
+    }
+    pub fn get_substitution_config(&self) -> &Substitution {
+        &self.substitute
+    }
+    pub fn get_date_config(&self) -> &StyleDate {
+        &self.dates
+    }
+}
+
 /// Localization configuration.
 ///
 /// Terms and data localization configuration.

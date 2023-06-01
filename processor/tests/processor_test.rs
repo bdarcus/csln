@@ -1,4 +1,74 @@
-#[cfg(test)]
+#[test]
+fn test_group_proc_references() {
+    let processor = Processor::new(Bibliography::default(), Style::default());
+    let proc_references = processor.get_proc_references();
+    let grouped_proc_references = processor.group_proc_references(proc_references);
+    assert_eq!(grouped_proc_references.len(), 4);
+    assert_eq!(
+        grouped_proc_references[0].proc_hints.as_ref().unwrap().group_key,
+        "Doe2020"
+    );
+    assert_eq!(
+        grouped_proc_references[0].proc_hints.as_ref().unwrap().group_index,
+        0
+    );
+    assert_eq!(
+        grouped_proc_references[0].proc_hints.as_ref().unwrap().group_length,
+        2
+    );
+    assert_eq!(
+        grouped_proc_references[0].proc_hints.as_ref().unwrap().disamb_condition,
+        false
+    );
+    assert_eq!(
+        grouped_proc_references[1].proc_hints.as_ref().unwrap().group_key,
+        "Doe2021"
+    );
+    assert_eq!(
+        grouped_proc_references[1].proc_hints.as_ref().unwrap().group_index,
+        1
+    );
+    assert_eq!(
+        grouped_proc_references[1].proc_hints.as_ref().unwrap().group_length,
+        1
+    );
+    assert_eq!(
+        grouped_proc_references[1].proc_hints.as_ref().unwrap().disamb_condition,
+        false
+    );
+    assert_eq!(
+        grouped_proc_references[2].proc_hints.as_ref().unwrap().group_key,
+        "Smith2020"
+    );
+    assert_eq!(
+        grouped_proc_references[2].proc_hints.as_ref().unwrap().group_index,
+        2
+    );
+    assert_eq!(
+        grouped_proc_references[2].proc_hints.as_ref().unwrap().group_length,
+        1
+    );
+    assert_eq!(
+        grouped_proc_references[2].proc_hints.as_ref().unwrap().disamb_condition,
+        false
+    );
+    assert_eq!(
+        grouped_proc_references[3].proc_hints.as_ref().unwrap().group_key,
+        "Smith2021"
+    );
+    assert_eq!(
+        grouped_proc_references[3].proc_hints.as_ref().unwrap().group_index,
+        3
+    );
+    assert_eq!(
+        grouped_proc_references[3].proc_hints.as_ref().unwrap().group_length,
+        1
+    );
+    assert_eq!(
+        grouped_proc_references[3].proc_hints.as_ref().unwrap().disamb_condition,
+        false
+    );
+}#[cfg(test)]
 mod tests {
     use csln_processor::{load_style_from_file, load_bibliography_from_file};
 
