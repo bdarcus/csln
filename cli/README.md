@@ -6,9 +6,9 @@ Right now, this has two simple binaries:
 I'm thinking to merge them in a single, richer, cli; something like:
 
 ```console
-csln make schemas -d /tno
-csln process bibliography -t latex -b bib.yanl -s style.json
-csln find style
-csln make style
+csln make schemas -d /tmp/schemas
+csln process bibliography -t latex -b bib.yaml -s style.json
+csln find style abc
+csln make style xyz
 ```
 
