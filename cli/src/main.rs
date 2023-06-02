@@ -17,5 +17,6 @@ fn main() {
     let bibliography_path: &String = &args[2];
     let bibliography: Bibliography = load_bibliography_from_file(bibliography_path);
     let processor: Processor = Processor::new(style, bibliography, bibliography_path.to_string());
-    println!("{:?}", processor.get_proc_references());
+    let prefs = processor.get_proc_references();
+    println!("{:?}", prefs);
 }

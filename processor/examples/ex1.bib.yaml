@@ -1,28 +1,27 @@
-# yaml-language-server: $schema=../schemas/bibliography.json
 ---
 un:
   type: article
-  title: E Title
+  title: Title 4
   author: ["United Nations"]
   issued: '2020'
 smith1:
   type: book
-  title: B Title
+  title: Title 3
   author: ["Smith, Sam"]
   issued: '2023-10'
 doe1:
   type: book
-  title: A Title
+  title: Title 2
   author: ["Doe, Jane"]
   issued: '2023-10'
 doe2:
   type: book
-  title: C Title
+  title: Title 1
   author: ["Doe, Jane"]
-  issued: '2023'
+  issued: '2020'
 doe3:
   type: article
-  title: D Title
+  title: Title 0
   author: ["Doe, Jane"]
   issued: '2020'
 
