@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use style::template::{Contributors, DateForm, Dates, StyleTemplateContributor};
 //use edtf::DateComplete;
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct InputReference {
     pub id: Option<String>,
     pub title: Option<String>,
