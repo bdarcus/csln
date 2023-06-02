@@ -207,6 +207,7 @@ impl Processor {
                 proc_refs.push(proc_ref);
             }
         }
+        proc_refs.reverse();
         proc_refs
     }
 

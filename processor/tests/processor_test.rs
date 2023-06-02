@@ -21,7 +21,7 @@ mod tests {
         let bibliography = load_bibliography_from_file("examples/ex1.bib.yaml");
         let processor = csln_processor::Processor::new(style, bibliography, "en-US".to_string());
         let proc_refs = processor.get_proc_references();
-        assert_eq!(proc_refs.len(), 5);
+        assert_eq!(proc_refs.len(), 20);
         assert_eq!(proc_refs[0].proc_hints.group_index, 1);
         assert_eq!(proc_refs[1].proc_hints.group_index, 2);
     }

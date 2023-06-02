@@ -24,6 +24,51 @@ doe3:
   title: Title 0
   author: ["Doe, Jane"]
   issued: '2020'
+brown1:
+  type: article
+  title: Title 5
+  author: ["Brown, John"]
+  issued: '2021'
+lee1:
+  type: book
+  title: Title 6
+  author: ["Lee, Sarah"]
+  issued: '2022'
+lee2:
+  type: article
+  title: Title 7
+  author: ["Lee, Sarah"]
+  issued: '2022'
+miller1:
+  type: book
+  title: Title 8
+  author: ["Miller, David"]
+  issued: '2023'
+miller2:
+  type: article
+  title: Title 9
+  author: ["Miller, David"]
+  issued: '2023'
+jones1:
+  type: book
+  title: Title 10
+  author: ["Jones, Michael"]
+  issued: '2024'
+jones2:
+  type: article
+  title: Title 11
+  author: ["Jones, Michael"]
+  issued: '2024'
+smith2:
+  type: book
+  title: Title 12
+  author: ["Smith, John"]
+  issued: '2025'
+smith3:
+  type: article
+  title: Title 13
+  author: ["Smith, John"]
+  issued: '2025'
 
 
 
