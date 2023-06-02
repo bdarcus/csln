@@ -54,7 +54,7 @@ pub struct Processor {
     locale: String,
 }
 
-/// The intermedia representation of a StyleTemplateComponent, which is used to render the output.
+/// The intermediate representation of a StyleTemplateComponent, which is used to render the output.
 /// This struct will have two fields: a StyleComponent and a ProcHints.
 /// The ProcHints field will be used to store information about the reference that is used to render the output.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
@@ -100,6 +100,7 @@ impl Default for ProcHints {
     }
 }
 
+// note: not sure if this is still needed
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub struct ProcTemplate {
@@ -145,6 +146,7 @@ impl Processor {
             match key {
                 "author" => {
                     references.sort_by(|a, b| {
+                        // REVIEW would like to review all these unwraps
                         let a_author = a.author.as_ref().unwrap().join(" ").to_lowercase();
                         let b_author = b.author.as_ref().unwrap().join(" ").to_lowercase();
                         if order == "Ascending" {
@@ -192,6 +194,9 @@ impl Processor {
         references
     }
 
+    // REVIEW strikes me that some of these methods might better be implemented as iterators
+    // and also make them asychronous so that they can be run in parallel
+    // For a GUI context, that may help make an already fast implementation even faster?
     pub fn get_proc_hints(&self) -> HashMap<String, ProcHints> {
         let refs = self.get_references();
         let sorted_refs = self.sort_references(refs);
@@ -207,7 +212,7 @@ impl Processor {
                     group_length: group_len,
                     group_key: key.clone(),
                 };
-                let id = reference.id.as_ref().unwrap().clone(); // FIXME need to get the key somehow from the bib
+                let id = reference.id.as_ref().unwrap().clone();
                 prochs.insert(id, proch);
             }
         }
@@ -262,6 +267,7 @@ impl Processor {
     }
 }
 
+// REVIEW with recent changes, do we need this, or put the methods directly on InputReference?
 impl ProcReference {
     fn format_names(names: Vec<String>) -> String {
         let mut name_string = String::new();
