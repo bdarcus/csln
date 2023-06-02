@@ -8,11 +8,12 @@ mod tests {
         let style = load_style_from_file("examples/style.csl.yaml");
         let bibliography = load_bibliography_from_file("examples/ex1.bib.yaml");
         let processor = csln_processor::Processor::new(style, bibliography, "en-US".to_string());
-        let proc_refs = processor.get_proc_hints();
-        assert_eq!(proc_refs.len(), 5);
+        let refs = processor.get_references();
+        let sorted_refs = processor.sort_references(refs);
+        assert_eq!(sorted_refs.len(), 20);
         // how can I test the contents of proc_references?
-        assert_eq!(proc_refs[0].data.title.as_deref(), Some("Title 0"));
-        assert_eq!(proc_refs[4].data.title.as_deref(), Some("Title 4"));
+        assert_eq!(sorted_refs[0].title.as_deref(), Some("Title 0"));
+        assert_eq!(sorted_refs[4].title.as_deref(), Some("Title 4"));
     }
 
     #[test]
@@ -20,9 +21,8 @@ mod tests {
         let style = load_style_from_file("examples/style.csl.yaml");
         let bibliography = load_bibliography_from_file("examples/ex1.bib.yaml");
         let processor = csln_processor::Processor::new(style, bibliography, "en-US".to_string());
-        let proc_refs = processor.get_proc_hints();
-        assert_eq!(proc_refs.len(), 20);
-        assert_eq!(proc_refs[0].proc_hints.group_index, 1);
-        assert_eq!(proc_refs[1].proc_hints.group_index, 2);
+        let proc_hints = processor.get_proc_hints();
+        assert_eq!(proc_hints.keys().len(), 20);
+        assert_eq!(proc_hints["id-0"].group_index, 0);
     }
 }
