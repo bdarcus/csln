@@ -116,7 +116,13 @@ pub struct ProcReference {
 
 impl Processor {
     fn get_references(&self) -> Vec<InputReference> {
-        self.bibliography.values().cloned().collect()
+        let mut references = Vec::new();
+        for (key, value) in &self.bibliography {
+            let mut reference = value.clone();
+            reference.id = Some(key.clone());
+            references.push(reference);
+        }
+        references
     }
 
     fn _get_reference(&self, id: &str) -> Option<InputReference> {
@@ -186,29 +192,26 @@ impl Processor {
         references
     }
 
-    pub fn get_proc_references(&self) -> Vec<ProcReference> {
+    pub fn get_proc_hints(&self) -> HashMap<String, ProcHints> {
         let refs = self.get_references();
         let sorted_refs = self.sort_references(refs);
         let grouped_refs = self.group_references(sorted_refs);
 
-        let mut proc_refs = Vec::new();
+        let mut prochs = HashMap::new();
         for (key, group) in grouped_refs {
             let group_len = group.len();
             for (index, reference) in group.into_iter().enumerate() {
-                let proc_ref = ProcReference {
-                    data: reference.clone(),
-                    proc_hints: ProcHints {
-                        disamb_condition: false,
-                        group_index: index + 1,
-                        group_length: group_len,
-                        group_key: key.clone(),
-                    },
+                let proch = ProcHints {
+                    disamb_condition: false,
+                    group_index: index + 1,
+                    group_length: group_len,
+                    group_key: key.clone(),
                 };
-                proc_refs.push(proc_ref);
+                let id = reference.id.as_ref().unwrap().clone(); // FIXME need to get the key somehow from the bib
+                prochs.insert(id, proch);
             }
         }
-        proc_refs.reverse();
-        proc_refs
+        prochs
     }
 
     fn make_group_key(&self, reference: &InputReference) -> String {
