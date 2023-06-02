@@ -1,0 +1,6 @@
+{
+    "yaml.schemas": {
+        "./schemas/style.json": ["/*.csl.yaml"],
+        "./schemas/bibliography.json": ["/*.bib.yaml"]
+    }
+}
