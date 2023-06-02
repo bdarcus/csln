@@ -38,7 +38,8 @@ pub fn load_style_from_file(style_path: &str) -> Style {
 
 /// Load and parse a YAML or JSON bibliography file.
 pub fn load_bibliography_from_file(bib_path: &str) -> Bibliography {
-    let contents = fs::read_to_string(bib_path).expect("Failed to read bibliography file");
+    let contents =
+        fs::read_to_string(bib_path).expect("Failed to read bibliography file");
     if bib_path.ends_with(".json") {
         serde_json::from_str(&contents).expect("Failed to parse JSON")
     } else if bib_path.ends_with(".yaml") || bib_path.ends_with(".yml") {
@@ -111,6 +112,58 @@ impl Default for ProcHints {
 }
 
 impl Processor {
+
+    /// Render references to AST.
+    pub fn render_references(&self) -> Vec<ProcTemplateComponent> {
+        let sorted_references = self.sort_references(self.get_references());
+        sorted_references
+            .iter()
+            .flat_map(|reference| {
+                self.render_reference(reference)
+            })
+            .collect()
+    }
+
+    /// Render a reference to AST.
+    fn render_reference(&self, reference: &InputReference) -> Vec<ProcTemplateComponent> {
+        let bibliography_style = self.style.bibliography.clone();
+        bibliography_style
+            .map(|style| {
+                style.template
+                    .iter()
+                    .map(|component| {
+                        self.render_template_component(component, reference)
+                    })
+                    .collect()
+            })
+            .unwrap_or_else(|| vec![])
+    }
+
+    fn render_template_component(
+        &self,
+        component: &StyleTemplateComponent,
+        reference: &InputReference,
+    ) -> ProcTemplateComponent {
+        let rendered = match component {
+            StyleTemplateComponent::Date(date) => {
+                reference.render_date(date)
+            }
+            StyleTemplateComponent::Contributor(contributor) => {
+                reference.render_contributors(contributor)
+            }
+            StyleTemplateComponent::Title(title) => {
+                reference.render_title(title)
+            }
+            StyleTemplateComponent::List(list) => {
+                reference.render_list(list)
+            }
+        };
+        ProcTemplateComponent {
+            template_component: component.clone(),
+            value: rendered,
+        }
+    }
+
     /// Get references from the bibliography.
     pub fn get_references(&self) -> Vec<InputReference> {
         let mut references = Vec::new();
@@ -128,7 +181,10 @@ impl Processor {
     }
 
     /// Sort the references according to instructions in the style.
-    pub fn sort_references(&self, references: Vec<InputReference>) -> Vec<InputReference> {
+    pub fn sort_references(
+        &self,
+        references: Vec<InputReference>,
+    ) -> Vec<InputReference> {
         let mut references = references;
         let sort_config: &[StyleSorting] = self.style.options.get_sort_config();
         for sort in sort_config {
@@ -145,8 +201,10 @@ impl Processor {
                 "author" => {
                     references.sort_by(|a, b| {
                         // REVIEW would like to review all these unwraps
-                        let a_author = a.author.as_ref().unwrap().join(" ").to_lowercase();
-                        let b_author = b.author.as_ref().unwrap().join(" ").to_lowercase();
+                        let a_author =
+                            a.author.as_ref().unwrap().join(" ").to_lowercase();
+                        let b_author =
+                            b.author.as_ref().unwrap().join(" ").to_lowercase();
                         if order == "Ascending" {
                             a_author.cmp(&b_author)
                         } else {
@@ -178,8 +236,10 @@ impl Processor {
                 }
                 _ => {
                     references.sort_by(|a, b| {
-                        let a_author = a.author.as_ref().unwrap().join(" ").to_lowercase();
-                        let b_author = b.author.as_ref().unwrap().join(" ").to_lowercase();
+                        let a_author =
+                            a.author.as_ref().unwrap().join(" ").to_lowercase();
+                        let b_author =
+                            b.author.as_ref().unwrap().join(" ").to_lowercase();
                         if order == "Ascending" {
                             a_author.cmp(&b_author)
                         } else {
@@ -220,7 +280,8 @@ impl Processor {
 
     /// Return a string to use for grouping for a given reference, using instructions in the style.
     fn make_group_key(&self, reference: &InputReference) -> String {
-        let group_key_config: &[StyleSortGroupKey] = self.style.options.get_group_key_config();
+        let group_key_config: &[StyleSortGroupKey] =
+            self.style.options.get_group_key_config();
         let group_key = group_key_config
             .iter()
             .map(|key| match key {
@@ -261,10 +322,6 @@ impl Processor {
     }
 
     pub fn new(style: Style, bibliography: Bibliography, locale: String) -> Processor {
-        Processor {
-            style,
-            bibliography,
-            locale,
-        }
+        Processor { style, bibliography, locale }
     }
 }

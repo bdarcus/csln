@@ -1,7 +1,10 @@
 use chrono::NaiveDate;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use style::template::{Contributors, DateForm, Dates, StyleTemplateContributor};
+use style::template::{
+    Contributors, DateForm, Dates, StyleTemplateContributor, StyleTemplateDate,
+    StyleTemplateList, StyleTemplateTitle, Titles,
+};
 //use edtf::DateComplete;
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -19,7 +22,7 @@ pub struct InputReference {
 }
 
 impl InputReference {
-    pub fn format_names(names: Vec<String>) -> String {
+    pub fn render_names(names: Vec<String>) -> String {
         let mut name_string = String::new();
         if names.len() == 1 {
             name_string = names[0].to_string();
@@ -35,9 +38,9 @@ impl InputReference {
         name_string
     }
 
-    pub fn format_contributors(
+    pub fn render_contributors(
         &self,
-        template_component: StyleTemplateContributor,
+        template_component: &StyleTemplateContributor,
     ) -> String {
         match template_component.contributor {
             Contributors::Author => {
@@ -48,7 +51,7 @@ impl InputReference {
                     .iter()
                     .map(|name| name.to_string())
                     .collect::<Vec<String>>();
-                InputReference::format_names(authors)
+                InputReference::render_names(authors)
             }
             Contributors::Editor => {
                 let editors = self
@@ -58,7 +61,7 @@ impl InputReference {
                     .iter()
                     .map(|editor| editor.to_string())
                     .collect::<Vec<String>>();
-                InputReference::format_names(editors)
+                InputReference::render_names(editors)
             }
             Contributors::Translator => {
                 let translators = self
@@ -68,7 +71,7 @@ impl InputReference {
                     .iter()
                     .map(|translator| translator.to_string())
                     .collect::<Vec<String>>();
-                InputReference::format_names(translators)
+                InputReference::render_names(translators)
             }
             Contributors::Director => todo!(),
             Contributors::Recipient => todo!(),
@@ -80,14 +83,14 @@ impl InputReference {
             Contributors::Publisher => todo!(),
         }
     }
-    pub fn format_date(&self, date: Dates, form: DateForm) -> String {
-        let date_string: &str = match date {
+    pub fn render_date(&self, template_component: &StyleTemplateDate) -> String {
+        let date_string: &str = match template_component.date {
             Dates::Issued => self.issued.as_ref().unwrap(),
             Dates::Accessed => todo!(),
             Dates::OriginalPublished => todo!(),
         };
 
-        let format_string: &str = match form {
+        let format_string: &str = match template_component.form {
             DateForm::Year => "%Y",
             DateForm::YearMonth => "%Y-%m",
             DateForm::Full => "%Y-%m-%d",
@@ -98,5 +101,17 @@ impl InputReference {
         let date: NaiveDate = NaiveDate::parse_from_str(date_string, "%Y-%m-%d").unwrap();
         let formatted_date: String = date.format(format_string).to_string();
         formatted_date
+    }
+
+    pub fn render_title(&self, template_component: &StyleTemplateTitle) -> String {
+        let title: &str = match template_component.title {
+            Titles::Title => self.title.as_ref().unwrap(),
+            Titles::ContainerTitle => todo!(),
+        };
+        title.to_string()
+    }
+
+    pub fn render_list(&self, _template_component: &StyleTemplateList) -> String {
+        "".to_string() // TODO
     }
 }
