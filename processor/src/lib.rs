@@ -115,7 +115,7 @@ pub struct ProcReference {
 }
 
 impl Processor {
-    fn get_references(&self) -> Vec<InputReference> {
+    pub fn get_references(&self) -> Vec<InputReference> {
         let mut references = Vec::new();
         for (key, value) in &self.bibliography {
             let mut reference = value.clone();
@@ -196,7 +196,7 @@ impl Processor {
         let refs = self.get_references();
         let sorted_refs = self.sort_references(refs);
         let grouped_refs = self.group_references(sorted_refs);
-
+        // REVIEW would prefer to avoid using mutable varibles here
         let mut prochs = HashMap::new();
         for (key, group) in grouped_refs {
             let group_len = group.len();
