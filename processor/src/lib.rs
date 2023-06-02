@@ -21,9 +21,10 @@ The basic design is the same as the csl-next typescript implementation:
 
 The processor takes a style, a bibliography, and a locale, and renders the output.
 
-The primary target is a JSON AST, represented by the ProcTemplate struct.
+The primary target is a JSON AST, represented by the ProcTemplateComponent struct.
  */
 
+/// Load and parse a YAML or JSON style file.
 pub fn load_style_from_file(style_path: &str) -> Style {
     let contents = fs::read_to_string(style_path).expect("Failed to read style file");
     if style_path.ends_with(".json") {
@@ -35,6 +36,7 @@ pub fn load_style_from_file(style_path: &str) -> Style {
     }
 }
 
+/// Load and parse a YAML or JSON bibliography file.
 pub fn load_bibliography_from_file(bib_path: &str) -> Bibliography {
     let contents = fs::read_to_string(bib_path).expect("Failed to read bibliography file");
     if bib_path.ends_with(".json") {
@@ -49,27 +51,35 @@ pub fn load_bibliography_from_file(bib_path: &str) -> Bibliography {
 /// The processor struct, which takes a style, a bibliography, and a locale, and renders the output.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Processor {
+    /// The input style.
     style: Style,
+    /// The input bibliography.
     bibliography: Bibliography,
+    /// The output locale.
     locale: String,
 }
 
 /// The intermediate representation of a StyleTemplateComponent, which is used to render the output.
-/// This struct will have two fields: a StyleComponent and a ProcHints.
-/// The ProcHints field will be used to store information about the reference that is used to render the output.
+/// This struct will have two fields: a StyleComponent and a String.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ProcTemplateComponent {
-    template_component: StyleTemplateComponent,
-    proc_hints: Option<ProcHints>,
+    /// The original input style template component, which provides rendering instructions.
+    pub template_component: StyleTemplateComponent,
+    /// The string to render.
+    pub value: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub struct ProcHints {
+    /// Whether or not the reference needs to be disambiguated.
     pub disamb_condition: bool,
+    /// The index of the reference in the group, starting at 1.
     pub group_index: usize,
+    /// The number of references in the group.
     pub group_length: usize,
+    /// The key of the group.
     pub group_key: String,
 }
 
@@ -100,22 +110,8 @@ impl Default for ProcHints {
     }
 }
 
-// note: not sure if this is still needed
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub struct ProcTemplate {
-    pub template_component: StyleTemplateComponent,
-    pub proc_hints: Option<ProcHints>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub struct ProcReference {
-    pub data: InputReference,
-    pub proc_hints: ProcHints,
-}
-
 impl Processor {
+    /// Get references from the bibliography.
     pub fn get_references(&self) -> Vec<InputReference> {
         let mut references = Vec::new();
         for (key, value) in &self.bibliography {
@@ -126,10 +122,12 @@ impl Processor {
         references
     }
 
+    /// Get a reference from the bibliography by id/citekey.
     fn _get_reference(&self, id: &str) -> Option<InputReference> {
         self.bibliography.get(id).cloned()
     }
 
+    /// Sort the references according to instructions in the style.
     pub fn sort_references(&self, references: Vec<InputReference>) -> Vec<InputReference> {
         let mut references = references;
         let sort_config: &[StyleSorting] = self.style.options.get_sort_config();
@@ -197,6 +195,7 @@ impl Processor {
     // REVIEW strikes me that some of these methods might better be implemented as iterators
     // and also make them asychronous so that they can be run in parallel
     // For a GUI context, that may help make an already fast implementation even faster?
+    /// Process the references and return a HashMap of ProcHints.
     pub fn get_proc_hints(&self) -> HashMap<String, ProcHints> {
         let refs = self.get_references();
         let sorted_refs = self.sort_references(refs);
@@ -219,6 +218,7 @@ impl Processor {
         prochs
     }
 
+    /// Return a string to use for grouping for a given reference, using instructions in the style.
     fn make_group_key(&self, reference: &InputReference) -> String {
         let group_key_config: &[StyleSortGroupKey] = self.style.options.get_group_key_config();
         let group_key = group_key_config
@@ -234,6 +234,7 @@ impl Processor {
         group_key
     }
 
+    /// Return a string for a given key for a given reference.
     fn string_for_key(&self, reference: &InputReference, key: &str) -> String {
         match key {
             "author" => reference.author.as_ref().unwrap().join(" "),
@@ -244,6 +245,7 @@ impl Processor {
     }
 
     // REVIEW not fond of using mutable variables here, but can't figure out Itertools:group_by
+    /// Group references according to instructions in the style.
     pub fn group_references(
         &self,
         references: Vec<InputReference>,
