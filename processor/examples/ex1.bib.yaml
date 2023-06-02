@@ -18,7 +18,7 @@ doe2:
   type: book
   title: Title 1
   author: ["Doe, Jane"]
-  issued: '2023'
+  issued: '2020'
 doe3:
   type: article
   title: Title 0

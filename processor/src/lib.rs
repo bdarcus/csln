@@ -67,19 +67,35 @@ pub struct ProcTemplateComponent {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub struct ProcHints {
-    disamb_condition: bool,
-    group_index: u8,
-    group_length: usize,
-    group_key: String,
+    pub disamb_condition: bool,
+    pub group_index: usize,
+    pub group_length: usize,
+    pub group_key: String,
+}
+
+impl ProcHints {
+    pub fn new(
+        disamb_condition: bool,
+        group_index: usize,
+        group_length: usize,
+        group_key: String,
+    ) -> Self {
+        ProcHints {
+            disamb_condition,
+            group_index,
+            group_length,
+            group_key,
+        }
+    }
 }
 
 impl Default for ProcHints {
     fn default() -> Self {
         ProcHints {
-            disamb_condition: false, // TODO need to dynamically set this
-            group_index: 1,
-            group_length: 1,
-            group_key: "".to_string(), // TODO fix this
+            disamb_condition: false,
+            group_index: 0,
+            group_length: 0,
+            group_key: "".to_string(),
         }
     }
 }
@@ -99,92 +115,16 @@ pub struct ProcReference {
 }
 
 impl Processor {
-    pub fn get_all_proc_references(&self) -> Vec<ProcReference> {
-        let prefs = self
-            .bibliography
-            .values()
-            .cloned()
-            .map(|input_reference| ProcReference {
-                data: input_reference,
-                proc_hints: ProcHints {
-                    disamb_condition: false,
-                    group_index: 0,
-                    group_length: 0,
-                    group_key: "".to_string(),
-                },
-            })
-            .collect();
-
-        let sorted_prefs: Vec<ProcReference> = self.sort_proc_references(prefs);
-        let grouped_prefs: HashMap<String, Vec<ProcReference>> =
-            self.group_proc_references(sorted_prefs);
-        let mut proc_references: Vec<ProcReference> = Vec::new();
-        grouped_prefs.iter().for_each(|(group_key, group)| {
-            let group_len = group.len();
-            group.iter().enumerate().for_each(|(group_index, proc_reference)| {
-                let phints = ProcHints {
-                    disamb_condition: group_len > 1,
-                    group_index: (group_index + 1) as u8,
-                    group_length: group_len,
-                    group_key: group_key.to_string(),
-                };
-                let proc_reference = ProcReference {
-                    data: proc_reference.data.clone(),
-                    proc_hints: phints,
-                };
-                proc_references.push(proc_reference);
-            });
-        });
-        proc_references
+    fn get_references(&self) -> Vec<InputReference> {
+        self.bibliography.values().cloned().collect()
     }
 
-    pub fn get_proc_references(&self) -> Vec<ProcReference> {
-        let all_proc_references = self.get_all_proc_references();
-        // additional processing goes here
-        all_proc_references
+    fn _get_reference(&self, id: &str) -> Option<InputReference> {
+        self.bibliography.get(id).cloned()
     }
 
-    fn make_group_key(&self, proc_reference: &ProcReference) -> String {
-        let group_key_config: &[StyleSortGroupKey] = self.style.options.get_group_key_config();
-        let group_key = group_key_config
-            .iter()
-            .map(|key| match key {
-                StyleSortGroupKey::Author => "author",
-                StyleSortGroupKey::Year => "year",
-                StyleSortGroupKey::Title => "title",
-            })
-            .map(|key| self.string_for_key(proc_reference, key))
-            .collect::<Vec<String>>()
-            .join(":");
-        group_key
-    }
-
-    fn string_for_key(&self, proc_reference: &ProcReference, key: &str) -> String {
-        match key {
-            "author" => proc_reference.data.author.as_ref().unwrap().join(" "),
-            "year" => proc_reference.data.issued.as_ref().unwrap().to_string(),
-            "title" => proc_reference.data.title.as_ref().unwrap().to_string(),
-            _ => panic!("Invalid key"),
-        }
-    }
-
-    // REVIEW not fond of using mutable variables here, but can't figure out Itertools:group_by
-    pub fn group_proc_references(
-        &self,
-        proc_references: Vec<ProcReference>,
-    ) -> HashMap<String, Vec<ProcReference>> {
-        let mut proc_references = proc_references;
-        let mut group_map: HashMap<String, Vec<ProcReference>> = HashMap::new();
-        for proc_reference in proc_references.iter_mut() {
-            let group_key = self.make_group_key(proc_reference);
-            let group = group_map.entry(group_key).or_insert(Vec::new());
-            group.push(proc_reference.clone());
-        }
-        group_map
-    }
-
-    pub fn sort_proc_references(&self, proc_references: Vec<ProcReference>) -> Vec<ProcReference> {
-        let mut proc_references = proc_references;
+    pub fn sort_references(&self, references: Vec<InputReference>) -> Vec<InputReference> {
+        let mut references = references;
         let sort_config: &[StyleSorting] = self.style.options.get_sort_config();
         for sort in sort_config {
             let key = match sort.key {
@@ -198,9 +138,9 @@ impl Processor {
             };
             match key {
                 "author" => {
-                    proc_references.sort_by(|a, b| {
-                        let a_author = a.data.author.as_ref().unwrap().join(" ").to_lowercase();
-                        let b_author = b.data.author.as_ref().unwrap().join(" ").to_lowercase();
+                    references.sort_by(|a, b| {
+                        let a_author = a.author.as_ref().unwrap().join(" ").to_lowercase();
+                        let b_author = b.author.as_ref().unwrap().join(" ").to_lowercase();
                         if order == "Ascending" {
                             a_author.cmp(&b_author)
                         } else {
@@ -209,9 +149,9 @@ impl Processor {
                     });
                 }
                 "year" => {
-                    proc_references.sort_by(|a, b| {
-                        let a_year = a.data.issued.as_ref().unwrap().parse::<i32>().unwrap();
-                        let b_year = b.data.issued.as_ref().unwrap().parse::<i32>().unwrap();
+                    references.sort_by(|a, b| {
+                        let a_year = a.issued.as_ref().unwrap().parse::<i32>().unwrap();
+                        let b_year = b.issued.as_ref().unwrap().parse::<i32>().unwrap();
                         if order == "Ascending" {
                             a_year.cmp(&b_year)
                         } else {
@@ -220,9 +160,9 @@ impl Processor {
                     });
                 }
                 "title" => {
-                    proc_references.sort_by(|a, b| {
-                        let a_title = a.data.title.as_ref().unwrap().to_lowercase();
-                        let b_title = b.data.title.as_ref().unwrap().to_lowercase();
+                    references.sort_by(|a, b| {
+                        let a_title = a.title.as_ref().unwrap().to_lowercase();
+                        let b_title = b.title.as_ref().unwrap().to_lowercase();
                         if order == "Ascending" {
                             a_title.cmp(&b_title)
                         } else {
@@ -231,9 +171,9 @@ impl Processor {
                     });
                 }
                 _ => {
-                    proc_references.sort_by(|a, b| {
-                        let a_author = a.data.author.as_ref().unwrap().join(" ").to_lowercase();
-                        let b_author = b.data.author.as_ref().unwrap().join(" ").to_lowercase();
+                    references.sort_by(|a, b| {
+                        let a_author = a.author.as_ref().unwrap().join(" ").to_lowercase();
+                        let b_author = b.author.as_ref().unwrap().join(" ").to_lowercase();
                         if order == "Ascending" {
                             a_author.cmp(&b_author)
                         } else {
@@ -243,7 +183,70 @@ impl Processor {
                 }
             }
         }
-        proc_references
+        references
+    }
+
+    pub fn get_proc_references(&self) -> Vec<ProcReference> {
+        let refs = self.get_references();
+        let sorted_refs = self.sort_references(refs);
+        let grouped_refs = self.group_references(sorted_refs);
+
+        let mut proc_refs = Vec::new();
+        for (key, group) in grouped_refs {
+            let group_len = group.len();
+            for (index, reference) in group.into_iter().enumerate() {
+                let proc_ref = ProcReference {
+                    data: reference.clone(),
+                    proc_hints: ProcHints {
+                        disamb_condition: false,
+                        group_index: index,
+                        group_length: group_len,
+                        group_key: key.clone(),
+                    },
+                };
+                proc_refs.push(proc_ref);
+            }
+        }
+        proc_refs
+    }
+
+    fn make_group_key(&self, reference: &InputReference) -> String {
+        let group_key_config: &[StyleSortGroupKey] = self.style.options.get_group_key_config();
+        let group_key = group_key_config
+            .iter()
+            .map(|key| match key {
+                StyleSortGroupKey::Author => "author",
+                StyleSortGroupKey::Year => "year",
+                StyleSortGroupKey::Title => "title",
+            })
+            .map(|key| self.string_for_key(reference, key))
+            .collect::<Vec<String>>()
+            .join(":");
+        group_key
+    }
+
+    fn string_for_key(&self, reference: &InputReference, key: &str) -> String {
+        match key {
+            "author" => reference.author.as_ref().unwrap().join(" "),
+            "year" => reference.issued.as_ref().unwrap().to_string(),
+            "title" => reference.title.as_ref().unwrap().to_string(),
+            _ => panic!("Invalid key"),
+        }
+    }
+
+    // REVIEW not fond of using mutable variables here, but can't figure out Itertools:group_by
+    pub fn group_references(
+        &self,
+        references: Vec<InputReference>,
+    ) -> HashMap<String, Vec<InputReference>> {
+        let mut references = references;
+        let mut group_map: HashMap<String, Vec<InputReference>> = HashMap::new();
+        for reference in references.iter_mut() {
+            let group_key = self.make_group_key(reference);
+            let group = group_map.entry(group_key).or_insert(Vec::new());
+            group.push(reference.clone());
+        }
+        group_map
     }
 
     pub fn new(style: Style, bibliography: Bibliography, locale: String) -> Processor {
