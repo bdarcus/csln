@@ -18,5 +18,5 @@ fn main() {
     let bibliography: Bibliography = load_bibliography_from_file(bibliography_path);
     let processor: Processor = Processor::new(style, bibliography, bibliography_path.to_string());
     let prefs = processor.get_proc_references();
-    println!("{:?}", prefs);
+    println!("{}", serde_json::to_string_pretty(&prefs).unwrap());
 }
