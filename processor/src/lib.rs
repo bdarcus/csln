@@ -199,7 +199,7 @@ impl Processor {
                     data: reference.clone(),
                     proc_hints: ProcHints {
                         disamb_condition: false,
-                        group_index: index,
+                        group_index: index + 1,
                         group_length: group_len,
                         group_key: key.clone(),
                     },

@@ -20,9 +20,6 @@ fn main() {
     let mut bib_file = File::create("schemas/bibliography.json").unwrap();
     style_file.write_all(style_json_output.as_bytes()).unwrap();
     bib_file.write_all(bib_json_output.as_bytes()).unwrap();
-    println!("{}", "Wrote style schema to schemas/style.json");
-    println!(
-        "{}",
-        "Wrote bibliography schema to schemas/bibliography.json"
-    );
+    println!("Wrote style schema to schemas/style.json");
+    println!("Wrote bibliography schema to schemas/bibliography.json");
 }
