@@ -1,12 +1,10 @@
-use schemars::{JsonSchema};
 use chrono::NaiveDate;
-use serde::{Serialize, Deserialize};
-use style::template::{
-    Contributors, DateForm, Dates, StyleTemplateContributor,
-};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use style::template::{Contributors, DateForm, Dates, StyleTemplateContributor};
 //use edtf::DateComplete;
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct InputReference {
     pub id: Option<String>,
     pub title: Option<String>,
@@ -21,22 +19,7 @@ pub struct InputReference {
 }
 
 impl InputReference {
-    pub fn new() -> InputReference {
-        InputReference {
-            id: None,
-            title: None,
-            author: None,
-            editor: None,
-            translator: None,
-            issued: None,
-            publisher: None,
-            url: None,
-            accessed: None,
-            note: None,
-        }
-    }
-
-    fn format_names(names: Vec<String>) -> String {
+    pub fn format_names(names: Vec<String>) -> String {
         let mut name_string = String::new();
         if names.len() == 1 {
             name_string = names[0].to_string();
@@ -52,7 +35,10 @@ impl InputReference {
         name_string
     }
 
-    pub fn format_contributors(&self, template_component: StyleTemplateContributor) -> String {
+    pub fn format_contributors(
+        &self,
+        template_component: StyleTemplateContributor,
+    ) -> String {
         match template_component.contributor {
             Contributors::Author => {
                 let authors = self
@@ -94,7 +80,6 @@ impl InputReference {
             Contributors::Publisher => todo!(),
         }
     }
-
     pub fn format_date(&self, date: Dates, form: DateForm) -> String {
         let date_string: &str = match date {
             Dates::Issued => self.issued.as_ref().unwrap(),
@@ -115,4 +100,3 @@ impl InputReference {
         formatted_date
     }
 }
-
