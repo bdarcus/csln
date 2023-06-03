@@ -136,7 +136,7 @@ impl Processor {
                     })
                     .collect()
             })
-            .unwrap_or_else(|| vec![])
+            .unwrap_or_else(std::vec::Vec::new)
     }
 
     fn render_template_component(
