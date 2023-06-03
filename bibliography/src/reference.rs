@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use edtf::level_1::Edtf;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use style::template::{
@@ -83,10 +83,25 @@ impl InputReference {
             Contributors::Publisher => todo!(),
         }
     }
+
+    pub fn render_edtf_date(&self, date_string: &str, _format_string: &str) -> String {
+        let edtf_date: Edtf = Edtf::parse(date_string).unwrap();
+        let formatted_date: String = match edtf_date {
+            // TODO need localized date rendering, using format_string
+            Edtf::Date(date) => date.to_string(),
+            Edtf::DateTime { .. } => todo!(),
+            Edtf::Interval { .. } => todo!(),
+            Edtf::IntervalFrom { .. } => todo!(),
+            Edtf::IntervalTo { .. } => todo!(),
+            Edtf::YYear { .. } => todo!(),
+        };
+        formatted_date
+    }
+
     pub fn render_date(&self, template_component: &StyleTemplateDate) -> String {
         let date_string: &str = match template_component.date {
             Dates::Issued => self.issued.as_ref().unwrap(),
-            Dates::Accessed => todo!(),
+            Dates::Accessed => self.accessed.as_ref().unwrap(),
             Dates::OriginalPublished => todo!(),
         };
 
@@ -97,10 +112,7 @@ impl InputReference {
             DateForm::MonthDay => "%m-%d",
         };
 
-        // use EDTF instead?
-        let date: NaiveDate = NaiveDate::parse_from_str(date_string, "%Y-%m-%d").unwrap();
-        let formatted_date: String = date.format(format_string).to_string();
-        formatted_date
+        self.render_edtf_date(date_string, format_string)
     }
 
     pub fn render_title(&self, template_component: &StyleTemplateTitle) -> String {
