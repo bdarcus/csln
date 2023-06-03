@@ -17,6 +17,6 @@ fn main() {
     let bibliography_path: &String = &args[2];
     let bibliography: Bibliography = load_bibliography_from_file(bibliography_path);
     let processor: Processor = Processor::new(style, bibliography, bibliography_path.to_string());
-    let phints = processor.get_proc_hints();
-    println!("{}", serde_json::to_string_pretty(&phints).unwrap());
+    let rendered_refs = processor.render_references();
+    println!("{}", serde_json::to_string_pretty(&rendered_refs).unwrap());
 }
