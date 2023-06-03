@@ -60,6 +60,9 @@ pub struct Processor {
     locale: String,
 }
 
+/// The intermediate representation of a StyleTemplate, which is used to render the output.
+pub type ProcTemplate = Vec<ProcTemplateComponent>;
+
 /// The intermediate representation of a StyleTemplateComponent, which is used to render the output.
 /// This struct will have two fields: a StyleComponent and a String.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
@@ -114,11 +117,11 @@ impl Default for ProcHints {
 impl Processor {
 
     /// Render references to AST.
-    pub fn render_references(&self) -> Vec<ProcTemplateComponent> {
+    pub fn render_references(&self) -> Vec<ProcTemplate> {
         let sorted_references = self.sort_references(self.get_references());
         sorted_references
             .iter()
-            .flat_map(|reference| {
+            .map(|reference| {
                 self.render_reference(reference)
             })
             .collect()
