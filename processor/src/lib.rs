@@ -1,18 +1,19 @@
+use bibliography::InputBibliography as Bibliography;
+use bibliography::InputReference;
+use edtf::level_1::Edtf;
+use rayon::prelude::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use rayon::prelude::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 use std::option::Option;
 use std::sync::{Arc, Mutex};
-
-use bibliography::InputBibliography as Bibliography;
-use bibliography::InputReference;
 use style::options::{SortOrder, StyleSortGroupKey, StyleSorting};
 #[allow(unused_imports)] // for now
 use style::template::{
     Contributors, DateForm, Dates, StyleTemplateComponent, StyleTemplateContributor,
+    StyleTemplateDate, StyleTemplateList, StyleTemplateTitle, Titles,
 };
 use style::Style;
 
@@ -116,16 +117,171 @@ impl Default for ProcHints {
     }
 }
 
-impl Processor {
+pub trait Render<T> {
+    fn render(&self, reference: &InputReference, component: &T) -> String;
+}
 
+// WTD???
+
+pub trait RenderComponent {
+    fn render(
+        &self,
+        reference: &InputReference,
+        // context: &RenderContext<T>,
+    ) -> String;
+}
+
+pub trait RenderDate {
+    fn render(
+        &self,
+        reference: &InputReference,
+        // context: &RenderContext<T>,
+    ) -> String;
+
+    fn render_date(&self, date_string: &str, format_string: &str) -> String;
+}
+
+pub trait RenderTitle {
+    fn render(
+        &self,
+        reference: &InputReference,
+        // context: &RenderContext<T>,
+    ) -> String;
+}
+
+pub trait RenderContributor {
+    fn render(
+        &self,
+        reference: &InputReference,
+    ) -> String;
+}
+
+impl RenderComponent for StyleTemplateComponent {
+    fn render(
+        &self,
+        reference: &InputReference,
+        // context: &RenderContext<T>,
+    ) -> String {
+        match self {
+            StyleTemplateComponent::Title(title) => title.render(reference),
+            StyleTemplateComponent::Contributor(contributor) => {
+                contributor.render(reference)
+            }
+            StyleTemplateComponent::Date(date) => date.render(reference),
+            StyleTemplateComponent::List(_list) => todo!(),
+        }
+    }
+}
+
+impl<T: RenderContributor + ?Sized> dyn Render<T> {
+    pub fn render(names: Vec<String>) -> String {
+        names.join(", ")
+    }
+}
+
+impl RenderTitle for StyleTemplateTitle {
+    fn render(
+        &self,
+        reference: &InputReference,
+    ) -> String {
+        let title: &str = match &self.title {
+            Titles::Title => reference.title.as_ref().unwrap(),
+            Titles::ContainerTitle => todo!(),
+        };
+        title.to_string()
+    }
+}
+
+impl RenderContributor for StyleTemplateContributor {
+    fn render(
+        &self,
+        reference: &InputReference,
+    ) -> String {
+        match &self.contributor {
+            Contributors::Author => {
+                let authors = reference
+                    .author
+                    .as_ref()
+                    .unwrap_or(&Vec::new())
+                    .par_iter()
+                    .map(|name| name.to_string())
+                    .collect::<Vec<String>>();
+                authors.join(", ")
+            }
+            Contributors::Editor => {
+                let editors = reference
+                    .editor
+                    .as_ref()
+                    .unwrap()
+                    .par_iter()
+                    .map(|editor| editor.to_string())
+                    .collect::<Vec<String>>();
+                editors.join(", ")
+            }
+            Contributors::Translator => {
+                let translators = reference
+                    .translator
+                    .as_ref()
+                    .unwrap()
+                    .par_iter()
+                    .map(|translator| translator.to_string())
+                    .collect::<Vec<String>>();
+                translators.join(", ")
+            }
+            Contributors::Director => todo!(),
+            Contributors::Publisher => todo!(),
+            Contributors::Recipient => todo!(),
+            Contributors::Interviewer => todo!(),
+            Contributors::Interviewee => todo!(),
+            Contributors::Composer => todo!(),
+            Contributors::Inventor => todo!(),
+            Contributors::Counsel => todo!(),
+        }
+    }
+}
+
+impl RenderDate for StyleTemplateDate {
+    fn render(
+        &self,
+        reference: &InputReference,
+    ) -> String {
+        let date_string: &str = match self.date {
+            Dates::Issued => reference.issued.as_ref().unwrap(),
+            Dates::Accessed => reference.accessed.as_ref().unwrap(),
+            Dates::OriginalPublished => todo!(),
+        };
+
+        let format_string: &str = match self.form {
+            DateForm::Year => "%Y",
+            DateForm::YearMonth => "%Y-%m",
+            DateForm::Full => "%Y-%m-%d",
+            DateForm::MonthDay => "%m-%d",
+        };
+
+        self.render_date(date_string, format_string)
+    }
+    fn render_date(&self, date_string: &str, _format_string: &str) -> String {
+        let edtf_date: Edtf = Edtf::parse(date_string).unwrap();
+        let formatted_date: String = match edtf_date {
+            // TODO need localized date rendering, using format_string
+            Edtf::Date(date) => date.to_string(),
+            Edtf::DateTime { .. } => todo!(),
+            Edtf::Interval { .. } => todo!(),
+            Edtf::IntervalFrom { .. } => todo!(),
+            Edtf::IntervalTo { .. } => todo!(),
+            Edtf::YYear { .. } => todo!(),
+        };
+        formatted_date
+    }
+}
+
+impl Processor {
     /// Render references to AST.
     pub fn render_references(&self) -> Vec<ProcTemplate> {
         let sorted_references = self.sort_references(self.get_references());
         sorted_references
             .par_iter()
-            .map(|reference| {
-                self.render_reference(reference)
-            })
+            .map(|reference| self.render_reference(reference))
             .collect()
     }
 
@@ -134,11 +290,10 @@ impl Processor {
         let bibliography_style = self.style.bibliography.clone();
         bibliography_style
             .map(|style| {
-                style.template
+                style
+                    .template
                     .par_iter()
-                    .map(|component| {
-                        self.render_template_component(component, reference)
-                    })
+                    .map(|component| self.render_template_component(component, reference))
                     .collect()
             })
             .unwrap_or_else(std::vec::Vec::new)
@@ -149,23 +304,9 @@ impl Processor {
         component: &StyleTemplateComponent,
         reference: &InputReference,
     ) -> ProcTemplateComponent {
-        let rendered = match component {
-            StyleTemplateComponent::Date(date) => {
-                reference.render_date(date)
-            }
-            StyleTemplateComponent::Contributor(contributor) => {
-                reference.render_contributors(contributor)
-            }
-            StyleTemplateComponent::Title(title) => {
-                reference.render_title(title)
-            }
-            StyleTemplateComponent::List(list) => {
-                reference.render_list(list)
-            }
-        };
         ProcTemplateComponent {
             template_component: component.clone(),
-            value: rendered,
+            value: component.render(reference),
         }
     }
 
