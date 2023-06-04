@@ -284,6 +284,7 @@ impl RenderDate for StyleTemplateDate {
 
 impl Processor {
     /// Render references to AST.
+    #[inline]
     pub fn render_references(&self) -> Vec<ProcTemplate> {
         let sorted_references = self.sort_references(self.get_references());
         sorted_references
@@ -345,7 +346,7 @@ impl Processor {
     ) -> Vec<InputReference> {
         let mut references = references;
         let sort_config: &[StyleSorting] = self.style.options.get_sort_config();
-        for sort in sort_config {
+        sort_config.into_iter().for_each(|sort| {
             let key = match sort.key {
                 StyleSortGroupKey::Author => "author",
                 StyleSortGroupKey::Year => "year",
@@ -406,7 +407,7 @@ impl Processor {
                     });
                 }
             }
-        }
+        });
         references
     }
 
@@ -466,6 +467,7 @@ impl Processor {
     }
 
     /// Group references according to instructions in the style.
+    #[inline]
     pub fn group_references(
         &self,
         references: Vec<InputReference>,
