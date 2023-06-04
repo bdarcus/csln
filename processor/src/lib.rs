@@ -251,15 +251,14 @@ impl RenderDate for StyleTemplateDate {
         };
 
         fn int_to_letter(n: u32) -> String {
-            let c = (n + 97) as u32;
-            let letter = match char::from_u32(c) {
+            let c = n + 97;
+            match char::from_u32(c) {
                 Some(ch) => ch.to_string(),
                 None => "".to_string(),
-            };
-            letter
+            }
         }
 
-        let suffix = if proc_hints.group_length > 1 {
+        let suffix = if proc_hints.disamb_condition {
             int_to_letter((proc_hints.group_index % 26) as u32)
         } else {
             "".to_string()
@@ -422,8 +421,10 @@ impl Processor {
                 let group_len = group.len();
                 group.iter().enumerate().map(
                     move |(index, reference)| -> (String, ProcHints) {
+                        // TODO will need to generalize.
+                        let disambiguate = group_len > 1;
                         let proc_hint = ProcHints {
-                            disamb_condition: false,
+                            disamb_condition: disambiguate,
                             group_index: index + 1,
                             group_length: group_len,
                             group_key: key.clone(),
