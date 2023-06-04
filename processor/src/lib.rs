@@ -9,7 +9,6 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 use std::option::Option;
-use std::sync::{Arc, Mutex};
 use style::options::{SortOrder, StyleSortGroupKey, StyleSorting};
 #[allow(unused_imports)] // for now
 use style::template::{
@@ -387,24 +386,22 @@ impl Processor {
         let refs = self.get_references();
         let sorted_refs = self.sort_references(refs);
         let grouped_refs = self.group_references(sorted_refs);
-        // REVIEW would prefer to avoid using mutable varibles here
-        let proc_hints = Arc::new(Mutex::new(HashMap::new()));
-        for (key, group) in grouped_refs {
-            let group_len = group.len();
-            // Run the processing in parallel.
-            group.into_par_iter().enumerate().for_each(|(index, reference)| {
-                let proc_hint = ProcHints {
-                    disamb_condition: false,
-                    group_index: index + 1,
-                    group_length: group_len,
-                    group_key: key.clone(),
-                };
-                let id = reference.id.as_ref().unwrap().clone();
-                let mut proc_hints = proc_hints.lock().unwrap();
-                proc_hints.insert(id, proc_hint);
-            });
-        }
-        Arc::try_unwrap(proc_hints).unwrap().into_inner().unwrap()
+        let proc_hints = grouped_refs
+            .iter()
+            .flat_map(|(key, group)| {
+                let group_len = group.len();
+                group.iter().enumerate().map(move |(index, reference)| {
+                    let proc_hint = ProcHints {
+                        disamb_condition: false,
+                        group_index: index + 1,
+                        group_length: group_len,
+                        group_key: key.clone(),
+                    };
+                    (reference.id.as_ref().unwrap().clone(), proc_hint)
+                })
+            })
+            .collect();
+        proc_hints
     }
 
     /// Return a string to use for grouping for a given reference, using instructions in the style.
