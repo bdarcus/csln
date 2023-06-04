@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 use std::option::Option;
+use std::sync::{Arc, Mutex};
 
 use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
@@ -121,7 +122,7 @@ impl Processor {
     pub fn render_references(&self) -> Vec<ProcTemplate> {
         let sorted_references = self.sort_references(self.get_references());
         sorted_references
-            .iter()
+            .par_iter()
             .map(|reference| {
                 self.render_reference(reference)
             })
@@ -134,7 +135,7 @@ impl Processor {
         bibliography_style
             .map(|style| {
                 style.template
-                    .iter()
+                    .par_iter()
                     .map(|component| {
                         self.render_template_component(component, reference)
                     })
@@ -266,21 +267,22 @@ impl Processor {
         let sorted_refs = self.sort_references(refs);
         let grouped_refs = self.group_references(sorted_refs);
         // REVIEW would prefer to avoid using mutable varibles here
-        let mut prochs = HashMap::new();
+        let proc_hints = Arc::new(Mutex::new(HashMap::new()));
         for (key, group) in grouped_refs {
             let group_len = group.len();
-            for (index, reference) in group.into_iter().enumerate() {
-                let proch = ProcHints {
+            group.into_par_iter().enumerate().for_each(|(index, reference)| {
+                let proc_hint = ProcHints {
                     disamb_condition: false,
                     group_index: index + 1,
                     group_length: group_len,
                     group_key: key.clone(),
                 };
                 let id = reference.id.as_ref().unwrap().clone();
-                prochs.insert(id, proch);
-            }
+                let mut proc_hints = proc_hints.lock().unwrap();
+                proc_hints.insert(id, proc_hint);
+            });
         }
-        prochs
+        Arc::try_unwrap(proc_hints).unwrap().into_inner().unwrap()
     }
 
     /// Return a string to use for grouping for a given reference, using instructions in the style.
@@ -288,7 +290,7 @@ impl Processor {
         let group_key_config: &[StyleSortGroupKey] =
             self.style.options.get_group_key_config();
         let group_key = group_key_config
-            .iter()
+            .par_iter()
             .map(|key| match key {
                 StyleSortGroupKey::Author => "author",
                 StyleSortGroupKey::Year => "year",
@@ -317,13 +319,15 @@ impl Processor {
         references: Vec<InputReference>,
     ) -> HashMap<String, Vec<InputReference>> {
         let mut references = references;
-        let mut group_map: HashMap<String, Vec<InputReference>> = HashMap::new();
-        for reference in references.iter_mut() {
+        let group_map: Arc<Mutex<HashMap<String, Vec<InputReference>>>> =
+            Arc::new(Mutex::new(HashMap::new()));
+        references.par_iter_mut().for_each(|reference| {
             let group_key = self.make_group_key(reference);
+            let mut group_map = group_map.lock().unwrap();
             let group = group_map.entry(group_key).or_insert(Vec::new());
             group.push(reference.clone());
-        }
-        group_map
+        });
+        Arc::try_unwrap(group_map).unwrap().into_inner().unwrap()
     }
 
     pub fn new(style: Style, bibliography: Bibliography, locale: String) -> Processor {
