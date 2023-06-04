@@ -69,8 +69,113 @@ smith3:
   title: Title 13
   author: ["Smith, John"]
   issued: '2025'
-
-
-
-
-
+miller3:
+  type: book
+  title: Title 14
+  author: ["Miller, Sarah"]
+  issued: '2026'
+miller4:
+  type: article
+  title: Title 15
+  author: ["Miller, Sarah"]
+  issued: '2026'
+jones3:
+  type: book
+  title: Title 16
+  author: ["Jones, David"]
+  issued: '2027'
+jones4:
+  type: article
+  title: Title 17
+  author: ["Jones, David"]
+  issued: '2027'
+brown2:
+  type: book
+  title: Title 18
+  author: ["Brown, Sarah"]
+  issued: '2028'
+brown3:
+  type: article
+  title: Title 19
+  author: ["Brown, Sarah"]
+  issued: '2028'
+lee3:
+  type: book
+  title: Title 20
+  author: ["Lee, David"]
+  issued: '2029'
+lee4:
+  type: article
+  title: Title 21
+  author: ["Lee, David"]
+  issued: '2029'
+doe4:
+  type: book
+  title: Title 22
+  author: ["Doe, John"]
+  issued: '2030'
+doe5:
+  type: article
+  title: Title 23
+  author: ["Doe, John"]
+  issued: '2030'
+smith4:
+  type: book
+  title: Title 24
+  author: ["Smith, Sarah"]
+  issued: '2031'
+smith5:
+  type: article
+  title: Title 25
+  author: ["Smith, Sarah"]
+  issued: '2031'
+miller5:
+  type: book
+  title: Title 26
+  author: ["Miller, John"]
+  issued: '2032'
+miller6:
+  type: article
+  title: Title 27
+  author: ["Miller, John"]
+  issued: '2032'
+jones5:
+  type: book
+  title: Title 28
+  author: ["Jones, Sarah"]
+  issued: '2033'
+jones6:
+  type: article
+  title: Title 29
+  author: ["Jones, Sarah"]
+  issued: '2033'
+brown4:
+  type: book
+  title: Title 30
+  author: ["Brown, David"]
+  issued: '2034'
+brown5:
+  type: article
+  title: Title 31
+  author: ["Brown, David"]
+  issued: '2034'
+lee5:
+  type: book
+  title: Title 32
+  author: ["Lee, John"]
+  issued: '2035'
+lee6:
+  type: article
+  title: Title 33
+  author: ["Lee, John"]
+  issued: '2035'
+doe6:
+  type: book
+  title: Title 34
+  author: ["Doe, Sarah"]
+  issued: '2036'
+doe7:
+  type: article
+  title: Title 35
+  author: ["Doe, Sarah"]
+  issued: '2036'
