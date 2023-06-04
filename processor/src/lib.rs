@@ -300,7 +300,14 @@ impl Processor {
 
     /// Get references from the bibliography.
     pub fn get_references(&self) -> Vec<InputReference> {
-        self.bibliography.values().cloned().collect()
+        self.bibliography
+            .iter()
+            .map(|(key, reference)| {
+                let mut input_reference = reference.clone();
+                input_reference.id = Some(key.clone());
+                input_reference
+            })
+            .collect()
     }
 
     /// Get a reference from the bibliography by id/citekey.
@@ -390,7 +397,7 @@ impl Processor {
             .iter()
             .flat_map(|(key, group)| {
                 let group_len = group.len();
-                group.iter().enumerate().map(move |(index, reference)| {
+                group.iter().enumerate().map(move |(index, reference)| -> (String, ProcHints) {
                     let proc_hint = ProcHints {
                         disamb_condition: false,
                         group_index: index + 1,
