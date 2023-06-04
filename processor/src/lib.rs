@@ -250,14 +250,12 @@ impl RenderDate for StyleTemplateDate {
             DateForm::MonthDay => "%m-%d",
         };
 
-        let int_to_letter = |n: usize| {
-            let letter = (n + 97) as u8;
-            String::from_utf8(vec![letter]).unwrap()
-        };
+        let int_to_letter: Vec<String> =
+            (0..26).map(|n| (n + 97) as u8).map(|c| c.to_string()).collect();
 
         // if proc_hints.group_length > 1, convert group_index to letter
         let suffix = if proc_hints.group_length > 1 {
-            int_to_letter(proc_hints.group_index)
+            int_to_letter[proc_hints.group_index % 26].clone()
         } else {
             "".to_string()
         };
