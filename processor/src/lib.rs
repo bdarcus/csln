@@ -184,6 +184,7 @@ impl Processor {
     }
 
     /// Sort the references according to instructions in the style.
+    #[inline]
     pub fn sort_references(
         &self,
         references: Vec<InputReference>,
