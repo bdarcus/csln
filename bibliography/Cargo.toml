@@ -23,11 +23,4 @@ serde_yaml = "0.9.21"
 edtf = { version = "0.2.0", features = ["chrono"] }
 chrono = { version = "0.4", features = ["unstable-locales"] }
 style = { path = "../style", package = "csln-style" }
-rayon = "1.7.0"
 
-[dev-dependencies]
-criterion = { version = "0.5.1", features = ["html_reports"] }
-
-[[bench]]
-name = "ref_benches"
-harness = false
