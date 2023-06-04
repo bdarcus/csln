@@ -2,6 +2,7 @@ use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
 use edtf::level_1::Edtf;
 use rayon::prelude::*;
+use itertools::Itertools;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -150,10 +151,7 @@ pub trait RenderTitle {
 }
 
 pub trait RenderContributor {
-    fn render(
-        &self,
-        reference: &InputReference,
-    ) -> String;
+    fn render(&self, reference: &InputReference) -> String;
 }
 
 impl RenderComponent for StyleTemplateComponent {
@@ -180,10 +178,7 @@ impl<T: RenderContributor + ?Sized> dyn Render<T> {
 }
 
 impl RenderTitle for StyleTemplateTitle {
-    fn render(
-        &self,
-        reference: &InputReference,
-    ) -> String {
+    fn render(&self, reference: &InputReference) -> String {
         let title: &str = match &self.title {
             Titles::Title => reference.title.as_ref().unwrap(),
             Titles::ContainerTitle => todo!(),
@@ -193,10 +188,7 @@ impl RenderTitle for StyleTemplateTitle {
 }
 
 impl RenderContributor for StyleTemplateContributor {
-    fn render(
-        &self,
-        reference: &InputReference,
-    ) -> String {
+    fn render(&self, reference: &InputReference) -> String {
         match &self.contributor {
             Contributors::Author => {
                 let authors = reference
@@ -241,10 +233,7 @@ impl RenderContributor for StyleTemplateContributor {
 }
 
 impl RenderDate for StyleTemplateDate {
-    fn render(
-        &self,
-        reference: &InputReference,
-    ) -> String {
+    fn render(&self, reference: &InputReference) -> String {
         let date_string: &str = match self.date {
             Dates::Issued => reference.issued.as_ref().unwrap(),
             Dates::Accessed => reference.accessed.as_ref().unwrap(),
@@ -312,17 +301,11 @@ impl Processor {
 
     /// Get references from the bibliography.
     pub fn get_references(&self) -> Vec<InputReference> {
-        let mut references = Vec::new();
-        for (key, value) in &self.bibliography {
-            let mut reference = value.clone();
-            reference.id = Some(key.clone());
-            references.push(reference);
-        }
-        references
+        self.bibliography.values().cloned().collect()
     }
 
     /// Get a reference from the bibliography by id/citekey.
-    fn _get_reference(&self, id: &str) -> Option<InputReference> {
+    pub fn get_reference(&self, id: &str) -> Option<InputReference> {
         self.bibliography.get(id).cloned()
     }
 
@@ -399,9 +382,6 @@ impl Processor {
         references
     }
 
-    // REVIEW strikes me that some of these methods might better be implemented as iterators
-    // and also make them asychronous so that they can be run in parallel
-    // For a GUI context, that may help make an already fast implementation even faster?
     /// Process the references and return a HashMap of ProcHints.
     pub fn get_proc_hints(&self) -> HashMap<String, ProcHints> {
         let refs = self.get_references();
@@ -411,6 +391,7 @@ impl Processor {
         let proc_hints = Arc::new(Mutex::new(HashMap::new()));
         for (key, group) in grouped_refs {
             let group_len = group.len();
+            // Run the processing in parallel.
             group.into_par_iter().enumerate().for_each(|(index, reference)| {
                 let proc_hint = ProcHints {
                     disamb_condition: false,
@@ -431,6 +412,7 @@ impl Processor {
         let group_key_config: &[StyleSortGroupKey] =
             self.style.options.get_group_key_config();
         let group_key = group_key_config
+            // This is likely unnecessary, but just in case.
             .par_iter()
             .map(|key| match key {
                 StyleSortGroupKey::Author => "author",
@@ -453,22 +435,17 @@ impl Processor {
         }
     }
 
-    // REVIEW not fond of using mutable variables here, but can't figure out Itertools:group_by
     /// Group references according to instructions in the style.
     pub fn group_references(
         &self,
         references: Vec<InputReference>,
     ) -> HashMap<String, Vec<InputReference>> {
-        let mut references = references;
-        let group_map: Arc<Mutex<HashMap<String, Vec<InputReference>>>> =
-            Arc::new(Mutex::new(HashMap::new()));
-        references.par_iter_mut().for_each(|reference| {
-            let group_key = self.make_group_key(reference);
-            let mut group_map = group_map.lock().unwrap();
-            let group = group_map.entry(group_key).or_insert(Vec::new());
-            group.push(reference.clone());
-        });
-        Arc::try_unwrap(group_map).unwrap().into_inner().unwrap()
+        references
+            .into_iter()
+            .group_by(|reference| self.make_group_key(reference))
+            .into_iter()
+            .map(|(key, group)| (key, group.collect()))
+            .collect()
     }
 
     pub fn new(style: Style, bibliography: Bibliography, locale: String) -> Processor {
