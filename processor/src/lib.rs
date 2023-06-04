@@ -1,8 +1,8 @@
 use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
 use edtf::level_1::Edtf;
-use rayon::prelude::*;
 use itertools::Itertools;
+use rayon::prelude::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -127,6 +127,7 @@ pub trait RenderComponent {
     fn render(
         &self,
         reference: &InputReference,
+        proc_hints: &ProcHints,
         // context: &RenderContext<T>,
     ) -> String;
 }
@@ -135,6 +136,7 @@ pub trait RenderDate {
     fn render(
         &self,
         reference: &InputReference,
+        proc_hints: &ProcHints,
         // context: &RenderContext<T>,
     ) -> String;
 
@@ -145,26 +147,28 @@ pub trait RenderTitle {
     fn render(
         &self,
         reference: &InputReference,
+        proc_hints: &ProcHints,
         // context: &RenderContext<T>,
     ) -> String;
 }
 
 pub trait RenderContributor {
-    fn render(&self, reference: &InputReference) -> String;
+    fn render(&self, reference: &InputReference, proc_hints: &ProcHints) -> String;
 }
 
 impl RenderComponent for StyleTemplateComponent {
     fn render(
         &self,
         reference: &InputReference,
+        proc_hints: &ProcHints,
         // context: &RenderContext<T>,
     ) -> String {
         match self {
-            StyleTemplateComponent::Title(title) => title.render(reference),
+            StyleTemplateComponent::Title(title) => title.render(reference, proc_hints),
             StyleTemplateComponent::Contributor(contributor) => {
-                contributor.render(reference)
+                contributor.render(reference, proc_hints)
             }
-            StyleTemplateComponent::Date(date) => date.render(reference),
+            StyleTemplateComponent::Date(date) => date.render(reference, proc_hints),
             StyleTemplateComponent::List(_list) => todo!(),
         }
     }
@@ -177,7 +181,7 @@ impl<T: RenderContributor + ?Sized> dyn Render<T> {
 }
 
 impl RenderTitle for StyleTemplateTitle {
-    fn render(&self, reference: &InputReference) -> String {
+    fn render(&self, reference: &InputReference, _proc_hints: &ProcHints) -> String {
         let title: &str = match &self.title {
             Titles::Title => reference.title.as_ref().unwrap(),
             Titles::ContainerTitle => todo!(),
@@ -187,7 +191,7 @@ impl RenderTitle for StyleTemplateTitle {
 }
 
 impl RenderContributor for StyleTemplateContributor {
-    fn render(&self, reference: &InputReference) -> String {
+    fn render(&self, reference: &InputReference, _proc_hints: &ProcHints) -> String {
         match &self.contributor {
             Contributors::Author => {
                 let authors = reference
@@ -232,7 +236,7 @@ impl RenderContributor for StyleTemplateContributor {
 }
 
 impl RenderDate for StyleTemplateDate {
-    fn render(&self, reference: &InputReference) -> String {
+    fn render(&self, reference: &InputReference, proc_hints: &ProcHints) -> String {
         let date_string: &str = match self.date {
             Dates::Issued => reference.issued.as_ref().unwrap(),
             Dates::Accessed => reference.accessed.as_ref().unwrap(),
@@ -246,7 +250,19 @@ impl RenderDate for StyleTemplateDate {
             DateForm::MonthDay => "%m-%d",
         };
 
-        self.render_date(date_string, format_string)
+        let int_to_letter = |n: usize| {
+            let letter = (n + 97) as u8;
+            String::from_utf8(vec![letter]).unwrap()
+        };
+
+        // if proc_hints.group_length > 1, convert group_index to letter
+        let suffix = if proc_hints.group_length > 1 {
+            int_to_letter(proc_hints.group_index)
+        } else {
+            "".to_string()
+        };
+
+        self.render_date(date_string, format_string) + &suffix
     }
     fn render_date(&self, date_string: &str, _format_string: &str) -> String {
         let edtf_date: Edtf = Edtf::parse(date_string).unwrap();
@@ -259,6 +275,7 @@ impl RenderDate for StyleTemplateDate {
             Edtf::IntervalTo { .. } => todo!(),
             Edtf::YYear { .. } => todo!(),
         };
+
         formatted_date
     }
 }
@@ -292,9 +309,12 @@ impl Processor {
         component: &StyleTemplateComponent,
         reference: &InputReference,
     ) -> ProcTemplateComponent {
+        let proc_hints = self.get_proc_hints();
+        let reference_id = reference.id.as_ref().unwrap();
+        let proc_hint = proc_hints.get(reference_id).cloned().unwrap_or_default();
         ProcTemplateComponent {
             template_component: component.clone(),
-            value: component.render(reference),
+            value: component.render(reference, &proc_hint),
         }
     }
 
@@ -397,15 +417,17 @@ impl Processor {
             .iter()
             .flat_map(|(key, group)| {
                 let group_len = group.len();
-                group.iter().enumerate().map(move |(index, reference)| -> (String, ProcHints) {
-                    let proc_hint = ProcHints {
-                        disamb_condition: false,
-                        group_index: index + 1,
-                        group_length: group_len,
-                        group_key: key.clone(),
-                    };
-                    (reference.id.as_ref().unwrap().clone(), proc_hint)
-                })
+                group.iter().enumerate().map(
+                    move |(index, reference)| -> (String, ProcHints) {
+                        let proc_hint = ProcHints {
+                            disamb_condition: false,
+                            group_index: index + 1,
+                            group_length: group_len,
+                            group_key: key.clone(),
+                        };
+                        (reference.id.as_ref().unwrap().clone(), proc_hint)
+                    },
+                )
             })
             .collect();
         proc_hints
