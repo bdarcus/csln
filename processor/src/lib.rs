@@ -1,5 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use rayon::prelude::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
@@ -203,7 +204,7 @@ impl Processor {
             };
             match key {
                 "author" => {
-                    references.sort_by(|a, b| {
+                    references.par_sort_unstable_by(|a, b| {
                         // REVIEW would like to review all these unwraps
                         let a_author =
                             a.author.as_ref().unwrap().join(" ").to_lowercase();
@@ -217,7 +218,7 @@ impl Processor {
                     });
                 }
                 "year" => {
-                    references.sort_by(|a, b| {
+                    references.par_sort_unstable_by(|a, b| {
                         let a_year = a.issued.as_ref().unwrap().parse::<i32>().unwrap();
                         let b_year = b.issued.as_ref().unwrap().parse::<i32>().unwrap();
                         if order == "Ascending" {
@@ -228,7 +229,7 @@ impl Processor {
                     });
                 }
                 "title" => {
-                    references.sort_by(|a, b| {
+                    references.par_sort_unstable_by(|a, b| {
                         let a_title = a.title.as_ref().unwrap().to_lowercase();
                         let b_title = b.title.as_ref().unwrap().to_lowercase();
                         if order == "Ascending" {
@@ -239,7 +240,7 @@ impl Processor {
                     });
                 }
                 _ => {
-                    references.sort_by(|a, b| {
+                    references.par_sort_unstable_by(|a, b| {
                         let a_author =
                             a.author.as_ref().unwrap().join(" ").to_lowercase();
                         let b_author =
