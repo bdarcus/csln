@@ -3,6 +3,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use csln_processor::Processor;
 use csln_processor::{load_bibliography_from_file, load_style_from_file};
 use style::Style;
+use std::time::Duration;
 
 fn proc_benchmark(c: &mut Criterion) {
     let style: Style = load_style_from_file("examples/style.csl.yaml");
@@ -26,5 +27,9 @@ fn proc_benchmark(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, proc_benchmark);
+criterion_group!(
+    name = benches;
+    config = Criterion::default().measurement_time(Duration::new(8, 0)).sample_size(100);
+    targets = proc_benchmark
+);
 criterion_main!(benches);
