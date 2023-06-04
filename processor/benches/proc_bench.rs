@@ -14,6 +14,11 @@ fn proc_benchmark(c: &mut Criterion) {
             processor.sort_references(refs);
         })
     });
+    c.bench_function("grouping references", |b| {
+        b.iter(|| {
+            processor.group_references(processor.get_references());
+        })
+    });
     c.bench_function("rendering references", |b| {
         b.iter(|| {
             processor.render_references();
