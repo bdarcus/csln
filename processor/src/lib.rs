@@ -1,6 +1,7 @@
 use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
 use edtf::level_1::Edtf;
+use icu::datetime::DateTimeFormatterOptions;
 use itertools::Itertools;
 use rayon::prelude::*;
 use schemars::JsonSchema;
@@ -9,7 +10,8 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 use std::option::Option;
-use style::options::{SortOrder, StyleSortGroupKey, StyleSorting};
+use style::options::StyleOptions;
+use style::options::{MonthOptions, SortOrder, StyleSortGroupKey, StyleSorting};
 #[allow(unused_imports)] // for now
 use style::template::{
     Contributors, DateForm, Dates, StyleTemplateComponent, StyleTemplateContributor,
@@ -118,7 +120,21 @@ impl Default for ProcHints {
 }
 
 pub trait Render<T> {
-    fn render(&self, reference: &InputReference, component: &T) -> String;
+    fn render(
+        &self,
+        reference: &InputReference,
+        component: &T,
+        options: RenderOptions,
+    ) -> String;
+}
+
+#[allow(dead_code)]
+// TODO need to hook this up, but depends on figuring out localized dates first
+pub struct RenderOptions<'a> {
+    // Options for the style, including default options.
+    global: &'a StyleOptions,
+    // Options for the citaton or bibliography, that may override the style options.
+    local: &'a StyleOptions,
 }
 
 // WTD???
@@ -127,8 +143,8 @@ pub trait RenderComponent {
     fn render(
         &self,
         reference: &InputReference,
-        proc_hints: &ProcHints,
-        // context: &RenderContext<T>,
+        hints: &ProcHints,
+        options: &RenderOptions,
     ) -> String;
 }
 
@@ -136,7 +152,8 @@ pub trait RenderDate {
     fn render(
         &self,
         reference: &InputReference,
-        proc_hints: &ProcHints,
+        hints: &ProcHints,
+        options: &RenderOptions,
         // context: &RenderContext<T>,
     ) -> String;
 
@@ -147,28 +164,37 @@ pub trait RenderTitle {
     fn render(
         &self,
         reference: &InputReference,
-        proc_hints: &ProcHints,
+        hints: &ProcHints,
+        options: &RenderOptions,
         // context: &RenderContext<T>,
     ) -> String;
 }
 
 pub trait RenderContributor {
-    fn render(&self, reference: &InputReference, proc_hints: &ProcHints) -> String;
+    fn render(
+        &self,
+        reference: &InputReference,
+        hints: &ProcHints,
+        options: &RenderOptions,
+    ) -> String;
 }
 
 impl RenderComponent for StyleTemplateComponent {
     fn render(
         &self,
         reference: &InputReference,
-        proc_hints: &ProcHints,
+        hints: &ProcHints,
+        options: &RenderOptions,
         // context: &RenderContext<T>,
     ) -> String {
         match self {
-            StyleTemplateComponent::Title(title) => title.render(reference, proc_hints),
-            StyleTemplateComponent::Contributor(contributor) => {
-                contributor.render(reference, proc_hints)
+            StyleTemplateComponent::Title(title) => {
+                title.render(reference, hints, options)
             }
-            StyleTemplateComponent::Date(date) => date.render(reference, proc_hints),
+            StyleTemplateComponent::Contributor(contributor) => {
+                contributor.render(reference, hints, options)
+            }
+            StyleTemplateComponent::Date(date) => date.render(reference, hints, options),
             StyleTemplateComponent::List(_list) => todo!(),
         }
     }
@@ -181,7 +207,12 @@ impl<T: RenderContributor + ?Sized> dyn Render<T> {
 }
 
 impl RenderTitle for StyleTemplateTitle {
-    fn render(&self, reference: &InputReference, _proc_hints: &ProcHints) -> String {
+    fn render(
+        &self,
+        reference: &InputReference,
+        _hints: &ProcHints,
+        _options: &RenderOptions,
+    ) -> String {
         let title: &str = match &self.title {
             Titles::Title => reference.title.as_ref().unwrap(),
             Titles::ContainerTitle => todo!(),
@@ -191,7 +222,12 @@ impl RenderTitle for StyleTemplateTitle {
 }
 
 impl RenderContributor for StyleTemplateContributor {
-    fn render(&self, reference: &InputReference, _proc_hints: &ProcHints) -> String {
+    fn render(
+        &self,
+        reference: &InputReference,
+        _hints: &ProcHints,
+        _options: &RenderOptions,
+    ) -> String {
         match &self.contributor {
             Contributors::Author => {
                 let authors = reference
@@ -236,19 +272,37 @@ impl RenderContributor for StyleTemplateContributor {
 }
 
 impl RenderDate for StyleTemplateDate {
-    fn render(&self, reference: &InputReference, proc_hints: &ProcHints) -> String {
-        let date_string: &str = match self.date {
-            Dates::Issued => reference.issued.as_ref().unwrap(),
-            Dates::Accessed => reference.accessed.as_ref().unwrap(),
+    fn render(
+        &self,
+        reference: &InputReference,
+        hints: &ProcHints,
+        _options: &RenderOptions,
+    ) -> String {
+        let date_string: String = match self.date {
+            Dates::Issued => reference.issued.clone().unwrap(),
+            Dates::Accessed => reference.accessed.clone().unwrap(),
             Dates::OriginalPublished => todo!(),
         };
-
-        let format_string: &str = match self.form {
-            DateForm::Year => "%Y",
-            DateForm::YearMonth => "%Y-%m",
-            DateForm::Full => "%Y-%m-%d",
-            DateForm::MonthDay => "%m-%d",
+        let parsed_date: Edtf = match Edtf::parse(&date_string) {
+            Ok(edtf) => edtf,
+            Err(_) => return date_string.to_string(),
         };
+
+        let formatted_date: String = match self.form {
+            DateForm::Year => parsed_date.as_date().unwrap().year().to_string(),
+            DateForm::YearMonth => todo!(),
+            DateForm::Full => todo!(),
+            DateForm::MonthDay => todo!(),
+        };
+
+        // TODO: implement this along with localized dates
+        fn _config_fmt(options: &RenderOptions) -> DateTimeFormatterOptions {
+            match options.global.dates.month {
+                MonthOptions::Long => todo!("long"),
+                MonthOptions::Short => todo!("short"),
+                MonthOptions::Numeric => todo!("numeric"),
+            };
+        }
 
         fn int_to_letter(n: u32) -> String {
             let c = n + 97;
@@ -258,14 +312,15 @@ impl RenderDate for StyleTemplateDate {
             }
         }
 
-        let suffix = if proc_hints.disamb_condition {
-            int_to_letter((proc_hints.group_index % 26) as u32)
+        let suffix = if hints.disamb_condition {
+            int_to_letter((hints.group_index % 26) as u32)
         } else {
             "".to_string()
         };
 
-        self.render_date(date_string, format_string) + &suffix
+        formatted_date + &suffix
     }
+    // REVIEW may want to just remove this; not clear ATM
     fn render_date(&self, date_string: &str, _format_string: &str) -> String {
         let edtf_date: Edtf = Edtf::parse(date_string).unwrap();
         let formatted_date: String = match edtf_date {
@@ -307,17 +362,26 @@ impl Processor {
             .unwrap_or_else(std::vec::Vec::new)
     }
 
+    fn get_render_options(&self) -> RenderOptions {
+        RenderOptions {
+            global: &self.style.options,
+            // TTODO: get local options
+            local: &self.style.options,
+        }
+    }
+
     fn render_template_component(
         &self,
         component: &StyleTemplateComponent,
         reference: &InputReference,
     ) -> ProcTemplateComponent {
-        let proc_hints = self.get_proc_hints();
+        let hints = self.get_proc_hints();
         let reference_id = reference.id.as_ref().unwrap();
-        let proc_hint = proc_hints.get(reference_id).cloned().unwrap_or_default();
+        let hint = hints.get(reference_id).cloned().unwrap_or_default();
+        let options = self.get_render_options();
         ProcTemplateComponent {
             template_component: component.clone(),
-            value: component.render(reference, &proc_hint),
+            value: component.render(reference, &hint, &options),
         }
     }
 
@@ -346,7 +410,7 @@ impl Processor {
     ) -> Vec<InputReference> {
         let mut references = references;
         let sort_config: &[StyleSorting] = self.style.options.get_sort_config();
-        sort_config.into_iter().for_each(|sort| {
+        sort_config.iter().for_each(|sort| {
             let key = match sort.key {
                 StyleSortGroupKey::Author => "author",
                 StyleSortGroupKey::Year => "year",
