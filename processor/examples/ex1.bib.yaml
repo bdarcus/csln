@@ -173,7 +173,7 @@ doe6:
   type: book
   title: Title 34
   author: ["Doe, Sarah"]
-  issued: '2009'
+  issued: 'non-EDTF date'
 doe7:
   type: article
   title: Title 35
