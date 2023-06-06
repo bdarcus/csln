@@ -1,13 +1,13 @@
 use bibliography::{InputBibliography as Bibliography};
+use bibliography::HasFile;
 use criterion::{criterion_group, criterion_main, Criterion};
 use csln_processor::Processor;
-use csln_processor::{load_bibliography_from_file, load_style_from_file};
 use style::Style;
 use std::time::Duration;
 
 fn proc_benchmark(c: &mut Criterion) {
-    let style: Style = load_style_from_file("examples/style.csl.yaml");
-    let bibliography: Bibliography = load_bibliography_from_file("examples/ex1.bib.yaml");
+    let style: Style = style::Style::from_file("examples/style.csl.yaml");
+    let bibliography: Bibliography = bibliography::InputBibliography::from_file("examples/ex1.bib.yaml");
     let processor: Processor = Processor::new(style, bibliography, "en-US".to_string());
     c.bench_function("sorting references", |b| {
         b.iter(|| {

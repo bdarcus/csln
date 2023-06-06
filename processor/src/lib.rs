@@ -8,7 +8,6 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::fs;
 use std::option::Option;
 use style::options::StyleOptions;
 use style::options::{MonthOptions, SortOrder, StyleSortGroupKey, StyleSorting};
@@ -28,31 +27,6 @@ The processor takes a style, a bibliography, and a locale, and renders the outpu
 
 The primary target is a JSON AST, represented by the ProcTemplateComponent struct.
  */
-
-/// Load and parse a YAML or JSON style file.
-pub fn load_style_from_file(style_path: &str) -> Style {
-    let contents = fs::read_to_string(style_path).expect("Failed to read style file");
-    if style_path.ends_with(".json") {
-        serde_json::from_str(&contents).expect("Failed to parse JSON")
-    } else if style_path.ends_with(".yaml") || style_path.ends_with(".yml") {
-        serde_yaml::from_str(&contents).expect("Failed to parse YAML")
-    } else {
-        panic!("Style file must be in YAML or JSON format")
-    }
-}
-
-/// Load and parse a YAML or JSON bibliography file.
-pub fn load_bibliography_from_file(bib_path: &str) -> Bibliography {
-    let contents =
-        fs::read_to_string(bib_path).expect("Failed to read bibliography file");
-    if bib_path.ends_with(".json") {
-        serde_json::from_str(&contents).expect("Failed to parse JSON")
-    } else if bib_path.ends_with(".yaml") || bib_path.ends_with(".yml") {
-        serde_yaml::from_str(&contents).expect("Failed to parse YAML")
-    } else {
-        panic!("Style file must be in YAML or JSON format")
-    }
-}
 
 /// The processor struct, which takes a style, a bibliography, and a locale, and renders the output.
 #[derive(Debug, Deserialize, Serialize)]
