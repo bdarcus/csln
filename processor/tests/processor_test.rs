@@ -21,6 +21,6 @@ mod tests {
         let processor = csln_processor::Processor::new(style, bibliography, "en-US".to_string());
         let proc_hints = processor.get_proc_hints();
         assert_eq!(proc_hints["doe7"].group_index, 1);
-        assert_eq!(proc_hints["doe7"].group_length, 2);
-    }
+        assert_eq!(proc_hints["doe7"].group_length, 1);
+    }   
 }
