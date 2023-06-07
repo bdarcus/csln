@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 use std::fs;
 
-mod reference;
+pub mod reference;
 pub use reference::InputReference;
 
 /// A bibliography is a collection of references.
 pub type InputBibliography = HashMap<String, InputReference>;
 
+// REVIEW move this to a core traits.rs module?
 pub trait HasFile {
     fn from_file(path: &str) -> Self;
 }

@@ -1,5 +1,7 @@
 use bibliography::InputBibliography as Bibliography;
-use bibliography::InputReference;
+use bibliography::{InputReference};
+#[allow(unused_imports)] // for now
+use bibliography::reference::{Contributor, ContributorList, DisplayContributor, SortContributor};
 use edtf::level_1::Edtf;
 use icu::datetime::DateTimeFormatterOptions;
 use itertools::Itertools;
@@ -204,34 +206,13 @@ impl RenderContributor for StyleTemplateContributor {
     ) -> String {
         match &self.contributor {
             Contributors::Author => {
-                let authors = reference
-                    .author
-                    .as_ref()
-                    .unwrap_or(&Vec::new())
-                    .par_iter()
-                    .map(|name| name.to_string())
-                    .collect::<Vec<String>>();
-                authors.join(", ")
+                reference.author.as_ref().unwrap().display()
             }
             Contributors::Editor => {
-                let editors = reference
-                    .editor
-                    .as_ref()
-                    .unwrap()
-                    .par_iter()
-                    .map(|editor| editor.to_string())
-                    .collect::<Vec<String>>();
-                editors.join(", ")
+                reference.editor.as_ref().unwrap().display()
             }
             Contributors::Translator => {
-                let translators = reference
-                    .translator
-                    .as_ref()
-                    .unwrap()
-                    .par_iter()
-                    .map(|translator| translator.to_string())
-                    .collect::<Vec<String>>();
-                translators.join(", ")
+                reference.translator.as_ref().unwrap().display()
             }
             Contributors::Director => todo!(),
             Contributors::Publisher => todo!(),
@@ -419,9 +400,9 @@ impl Processor {
                     references.par_sort_unstable_by(|a, b| {
                         // REVIEW would like to review all these unwraps
                         let a_author =
-                            a.author.as_ref().unwrap().join(" ").to_lowercase();
+                            a.author.as_ref().unwrap().display().to_lowercase();
                         let b_author =
-                            b.author.as_ref().unwrap().join(" ").to_lowercase();
+                            b.author.as_ref().unwrap().display().to_lowercase();
                         if order == "Ascending" {
                             a_author.cmp(&b_author)
                         } else {
@@ -454,9 +435,9 @@ impl Processor {
                 _ => {
                     references.par_sort_unstable_by(|a, b| {
                         let a_author =
-                            a.author.as_ref().unwrap().join(" ").to_lowercase();
+                            a.author.as_ref().unwrap().display().to_lowercase();
                         let b_author =
-                            b.author.as_ref().unwrap().join(" ").to_lowercase();
+                            b.author.as_ref().unwrap().display().to_lowercase();
                         if order == "Ascending" {
                             a_author.cmp(&b_author)
                         } else {
@@ -517,7 +498,7 @@ impl Processor {
     /// Return a string for a given key for a given reference.
     fn string_for_key(&self, reference: &InputReference, key: &str) -> String {
         match key {
-            "author" => reference.author.as_ref().unwrap().join(" "),
+            "author" => reference.author.as_ref().unwrap().display(),
             "year" => reference.issued.as_ref().unwrap().to_string(),
             "title" => reference.title.as_ref().unwrap().to_string(),
             _ => panic!("Invalid key"),

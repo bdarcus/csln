@@ -142,12 +142,18 @@ miller6:
 jones5:
   type: book
   title: Title 28
-  author: ["Jones, Sarah"]
+  # for single author pieces, there's no point in a list
+  # but if we need structured data, as we do with Western names,let's structure it
+  author:
+    familyName: Doe
+    givenName: Jane
   issued: '2018'
 jones6:
   type: article
   title: Title 29
-  author: ["Jones, Sarah"]
+  author:
+    familyName: Jones
+    givenName: Sarah
   issued: '2018'
 brown4:
   type: book
@@ -157,7 +163,12 @@ brown4:
 brown5:
   type: article
   title: Title 31
-  author: ["Brown, David", "Lee, John"]
+  # here we need a list
+  author:
+    - familyName: Brown
+      givenName: David
+    - familyName: Lee
+      givenName: Jane
   issued: '2021'
 lee5:
   type: book
