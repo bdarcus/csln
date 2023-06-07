@@ -1,10 +1,10 @@
 
 <a name="0.1.0"></a>
-## 0.1.0 (2023-06-06)
+## 0.1.0 (2023-06-07)
 
 ### Added
 
-* **citation:** add the model ([7e586e3](https://github.com/bdarcus/csln/commit/7e586e3))
+* **citation:** the model ([2274c3d](https://github.com/bdarcus/csln/commit/2274c3d))
 * **cli:** use render_references ([9368dc2](https://github.com/bdarcus/csln/commit/9368dc2))
 * **proc:** options, dates ([4a2a813](https://github.com/bdarcus/csln/commit/4a2a813))
 * **proc:** set disabm_condition ([438e484](https://github.com/bdarcus/csln/commit/438e484))
