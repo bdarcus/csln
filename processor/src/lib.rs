@@ -311,6 +311,26 @@ impl RenderDate for StyleTemplateDate {
     }
 }
 
+#[test]
+fn render_year() {
+    let component = StyleTemplateDate {
+        date: Dates::Issued,
+        form: DateForm::Year,
+        rendering: None,
+    };
+    let reference = InputReference {
+        id: Some("test".to_string()),
+        issued: Some("2020-01-01".to_string()),
+        ..Default::default()
+    };
+    let options = RenderOptions {
+        global: &StyleOptions::default(),
+        local: &StyleOptions::default(),
+    };
+    let rendered_date = component.render(&reference, &ProcHints::default(), &options);
+    assert_eq!(rendered_date, "2020");
+}
+
 impl Processor {
     /// Render references to AST.
     #[inline]
