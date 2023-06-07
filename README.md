@@ -46,7 +46,7 @@ I also understand the Mozilla 2.0 license is compatible with Apache.
 A note on citeproc-rs:
 
 In reviewing the code, it strikes me pieces of it obviously complement this code base. 
-In particular, it has been optimized for the Zotero use-case, where it provides real-time formatting, while I have focused of the patch-processing case.
+In particular, it has been optimized for the Zotero use-case, where it provides real-time formatting, while I have focused of the batch-processing case.
 
 [CSL]: https://citationstyles.org/
 [CSLNJS]: https://github.com/bdarcus/csl-next
