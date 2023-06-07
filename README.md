@@ -51,5 +51,5 @@ In particular, it has been optimized for the Zotero use-case, where it provides 
 [CSL]: https://citationstyles.org/
 [CSLNJS]: https://github.com/bdarcus/csl-next
 [CSLNO]: https://github.com/bdarcus/csln/blob/main/style/src/options.rs
-[CSLRS]: https://github.com/zotero/citeproc-rs)
+[CSLRS]: https://github.com/zotero/citeproc-rs
 [CSLO]: https://github.com/citation-style-language
