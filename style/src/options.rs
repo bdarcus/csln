@@ -13,56 +13,84 @@ pub struct StyleOptions {
     /// Disambiguation configuration of rendererd group display names.
     pub disambiguate: Disambiguation,
     /// Grouping configuration.
-    pub group: Vec<StyleSortGroupKey>,
+    pub group: Vec<SortGroupKey>,
     /// Localization configuration.
     pub localization: Localization,
     /// Sorting configuration.
-    pub sort: Vec<StyleSorting>,
+    pub sort: Vec<Sort>,
     /// Substitution configuration.
-    pub substitute: Substitution,
+    pub substitute: SubstituteOptions,
 }
 
 impl Default for StyleOptions {
     fn default() -> Self {
-        StyleOptions {
-            contributors: StyleContributors {
-                display_as_sort: None,
-                shorten: ShortenListOptions {
-                    min: 3,
-                    use_first: 3,
-                    et_al: AndOptions::Symbol,
-                    delimiter_precedes_last: DelimiterLastOptions::Contextual,
+        Self {
+            contributors: StyleContributors::default(),
+            dates: StyleDate::default(),
+            disambiguate: Disambiguation::default(),
+            group: GroupOptions::default().group,
+            localization: Localization { scope: LocalizationScope::PerItem },
+            sort: vec![
+                Sort {
+                    key: SortGroupKey::Author,
+                    order: SortOrder::Ascending,
                 },
-                delimiter: DelimiterOptions::Comma,
-                and: AndOptions::Symbol,
-                label: LabelOptions::Long,
-            },
-            dates: StyleDate { 
-                month: MonthOptions::Long,
-            },
-            disambiguate: Disambiguation {
-                add_names: AddNames::All, // REVIEW: Is this the right default?
-                add_year_suffix: true,
-            },
-            localization: Localization {
-                scope: LocalizationScope::Global,
-            },
-            sort: vec![StyleSorting {
-                key: StyleSortGroupKey::Author,
-                order: SortOrder::Ascending,
-            }],
-            group: vec![StyleSortGroupKey::Author,
-                        StyleSortGroupKey::Year],
-            substitute: Substitution {
-                author: vec![Substitute::Editor, Substitute::Translator, Substitute::Title],
-            },
+                Sort {
+                    key: SortGroupKey::Year,
+                    order: SortOrder::Ascending,
+                }
+            ],
+            substitute: SubstituteOptions::default(),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct Sort {
+    pub key: SortGroupKey,
+    pub order: SortOrder,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct DateOptions {
+    pub date: StyleDate,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct SubstituteOptions {
+    pub substitute: Vec<Substitute>,
+}
+
+pub struct GroupOptions {
+    pub group: Vec<SortGroupKey>,
+}
+
+impl Default for SubstituteOptions {
+    fn default() -> Self {
+        Self {
+            substitute: vec![
+                Substitute::Editor,
+                Substitute::Title,
+                Substitute::Translator,
+            ],
+        }
+    }
+}
+
+impl Default for GroupOptions {
+    fn default() -> Self {
+        Self {
+            group: vec![SortGroupKey::Author, SortGroupKey::Year],
         }
     }
 }
 
 impl StyleOptions {
-    pub fn get_group_key_config(&self) -> &[StyleSortGroupKey] {
+    pub fn get_group_key_config(&self) -> &[SortGroupKey] {
         self.group.as_slice()
+    }
+    pub fn get_sort_config(&self) -> &[Sort] {
+        self.sort.as_slice()
     }
     pub fn get_contributors_config(&self) -> &StyleContributors {
         &self.contributors
@@ -72,9 +100,6 @@ impl StyleOptions {
     }
     pub fn get_localization_config(&self) -> &Localization {
         &self.localization
-    }
-    pub fn get_substitution_config(&self) -> &Substitution {
-        &self.substitute
     }
     pub fn get_date_config(&self) -> &StyleDate {
         &self.dates
@@ -107,8 +132,14 @@ pub enum LocalizationScope {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Disambiguation {
-    pub add_names: AddNames,
+    pub add_names: bool,
     pub add_year_suffix: bool,
+}
+
+impl Default for Disambiguation {
+    fn default() -> Self {
+        Self { add_names: true, add_year_suffix: false }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
@@ -127,52 +158,24 @@ pub enum Substitute {
     Translator,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case", untagged)]
-pub enum AddNames {
-    All,
-    AllWithInitials,
-    ByCite,
-    Primary,
-    PrimaryWithInitials,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StyleDate {
     pub month: MonthOptions,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum MonthOptions {
+    #[default]
     Long,
     Short,
     Numeric,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum YearSuffixOptions {
-    Never,
-    Always,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct StyleSorting {
-    pub key: StyleSortGroupKey,
-    pub order: SortOrder,
-}
-
-impl StyleOptions {
-    pub fn get_sort_config(&self) -> &[StyleSorting] {
-        self.sort.as_slice()
-    }
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase", untagged)]
-pub enum StyleSortGroupKey {
+pub enum SortGroupKey {
     Title,
     Author,
     Year,
@@ -185,30 +188,22 @@ pub enum SortOrder {
     Descending,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StyleContributors {
-    pub display_as_sort: Option<DisplayAsSort>,
+    pub display_as_sort: DisplayAsSort,
     pub shorten: ShortenListOptions,
     pub delimiter: DelimiterOptions,
     pub and: AndOptions,
     pub label: LabelOptions,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase", untagged)]
 pub enum DisplayAsSort {
     All,
     First,
-    Last,
-    None,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "lowercase", untagged)]
-pub enum ContributorOptions {
-    All,
-    First,
+    #[default]
     None,
 }
 
@@ -221,7 +216,19 @@ pub struct ShortenListOptions {
     pub delimiter_precedes_last: DelimiterLastOptions,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+impl Default for ShortenListOptions {
+    // REVIEW these defaults
+    fn default() -> Self {
+        Self {
+            min: 3,
+            use_first: 1,
+            et_al: AndOptions::default(),
+            delimiter_precedes_last: DelimiterLastOptions::default(),
+        }
+    }
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum DelimiterLastOptions {
     /// Delimiter is only used if preceding name is inverted as a result of the`asSort` parameter. E.g. with `asSort` set to “first”.
@@ -230,16 +237,18 @@ pub enum DelimiterLastOptions {
     Always,
     /// Delimiter is never used.
     Never,
+    #[default]
     /// The delimiter is only used when shortening is applied.
     Contextual,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum DelimiterOptions {
     Comma,
     SemiColon,
     Period,
+    #[default]
     Space,
     Hyphen,
     Ampersand,
@@ -249,17 +258,19 @@ pub enum DelimiterOptions {
     NoDelimiter,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum AndOptions {
+    #[default] // REVIEW: is this correct?
     Text,
     Symbol,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum LabelOptions {
     Long,
+    #[default]
     Short,
     Verb,
 }
@@ -272,31 +283,34 @@ pub struct StyleTitles {
     pub short_title: ShortTitleOptions,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum TitleOptions {
     CapitalizeAll,
     CapitalizeFirst,
-    Sentence,
     Lowercase,
+    #[default]
+    AsIs,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum SubtitleOptions {
     CapitalizeAll,
     CapitalizeFirst,
-    Sentence,
     Lowercase,
+    #[default]
+    AsIs,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum ShortTitleOptions {
     CapitalizeAll,
     CapitalizeFirst,
-    Sentence,
     Lowercase,
+    #[default]
+    AsIs,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -307,37 +321,41 @@ pub struct StyleTemplateDate {
     pub year: Option<YearStyle>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum YearStyle {
+    #[default]
     Numeric,
     TwoDigit,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum MonthStyle {
     Numeric,
+    #[default] // REVIEW: is this correct?
     Long,
     Short,
     Narrow,
     TwoDigit,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum TimeStyle {
     Full,
     Short,
+    #[default] // REVIEW: is this correct?
     Medium,
     Long,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum DateStyle {
     Full,
     Short,
+    #[default] // REVIEW: is this correct?
     Long,
 }
 
@@ -347,10 +365,11 @@ pub struct StyleTemplateTitle {
     pub form: TitleForm,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum TitleForm {
     Short,
+    #[default] // REVIEW: is this correct?
     Long,
 }
 
@@ -360,9 +379,10 @@ pub struct StyleTemplateContributors {
     pub form: ContributorForm,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum ContributorForm {
+    #[default] // REVIEW: is this correct?
     Long,
     Short,
 }
