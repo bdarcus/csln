@@ -26,6 +26,18 @@ There, you will note configuration options for many details that in CSL 1.0 are 
 
 Plus, I've added `localization` support as such a configuration option group, with the idea it can be more easily-expanded there, than by burdening the template language with those details.
 
+## Principles
+
+For the `Style` model:
+
+1. Keep the template language as simple as possible, in the hopes we can keep it stable going forward, while still enabling innnovation.
+2. Add new functionality primary via option groups.
+
+For the `InputReference` and `Citation` models:
+
+3. No string-parsing, with the sole exception of the [EDTF date format][EDTF], which is now ISO-standardized as an extension profile of ISO 8601, with well-defined parsing rules, and parsing libraries available in multiple languages.
+4. Provide structure where needed, but offer alternatives where not. EDTF is available for diverse date-time encoding, but dates fields will fallback to a plain string. Likewise, the `Contributor` model offers similar flexibility, and power where needed.
+
 ## Project Organization
 
 I've separated the code into discrete crates, with the intention to ultimately publish them.
@@ -53,3 +65,4 @@ In particular, it has been optimized for the Zotero use-case, where it provides 
 [CSLNO]: https://github.com/bdarcus/csln/blob/main/style/src/options.rs
 [CSLRS]: https://github.com/zotero/citeproc-rs
 [CSLO]: https://github.com/citation-style-language
+[EDTF]: https://www.loc.gov/standards/datetime/
