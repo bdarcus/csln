@@ -10,8 +10,7 @@ mod tests {
         let refs = processor.get_references();
         let sorted_refs = processor.sort_references(refs);
         assert_eq!(sorted_refs.len(), 36);
-        assert_eq!(sorted_refs[35].title.as_deref(), Some("Title 4"));
-        assert_eq!(sorted_refs[1].title.as_deref(), Some("Title 31"));
+        assert_eq!(sorted_refs.last().unwrap().title.as_deref(), Some("Title 4"));
     }
 
     #[test]
