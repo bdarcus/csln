@@ -2,7 +2,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct Citation {
     /// Local citation rendering option; aka command or style.
     /// Both are more general than author-date styles, and can apply to any citation style.
@@ -15,7 +15,7 @@ pub struct Citation {
     pub suffix: String,
 }
 
-#[derive(Default, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum CitationModeType {
     /// Places the author inline in the text; also known as "narrative" or "in text" citations.
@@ -25,7 +25,7 @@ pub enum CitationModeType {
     NonIntegral,
 }
 
-#[derive(Default, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CitationReference {
     /// A string that prefaces the citation reference.
@@ -38,7 +38,7 @@ pub struct CitationReference {
 
 #[allow(clippy::large_enum_variant)] // REVIEW is this a problem?
 /// A key-value object, or a string.
-#[derive(Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(untagged)]
 pub enum Locator {
     KeyValue(LocatorKeyValue),
@@ -47,7 +47,7 @@ pub enum Locator {
 
 pub type LocatorKeyValue = (LocatorTerm, String);
 
-#[derive(Default, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum LocatorTerm {
     Book,

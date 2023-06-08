@@ -2,6 +2,7 @@
 use bibliography::reference::{Contributor, ContributorList, Name, NameList};
 use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
+use citation::Citation;
 use edtf::level_1::Edtf;
 use icu::datetime::DateTimeFormatterOptions;
 use itertools::Itertools;
@@ -12,7 +13,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::option::Option;
 use style::options::StyleOptions;
-use style::options::{MonthOptions, SortOrder, SortGroupKey, Sort};
+use style::options::{MonthOptions, Sort, SortGroupKey, SortOrder};
 #[allow(unused_imports)] // for now
 use style::template::{
     Contributors, DateForm, Dates, StyleTemplateComponent, StyleTemplateContributor,
@@ -31,12 +32,14 @@ The primary target is a JSON AST, represented by the ProcTemplateComponent struc
  */
 
 /// The processor struct, which takes a style, a bibliography, and a locale, and renders the output.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Processor {
     /// The input style.
     style: Style,
     /// The input bibliography.
     bibliography: Bibliography,
+    /// The input citations.
+    citations: Vec<Citation>,
     /// The output locale.
     locale: String,
 }
@@ -386,14 +389,35 @@ impl Processor {
         self.bibliography.get(id).cloned()
     }
 
+    pub fn get_cited_references(&self) -> Vec<InputReference> {
+        let mut cited_references = Vec::new();
+        for key in &self.get_cited_keys() { 
+            let reference = self.get_reference(key);
+            if let Some(reference) = reference {
+                cited_references.push(reference);
+            }
+        }
+        cited_references
+    }
+
+    /// Return a list of all the keys cited in the document, in order.
+    pub fn get_cited_keys(&self) -> Vec<String> {
+        self.citations.iter().flat_map(|c| {
+            c.references
+                .iter()
+                .map(|cr| cr.ref_id.clone())
+                .collect::<Vec<String>>()
+        }).collect()
+    }
+
     /// Sort the references according to instructions in the style.
     #[inline]
     pub fn sort_references(
         &self,
         references: Vec<InputReference>,
     ) -> Vec<InputReference> {
-        let mut references = references;
-        let options = &self.style.options;
+        let mut references: Vec<InputReference> = references;
+        let options: &StyleOptions = &self.style.options;
         let sort_config: &[Sort] = self.style.options.get_sort_config();
         //println!("{:?}", sort_config);
         sort_config.iter().for_each(|sort| {
@@ -478,8 +502,7 @@ impl Processor {
 
     /// Return a string to use for grouping for a given reference, using instructions in the style.
     fn make_group_key(&self, reference: &InputReference) -> String {
-        let group_key_config: &[SortGroupKey] =
-            self.style.options.get_group_key_config();
+        let group_key_config: &[SortGroupKey] = self.style.options.get_group_key_config();
         let group_key = group_key_config
             // This is likely unnecessary, but just in case.
             .par_iter()
@@ -520,7 +543,8 @@ impl Processor {
             .collect()
     }
 
-    pub fn new(style: Style, bibliography: Bibliography, locale: String) -> Processor {
-        Processor { style, bibliography, locale }
+    pub fn new(style: Style, bibliography: Bibliography, citations: Vec<Citation>,locale: String) -> Processor {
+        Processor { style, bibliography, citations, 
+            locale }
     }
 }
