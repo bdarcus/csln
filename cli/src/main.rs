@@ -1,5 +1,6 @@
 use bibliography::InputBibliography as Bibliography;
 use bibliography::HasFile;
+use citation::Citation;
 use processor::Processor;
 use std::env;
 use style::Style;
@@ -15,7 +16,9 @@ fn main() {
 
     let bibliography_path: &String = &args[2];
     let bibliography: Bibliography = Bibliography::from_file(bibliography_path);
-    let processor: Processor = Processor::new(style, bibliography, bibliography_path.to_string());
+    let citations: Vec<Citation> = Vec::new();
+
+    let processor: Processor = Processor::new(style, bibliography, citations, "en-US".to_string());
     let rendered_refs = processor.render_references();
     println!("{}", serde_json::to_string_pretty(&rendered_refs).unwrap());
 }

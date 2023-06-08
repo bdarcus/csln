@@ -1,5 +1,6 @@
 use bibliography::{InputBibliography as Bibliography};
 use bibliography::HasFile;
+use citation::Citation;
 use criterion::{criterion_group, criterion_main, Criterion};
 use csln_processor::Processor;
 use style::Style;
@@ -8,7 +9,8 @@ use std::time::Duration;
 fn proc_benchmark(c: &mut Criterion) {
     let style: Style = style::Style::from_file("examples/style.csl.yaml");
     let bibliography: Bibliography = bibliography::InputBibliography::from_file("examples/ex1.bib.yaml");
-    let processor: Processor = Processor::new(style, bibliography, "en-US".to_string());
+    let citations: Vec<Citation> = Vec::new();
+    let processor: Processor = Processor::new(style, bibliography, citations, "en-US".to_string());
     c.bench_function("sorting references", |b| {
         b.iter(|| {
             let refs = processor.get_references();
@@ -29,7 +31,7 @@ fn proc_benchmark(c: &mut Criterion) {
 
 criterion_group!(
     name = benches;
-    config = Criterion::default().measurement_time(Duration::new(8, 0)).sample_size(100);
+    config = Criterion::default().measurement_time(Duration::new(12, 0)).sample_size(80);
     targets = proc_benchmark
 );
 criterion_main!(benches);
