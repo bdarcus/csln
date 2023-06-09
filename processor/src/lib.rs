@@ -1,3 +1,8 @@
+/* 
+SPDX-License-Identifier: MPL-2.0 
+SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
+*/
+
 #[allow(unused_imports)] // for now
 use bibliography::reference::{Contributor, ContributorList, Name, NameList};
 use bibliography::InputBibliography as Bibliography;
