@@ -420,10 +420,10 @@ impl Processor {
         let options: &StyleOptions = &self.style.options;
         let sort_config: &[Sort] = self.style.options.get_sort_config();
         //println!("{:?}", sort_config);
-        sort_config.iter().for_each(|sort| {
+        sort_config.iter().rev().for_each(|sort| {
             match sort.key {
                 SortGroupKey::Author => {
-                    references.par_sort_unstable_by(|a, b| {
+                    references.par_sort_by(|a, b| {
                         // REVIEW would like to clean up all these unwrap etcs
                         let a_author = a
                             .author
@@ -446,7 +446,7 @@ impl Processor {
                     });
                 }
                 SortGroupKey::Year => {
-                    references.par_sort_unstable_by(|a, b| {
+                    references.par_sort_by(|a, b| {
                         let a_year = a.issued.as_ref().unwrap().year();
                         let b_year = b.issued.as_ref().unwrap().year();
                         //println!("a_year: {}", a_year);
@@ -458,7 +458,7 @@ impl Processor {
                     });
                 }
                 SortGroupKey::Title => {
-                    references.par_sort_unstable_by(|a, b| {
+                    references.par_sort_by(|a, b| {
                         let a_title = a.title.as_ref().unwrap().to_lowercase();
                         let b_title = b.title.as_ref().unwrap().to_lowercase();
                         if sort.order == SortOrder::Ascending {
