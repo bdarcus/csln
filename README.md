@@ -7,6 +7,7 @@ At a high-level, the vision of the project is to:
 1. Adapt what we've learned in almost 20 years of experience with [CSL 1.0][CSL] to modern programming idioms and formats.
 2. Simplify the template part of the language, and put more, and extensible, logic in option groups, so it's easier to work with for users, style editors, and developers alike.
 3. Add new features while we're at it, like multi-lingual support, advanced dates and times, narrative citations, and so forth.
+4. Align code and schemas by generating the latter from the former, and so also provide a common meeting point for developers and domain experts.
 
 More concretely, the goal is a suite of models, libraries and tools that make extremely performant advanced citation and bibliography processing available everywhere: 
 
