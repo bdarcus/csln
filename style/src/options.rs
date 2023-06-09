@@ -1,3 +1,9 @@
+/* 
+SPDX-License-Identifier: MPL-2.0 
+SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
+
+This module defines models and traits for basic data types used in CSLN styles and input data.
+*/
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
