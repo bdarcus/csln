@@ -3,6 +3,7 @@
 members = [
     "cli",
     "bibliography",
+    "types",
     "citation",
     "style",
     "processor",
