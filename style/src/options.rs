@@ -1,13 +1,39 @@
+//! This submodule defines the configuration groups and options available in CSLN styles.
+//! 
+//! The details are adapted from:
+//! 
+//! 1. The [CSL 1.0 specification][CSL-spec].
+//! 2. Its template language (aka [layout][CSL-templates] and [rendering elements][CSL-render]), most notably from names, dates, and other formatting.
+//! 3. Patterns observed in the [CSL 1.0 styles repository][CSL-styles].
+//! 
+//! In this model, much more logic is configured in these options, and the `template` submodule is comparatively simple. 
+//! The intent is to make it easier to write and maintain styles, as well as softtware that uses them.
+//! 
+//! ## Style Options
+//! 
+//! The [`StyleOptions`] struct defines the configuration groups and options available in CSLN styles.
+//! 
+//! ## Status
+//! 
+//! Still early, with more work needed on adding options, and testing.
+//! 
+//! [CSL-spec]: https://docs.citationstyles.org/en/stable/specification.html#style-options
+//! [CSL-styles]: https://github.com/citation-style-language/styles
+//! [CSL-macros]: https://docs.citationstyles.org/en/stable/specification.html#macros
+//! [CSL-templates]: https://docs.citationstyles.org/en/stable/specification.html#layout-1
+//! [CSL-render]: https://docs.citationstyles.org/en/stable/specification.html#rendering-elements
+//! 
+
 /* 
 SPDX-License-Identifier: MPL-2.0 
 SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
-
-This module defines models and traits for basic data types used in CSLN styles and input data.
 */
+
+//use std::default;
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
-use super::template::Contributors;
+use crate::template::{Rendering, Contributors};
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(default)]
@@ -197,11 +223,39 @@ pub enum SortOrder {
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StyleContributors {
+    /// When to display a contributor's name in sort order.
     pub display_as_sort: DisplayAsSort,
+    /// Shorten the list of contributors.
     pub shorten: ShortenListOptions,
+    /// The delimiter or separator to use between contributors.
     pub delimiter: DelimiterOptions,
+    /// Whether to sepaaate the last two contributors with a natural language conjunction, and if so what form it should take.
     pub and: AndOptions,
-    pub label: LabelOptions,
+    /// When and how to display contributor roles.
+    pub role: RoleOptions,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct RoleOptions {
+    /// Contributor roles for which to omit the role description.
+    ///
+    /// The default value is `["author"]`, which omits the role for authors, including for any
+    /// author substitutions.
+    // TODO
+    pub omit: Vec<String>,
+    pub form: Option<ContributorForm>,
+    pub rendering: Option<Rendering>,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum ContributorForm {
+    #[default]
+    Long,
+    Short,
+    Verb,
+    VerbShort,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -266,10 +320,12 @@ pub enum DelimiterOptions {
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum AndOptions {
     #[default] // REVIEW: is this correct?
     Text,
     Symbol,
+    None,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -385,10 +441,3 @@ pub struct StyleTemplateContributors {
     pub form: ContributorForm,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum ContributorForm {
-    #[default] // REVIEW: is this correct?
-    Long,
-    Short,
-}
