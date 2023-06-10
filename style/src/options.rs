@@ -2,9 +2,9 @@
 //! 
 //! The details are adapted from:
 //! 
-//! 1. The [CSL 1.0 specification][CSL-spec].
-//! 2. Its template language (aka [layout][CSL-templates] and [rendering elements][CSL-render]), most notably from names, dates, and other formatting.
-//! 3. Patterns observed in the [CSL 1.0 styles repository][CSL-styles].
+//! 1. The [CSL 1.0 specification][CSL-spec] [options][CSL-options], and its template language (aka [layout][CSL-templates] and [rendering elements][CSL-render]), most notably from names, dates, and other formatting.
+//! 2. Patterns observed in the [CSL 1.0 styles repository][CSL-styles].
+//! 3. The [BibLaTeX preamble][BLTX] options.
 //! 
 //! In this model, much more logic is configured in these options, and the `template` submodule is comparatively simple. 
 //! The intent is to make it easier to write and maintain styles, as well as softtware that uses them.
@@ -17,11 +17,13 @@
 //! 
 //! Still early, with more work needed on adding options, and testing.
 //! 
-//! [CSL-spec]: https://docs.citationstyles.org/en/stable/specification.html#style-options
+//! [CSL-spec]: https://docs.citationstyles.org/en/stable/specification.html
 //! [CSL-styles]: https://github.com/citation-style-language/styles
 //! [CSL-macros]: https://docs.citationstyles.org/en/stable/specification.html#macros
 //! [CSL-templates]: https://docs.citationstyles.org/en/stable/specification.html#layout-1
 //! [CSL-render]: https://docs.citationstyles.org/en/stable/specification.html#rendering-elements
+//! [CSL-options]: https://docs.citationstyles.org/en/stable/specification.html#options
+//! [BLTX]: https://github.com/plk/biblatex
 //! 
 
 /* 
