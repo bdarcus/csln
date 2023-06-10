@@ -16,7 +16,15 @@ More concretely, the goal is a suite of models, libraries and tools that make ex
 - interactive real-time processing for GUI contexts like Zotero
 - easy-to-use style creation wizards, both command-line and web
 
-## The model and CSL 1.0
+## The model
+
+### Influences
+
+1. The [CSL 1.0 specification][CSL-spec] [options][CSL-options], and its template language (aka [layout][CSL-templates] and [rendering elements][CSL-render]), most notably from names, dates, and other formatting.
+2. Patterns observed in the [CSL 1.0 styles repository][CSL-styles].
+3. The [BibLaTeX preamble][BLTX] options.
+
+### Comparison to CSL 1.0 and BibLaTeX
 
 To understand the difference between this model and [CSL 1.0][CSL], look at [style::options][CSLNO]. 
 There, you will note configuration options for many details that in CSL 1.0 are configured within the template language:
@@ -26,6 +34,9 @@ There, you will note configuration options for many details that in CSL 1.0 are 
 - substitution
 
 Plus, I've added `localization` support as such a configuration option group, with the idea it can be more easily-expanded there, than by burdening the template language with those details.
+
+In that sense, this design is closer to [BibLaTeX][BLTX], which has a very long list of flat options that handle much of the configuration. 
+Like that project, here were standardize on [EDTF dates][EDTF].
 
 ## Principles
 
@@ -66,4 +77,11 @@ In particular, it has been optimized for the Zotero use-case, where it provides 
 [CSLNO]: https://github.com/bdarcus/csln/blob/main/style/src/options.rs
 [CSLRS]: https://github.com/zotero/citeproc-rs
 [CSLO]: https://github.com/citation-style-language
+[CSL-spec]: https://docs.citationstyles.org/en/stable/specification.html
+[CSL-styles]: https://github.com/citation-style-language/styles
+[CSL-macros]: https://docs.citationstyles.org/en/stable/specification.html#macros
+[CSL-templates]: https://docs.citationstyles.org/en/stable/specification.html#layout-1
+[CSL-render]: https://docs.citationstyles.org/en/stable/specification.html#rendering-elements
+[CSL-options]: https://docs.citationstyles.org/en/stable/specification.html#options
+[BLTX]: https://github.com/plk/biblatex
 [EDTF]: https://www.loc.gov/standards/datetime/
