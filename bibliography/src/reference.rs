@@ -2,8 +2,9 @@ use edtf::level_1::Edtf;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use style::options::{StyleOptions, StyleContributors};
+use style::options::{StyleOptions};
 use url::Url;
+//use icu::calendar::DateTime;
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct InputReference {
@@ -36,9 +37,30 @@ impl EdtfString {
     pub fn as_date(&self) -> Option<Edtf> {
         Edtf::parse(&self.0).ok()
     }
+
+    // TODO do want this or string?
+    pub fn year(&self) -> Option<i32> {
+        self.as_date().and_then(|d| match d {
+            Edtf::Date(date) => Some(date.year()),
+            _ => None,
+        })
+    }
+}
+
+#[test]
+fn test_edtf_dates () {
+    let date = EdtfString("2020-01-01".to_string());
+    assert_eq!(date.year(), Some(2020));
+    let date = EdtfString("2021-10".to_string());
+    assert_eq!(date.year(), Some(2021));
+    let date = EdtfString("2022".to_string());
+    assert_eq!(date.year(), Some(2022));
 }
 
 impl fmt::Display for EdtfString {
+
+
+
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // TODO: finish this
         let parsed_date: Edtf = match Edtf::parse(&self.0) {
