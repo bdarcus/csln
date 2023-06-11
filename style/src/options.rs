@@ -2,7 +2,8 @@
 //! 
 //! The details are adapted from:
 //! 
-//! 1. The [CSL 1.0 specification][CSL-spec] [options][CSL-options], and its template language (aka [layout][CSL-templates] and [rendering elements][CSL-render]), most notably from names, dates, and other formatting.
+//! 1. The [CSL 1.0 specification][CSL-spec] [options][CSL-options], and its template language (aka [layout][CSL-templates] and 
+//!    [rendering elements][CSL-render]), most notably from names, dates, and other formatting.
 //! 2. Patterns observed in the [CSL 1.0 styles repository][CSL-styles].
 //! 3. The [BibLaTeX preamble][BLTX] options.
 //! 
@@ -95,6 +96,7 @@ pub struct SubstituteOptions {
     pub substitute: Vec<Substitute>,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct GroupOptions {
     pub group: Vec<SortGroupKey>,
 }
@@ -273,7 +275,7 @@ pub enum DisplayAsSort {
 #[serde(rename_all = "camelCase")]
 pub struct ShortenListOptions {
     pub min: u8,
-    pub use_first: u8,
+    pub take: u8,
     pub et_al: AndOptions,
     pub delimiter_precedes_last: DelimiterLastOptions,
 }
@@ -283,7 +285,7 @@ impl Default for ShortenListOptions {
     fn default() -> Self {
         Self {
             min: 3,
-            use_first: 1,
+            take: 1,
             et_al: AndOptions::default(),
             delimiter_precedes_last: DelimiterLastOptions::default(),
         }

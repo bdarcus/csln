@@ -1,5 +1,5 @@
-/* 
-SPDX-License-Identifier: MPL-2.0 
+/*
+SPDX-License-Identifier: MPL-2.0
 SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 
 This is a small module that defines basic data types and functions for formatting.
@@ -10,12 +10,14 @@ Some of the ideas and code are adapted from the `typst-hayagriva` crate.
 use bibliography::reference::InputReference;
 use edtf::level_1::Edtf;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use std::fmt;
-use style::options::StyleOptions;
-use url::Url;
-use std::str::FromStr;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cmp::Ordering;
+use std::fmt;
+use std::str::FromStr;
+use style::options::StyleOptions;
+use unic_langid::{LanguageIdentifier, LanguageIdentifierError};
+use url::Url;
+//use std::borrow::Cow;
 
 /*
 This section almost-completely adapted from HayaGriva.
@@ -60,7 +62,45 @@ pub enum Value {
     Language(LangID),
 }
 
-pub type LangID = String;
+#[derive(Clone, Debug, PartialEq)]
+pub struct LangID(LanguageIdentifier);
+
+impl<'de> Deserialize<'de> for LangID {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        s.parse().map_err(serde::de::Error::custom).map(LangID)
+    }
+}
+
+impl FromStr for LangID {
+    type Err = LanguageIdentifierError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(LangID(s.parse()?))
+    }
+}
+
+impl Serialize for LangID {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.0.to_string().serialize(serializer)
+    }
+}
+
+impl JsonSchema for LangID {
+    fn schema_name() -> String {
+        "LangID".to_owned()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        String::json_schema(gen)
+    }
+}
 
 /*
 Core structs.
@@ -70,11 +110,7 @@ Core structs.
 Traits.
  */
 pub trait Formattable {
-    fn render(
-        &self,
-        referemce: InputReference,
-        style: StyleOptions,
-    ) -> Option<String>;
+    fn render(&self, referemce: InputReference, style: StyleOptions) -> Option<String>;
 }
 
 pub trait SortAndGroupAble {
@@ -85,27 +121,54 @@ pub trait SortAndGroupAble {
 Core Trait implementations.
  */
 
+impl fmt::Display for LangID {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // format the LangID value as a string
+        write!(f, "LangID({:?})", self)
+    }
+}
+
+impl Formattable for (LangID, String) {
+    fn render(&self, _referemce: InputReference, _style: StyleOptions) -> Option<String> {
+        let (lang_id, title) = self;
+        Some(format!("{:?} - {}", lang_id, title))
+    }
+}
+
 impl Formattable for Title {
-    fn render(
-        &self,
-        referemce: InputReference,
-        style: StyleOptions,
-    ) -> Option<String> {
-        todo!()
+    fn render(&self, referemce: InputReference, style: StyleOptions) -> Option<String> {
+        match self {
+            Title::Single(s) => Some(s.clone()),
+            Title::Multi(m) => {
+                let mut titles = m
+                    .iter()
+                    .filter_map(|t| t.render(referemce.clone(), style.clone()))
+                    .collect::<Vec<_>>();
+                titles.sort();
+                Some(titles.join(", "))
+            }
+            Title::Structured(s) => Some(format!(
+                "{} ({})",
+                s.main.clone().unwrap(),
+                s.sub.clone().unwrap().join(", ")
+            )),
+            Title::MultiStructured(m) => Some(format!("{} items", m.len())),
+            Title::Shorthand(s, t) => Some(format!("{} ({})", s, t)),
+        }
     }
 }
 
 impl SortAndGroupAble for Title {
     fn key(&self) -> String {
         match self {
-            Title::Single(s) => s.to_string(),
-            Title::Multi(m) => {
+            Title::Single(s) => s.to_lowercase(),
+            Title::Multi(_m) => {
                 todo!("Implement this")
             }
-            Title::Structured(s) => {
+            Title::Structured(_s) => {
                 todo!("Implement this")
             }
-            Title::MultiStructured(m) => {
+            Title::MultiStructured(_m) => {
                 todo!("Implement this")
             }
             Title::Shorthand(s, t) => {
@@ -116,11 +179,7 @@ impl SortAndGroupAble for Title {
 }
 
 impl Formattable for RefDate {
-    fn render(
-        &self,
-        referemce: InputReference,
-        style: StyleOptions,
-    ) -> Option<String> {
+    fn render(&self, _referemce: InputReference, _style: StyleOptions) -> Option<String> {
         match self {
             RefDate::EdtfString(e) => Some(e.to_string()),
             RefDate::Literal(s) => Some(s.to_string()),
@@ -128,14 +187,35 @@ impl Formattable for RefDate {
     }
 }
 
+impl fmt::Display for RefDate {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RefDate::EdtfString(date) => {
+                let parsed_date: Edtf = match Edtf::parse(&date.to_string()) {
+                    Ok(edtf) => edtf,
+                    Err(_) => return write!(f, "{}", date)
+                };
+                write!(f, "{}", parsed_date)
+            }
+            RefDate::Literal(date) => write!(f, "{}", date),
+        }
+    }
+}
+
+#[test]
+fn test_edtf_date_fmt () {
+    let date = RefDate::EdtfString("2020-01-01".to_string());
+    assert_eq!(date.to_string(), "2020-01-01".to_string());
+}
+
 impl SortAndGroupAble for RefDate {
     fn key(&self) -> String {
         match self {
-            // In progress; not close to right
             RefDate::EdtfString(date) => {
                 let parsed_date: Edtf = Edtf::parse(&date.to_string())
                     .unwrap_or_else(|_| Edtf::from_str("unknown").unwrap());
-                parsed_date.to_string()
+                // REVIEW should we only be returning the year?
+                parsed_date.as_date().unwrap().year().to_string()
             }
             RefDate::Literal(date) => date.to_string(),
         }
@@ -143,22 +223,19 @@ impl SortAndGroupAble for RefDate {
 }
 
 impl Formattable for Contributor {
-    fn render(
-        &self,
-        referemce: InputReference,
-        style: StyleOptions,
-    ) -> Option<String> {
+    fn render(&self, referemce: InputReference, style: StyleOptions) -> Option<String> {
         // Clone the reference before moving it into the closure.
         let cloned_reference = referemce;
         match self {
             Contributor::SimpleName(s) => Some(s.to_string()),
             Contributor::StructuredName(n) => {
                 Some(format!("{} {}", n.family_name, n.given_name,))
-            },
+            }
             Contributor::ContributorList(l) => {
-                let rendered: Vec<String> = l.0.iter()
-                    .filter_map(|c| c.render(cloned_reference.clone(), style.clone()))
-                    .collect();
+                let rendered: Vec<String> =
+                    l.0.iter()
+                        .filter_map(|c| c.render(cloned_reference.clone(), style.clone()))
+                        .collect();
                 Some(rendered.join("; "))
             }
         }
@@ -169,13 +246,50 @@ impl SortAndGroupAble for Contributor {
     fn key(&self) -> String {
         // In progress.
         match self {
-            Contributor::SimpleName(s) => s.to_string(),
+            Contributor::SimpleName(s) => s.to_lowercase(),
             Contributor::StructuredName(n) => {
-                format!("{} {}", n.family_name, n.given_name,)
+                format!(
+                    "{}-{}",
+                    n.family_name.to_lowercase(),
+                    n.given_name.to_lowercase(),
+                )
             }
-            Contributor::ContributorList(l) => l.0.iter().map(|c| c.key()).collect(),
+            Contributor::ContributorList(l) => {
+                let names: Vec<String> = l.0.iter().map(|c| c.key()).collect();
+                names.join(":")
+            }
         }
     }
+}
+
+#[test]
+fn test_contributor_key() {
+    let simple = Contributor::SimpleName("John Doe".to_string());
+    assert_eq!(simple.key(), "john doe");
+
+    let structured = Contributor::StructuredName(StructuredName {
+        given_name: "John".to_string(),
+        family_name: "Doe".to_string(),
+    });
+    assert_eq!(simple.key(), "john doe");
+    assert_eq!(structured.key(), "doe-john");
+
+    let simple_list = Contributor::ContributorList(ContributorList(vec![
+        Contributor::SimpleName("John Doe".to_string()),
+        Contributor::SimpleName("Jane Doe".to_string()),
+    ]));
+    let structured_list = Contributor::ContributorList(ContributorList(vec![
+        Contributor::StructuredName(StructuredName {
+            given_name: "John".to_string(),
+            family_name: "Doe".to_string(),
+        }),
+        Contributor::StructuredName(StructuredName {
+            given_name: "Jane".to_string(),
+            family_name: "Doe".to_string(),
+        }),
+    ]));
+    assert_eq!(simple_list.key(), "john doe:jane doe");
+    assert_eq!(structured_list.key(), "doe-john:doe-jane");
 }
 
 /// A contributor can be a person or an organzation.
@@ -198,6 +312,24 @@ pub struct StructuredName {
     pub family_name: String,
 }
 
+impl fmt::Display for StructuredName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", self.given_name, self.family_name)
+    }
+}
+
+#[test]
+fn test_structured_name() {
+    let name = StructuredName {
+        given_name: "John".to_string(),
+        family_name: "Doe".to_string(),
+    };
+    assert_eq!(
+        name.to_string(),
+        "John Doe".to_string(),
+        "StructuredName should be formatted as 'given_name family_name'");
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(untagged)]
 pub enum RefDate {
@@ -216,6 +348,12 @@ impl Ord for RefDate {
             (RefDate::Literal(_), RefDate::EdtfString(_)) => Ordering::Greater,
         }
     }
+}
+
+#[test]
+fn test_date_key () {
+    let date = RefDate::EdtfString("2020-01-01".to_string());
+    assert_eq!(date.key(), "2020".to_string());
 }
 
 impl PartialOrd for RefDate {
@@ -243,6 +381,14 @@ pub enum Title {
     Shorthand(String, String),
 }
 
+#[test]
+fn test_title_key() {
+    let title = Title::Single("A Title".to_string());
+    assert_eq!(title.key(), "a title".to_string());
+    let title = Title::Shorthand("a title".to_string(), "AT".to_string());
+    assert_eq!(title.key(), "a title (AT)".to_string());
+}
+
 /// Where title parts are meaningful, use this struct; CSLN processors will not parse title strings.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct StructuredTitle {
@@ -264,21 +410,6 @@ impl RefDate {
                 Some(parsed_date.as_date().unwrap().year().to_string())
             }
             RefDate::Literal(_) => None,
-        }
-    }
-}
-
-impl fmt::Display for RefDate {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            RefDate::EdtfString(date) => {
-                let parsed_date: Edtf = match Edtf::parse(&date.to_string()) {
-                    Ok(edtf) => edtf,
-                    Err(_) => return write!(f, "{}", date),
-                };
-                write!(f, "{}", parsed_date)
-            }
-            RefDate::Literal(date) => write!(f, "{}", date),
         }
     }
 }
