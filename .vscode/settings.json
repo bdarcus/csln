@@ -1,11 +1,10 @@
 {
-    "yaml.schemas": {
-        "./schemas/style.json": ["/*.csl.yaml"],
-        "./schemas/bibliography.json": ["/*.bib.yaml"]
-    },
-    "rust-analyzer.linkedProjects": [
-        "./types/Cargo.toml",
-        "./types/Cargo.toml"
+  "yaml.schemas": {
+    "./schemas/style.json": [
+      "/*.csl.yaml"
     ],
-    "rust-analyzer.showUnlinkedFileNotification": false
+    "./schemas/bibliography.json": [
+      "/*.bib.yaml"
+    ]
+  },
 }
