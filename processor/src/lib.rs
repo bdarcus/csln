@@ -528,7 +528,7 @@ impl Processor {
         let as_sorted = false;
         match key {
             "author" => reference.author.as_ref().unwrap().names(options, as_sorted),
-            "year" => reference.issued.as_ref().unwrap().year().unwrap_or_default(),
+            "year" => reference.issued.as_ref().unwrap().year().unwrap_or_default().to_string(),
             "title" => reference.title.as_ref().unwrap().to_string(),
             _ => panic!("Invalid key"),
         }
