@@ -24,4 +24,6 @@ url = { version = "2", features = ["serde"] }
 edtf = { version = "0.2", features = ["chrono"] }
 chrono = { version = "0.4", features = ["unstable-locales"] }
 style = { path = "../style", package = "csln-style" }
+icu = { version = "1.2.0", features = ["icu_datetime_experimental"] }
+icu_testdata = { version = "1.2.0", features = ["icu_datetime_experimental"] }
 
