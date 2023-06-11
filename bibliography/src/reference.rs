@@ -1,9 +1,9 @@
+use edtf::level_1::Edtf;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use style::options::StyleOptions;
+use style::options::{StyleOptions, StyleContributors};
 use url::Url;
-use edtf::level_1::Edtf;
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct InputReference {
@@ -12,10 +12,10 @@ pub struct InputReference {
     pub author: Option<Contributor>,
     pub editor: Option<Contributor>,
     pub translator: Option<Contributor>,
-    pub issued: Option<RefDate>,
+    pub issued: Option<EdtfString>,
     pub publisher: Option<Contributor>,
     pub url: Option<Url>,
-    pub accessed: Option<RefDate>,
+    pub accessed: Option<EdtfString>,
     pub note: Option<String>,
 }
 
@@ -30,41 +30,22 @@ pub struct StructuredName {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(untagged)]
-pub enum RefDate {
-    Structured(EdtfString),
-    Plain(String),
-}
+pub struct EdtfString(pub String);
 
-pub type EdtfString = String;
-
-impl RefDate {
-    pub fn year(&self) -> Option<String> {
-        match self {
-            RefDate::Structured(date) => {
-                let parsed_date: Edtf = match Edtf::parse(&date.to_string()) {
-                    Ok(edtf) => edtf,
-                    Err(_) => return None,
-                };
-                Some(parsed_date.as_date().unwrap().year().to_string())
-            }
-            RefDate::Plain(_) => None,
-        }
+impl EdtfString {    
+    pub fn as_date(&self) -> Option<Edtf> {
+        Edtf::parse(&self.0).ok()
     }
 }
 
-impl fmt::Display for RefDate {
+impl fmt::Display for EdtfString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            RefDate::Structured(date) => {
-                let parsed_date: Edtf = match Edtf::parse(&date.to_string()) {
-                    Ok(edtf) => edtf,
-                    Err(_) => return write!(f, "{}", date)
-                };
-                write!(f, "{}", parsed_date)
-            }
-            RefDate::Plain(date) => write!(f, "{}", date),
-        }
+        // TODO: finish this
+        let parsed_date: Edtf = match Edtf::parse(&self.0) {
+            Ok(edtf) => edtf,
+            Err(_) => return write!(f, "{:?}", self),
+        };
+        write!(f, "{}", parsed_date)
     }
 }
 
@@ -90,6 +71,22 @@ impl fmt::Display for Contributor {
             }
         }
     }
+}
+
+#[test]
+fn test_display_contributor () {
+    let contributor = Contributor::SimpleName("John Smith".to_string());
+    assert_eq!(contributor.to_string(), "John Smith");
+    let contributor = Contributor::StructuredName(StructuredName {
+        given_name: "John".to_string(),
+        family_name: "Smith".to_string(),
+    });
+    assert_eq!(contributor.to_string(), "John Smith");
+    let contributor = Contributor::ContributorList(ContributorList(vec![
+        Contributor::SimpleName("John Smith".to_string()),
+        Contributor::SimpleName("Jane Smith".to_string()),
+    ]));
+    assert_eq!(contributor.to_string(), "John Smith, Jane Smith");
 }
 
 impl fmt::Display for ContributorList {
@@ -142,6 +139,27 @@ impl Name for Contributor {
     }
 }
 
+#[test]
+fn test_names() {
+    let simple = Contributor::SimpleName("John Doe".to_string());
+    let structured = Contributor::StructuredName(StructuredName {
+        given_name: "John".to_string(),
+        family_name: "Doe".to_string(),
+    });
+    let options = StyleOptions::default();
+    assert_eq!(simple.names(options, false), "John Doe");
+    let options = StyleOptions::default();
+    assert_eq!(
+        simple.names(options, true),
+        "John Doe",
+        "as_sorted=true should not affect a simple name"
+    );
+    let options = StyleOptions::default();
+    assert_eq!(structured.names(options, false), "John Doe");
+    let options = StyleOptions::default();
+    assert_eq!(structured.names(options, true), "Doe, John");
+}
+
 impl NameList for ContributorList {
     fn names_list(&self, options: StyleOptions, as_sorted: bool) -> String {
         let names: Vec<String> = self
@@ -163,4 +181,38 @@ impl NameList for ContributorList {
             .collect::<Vec<String>>();
         names.join(", ")
     }
+}
+
+#[test]
+fn test_names_list() {
+    let contributor_list = ContributorList(vec![
+        Contributor::SimpleName("John Doe".to_string()),
+        Contributor::SimpleName("Jane Doe".to_string()),
+    ]);
+    let options = StyleOptions::default();
+    assert_eq!(contributor_list.names_list(options, false), "John Doe, Jane Doe");
+    let options = StyleOptions::default();
+    assert_eq!(contributor_list.names_list(options, true), "John Doe, Jane Doe", "as_sorted=true should not affect simple names");
+    let structured_name_list = ContributorList(vec![
+        Contributor::StructuredName(StructuredName {
+            given_name: "John".to_string(),
+            family_name: "Doe".to_string(),
+        }),
+        Contributor::StructuredName(StructuredName {
+            given_name: "Jane".to_string(),
+            family_name: "Doe".to_string(),
+        }),
+    ]);
+    let options = StyleOptions::default();
+    assert_eq!(structured_name_list.names_list(options, false), "John Doe, Jane Doe");
+    let options = StyleOptions::default();
+    assert_eq!(structured_name_list.names_list(options, true), "Doe, John, Doe, Jane");
+    let options = StyleOptions {
+        contributors: style::options::StyleContributors {
+            display_as_sort: style::options::DisplayAsSort::First,
+            ..StyleContributors::default()
+        },
+        ..StyleOptions::default()
+    };
+    assert_eq!(structured_name_list.names_list(options, false), "Doe, John, Jane Doe");
 }
