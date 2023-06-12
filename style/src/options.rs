@@ -51,7 +51,7 @@ pub struct StyleOptions {
     /// Localization configuration.
     pub localization: Localization,
     /// Sorting configuration.
-    pub sort: Vec<Sort>,
+    pub sort: SortOptions,
     /// Substitution configuration.
     pub substitute: SubstituteOptions,
 }
@@ -64,7 +64,28 @@ impl Default for StyleOptions {
             disambiguate: Disambiguation::default(),
             group: GroupOptions::default().group,
             localization: Localization { scope: LocalizationScope::PerItem },
-            sort: vec![
+            sort: SortOptions::default(),
+            substitute: SubstituteOptions::default(),
+        }
+    }
+}
+
+/* Sorting Configuration */
+
+/// Sorting is configured by the [`SortOptions`] struct.
+/// It distinguishes between the templates, which specify the sequence of keys used for sorting 
+/// and order they are sorted in, and options which cusutomize the sorting process.
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct SortOptions {
+    pub options: SortConfig,
+    pub template: Vec<Sort>,
+}
+
+impl Default for SortOptions {
+    fn default() -> Self {
+        Self {
+            options: SortConfig::default(),
+            template: vec![
                 Sort {
                     key: SortGroupKey::Author,
                     order: SortOrder::Ascending,
@@ -72,9 +93,42 @@ impl Default for StyleOptions {
                 Sort {
                     key: SortGroupKey::Year,
                     order: SortOrder::Ascending,
-                }
+                },
             ],
-            substitute: SubstituteOptions::default(),
+        }
+    }
+}
+
+/// Configuration options for sorting.
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct SortConfig {
+    /// Shorten name lists for sorting the same as for display.
+    // REVIEW: may need more options here.
+    pub shorten_names: bool,
+    /// Use same substitutions for sorting as for rendering.
+    pub render_substitutions: bool,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "lowercase", untagged)]
+pub enum SortGroupKey {
+    Title,
+    Author,
+    Year,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "lowercase", untagged)]
+pub enum SortOrder {
+    Ascending,
+    Descending,
+}
+
+impl Default for SortConfig {
+    fn default() -> Self {
+        Self {
+            shorten_names: false,
+            render_substitutions: true,
         }
     }
 }
@@ -85,30 +139,10 @@ pub struct Sort {
     pub order: SortOrder,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct DateOptions {
-    pub date: StyleDate,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct SubstituteOptions {
-    pub substitute: Vec<Substitute>,
-}
+/* Grouping Options */
 
 pub struct GroupOptions {
     pub group: Vec<SortGroupKey>,
-}
-
-impl Default for SubstituteOptions {
-    fn default() -> Self {
-        Self {
-            substitute: vec![
-                Substitute::Editor,
-                Substitute::Title,
-                Substitute::Translator,
-            ],
-        }
-    }
 }
 
 impl Default for GroupOptions {
@@ -119,62 +153,12 @@ impl Default for GroupOptions {
     }
 }
 
-impl StyleOptions {
-    pub fn get_group_key_config(&self) -> &[SortGroupKey] {
-        self.group.as_slice()
-    }
-    pub fn get_sort_config(&self) -> &[Sort] {
-        self.sort.as_slice()
-    }
-    pub fn get_contributors_config(&self) -> &StyleContributors {
-        &self.contributors
-    }
-    pub fn get_disambiguation_config(&self) -> &Disambiguation {
-        &self.disambiguate
-    }
-    pub fn get_localization_config(&self) -> &Localization {
-        &self.localization
-    }
-    pub fn get_date_config(&self) -> &StyleDate {
-        &self.dates
-    }
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct DateOptions {
+    pub date: StyleDate,
 }
 
-/// Localization configuration.
-///
-/// Terms and data localization configuration.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct Localization {
-    /// The scope to use for localization.
-    ///
-    /// "per-item" uses the locale of the reference item, and "global" uses the target language
-    /// across all references.
-    pub scope: LocalizationScope,
-}
-
-/// The scope to use for localization.
-///
-/// "per-item" uses the locale of the reference item, and "global" uses the target language
-/// across all references.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case", untagged)]
-pub enum LocalizationScope {
-    Global,
-    PerItem,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct Disambiguation {
-    pub add_names: bool,
-    pub add_year_suffix: bool,
-}
-
-impl Default for Disambiguation {
-    fn default() -> Self {
-        Self { add_names: true, add_year_suffix: false }
-    }
-}
+/* Substition configuration. */
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct Substitution {
@@ -192,6 +176,86 @@ pub enum Substitute {
     Translator,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct SubstituteOptions {
+    pub substitute: Vec<Substitute>,
+}
+
+impl Default for SubstituteOptions {
+    fn default() -> Self {
+        Self {
+            substitute: vec![
+                Substitute::Editor,
+                Substitute::Title,
+                Substitute::Translator,
+            ],
+        }
+    }
+}
+
+impl StyleOptions {
+    pub fn get_group_key_config(&self) -> &[SortGroupKey] {
+        self.group.as_slice()
+    }
+    pub fn get_sort_config(&self) -> &SortOptions {
+        &self.sort
+    }
+    pub fn get_contributors_config(&self) -> &StyleContributors {
+        &self.contributors
+    }
+    pub fn get_disambiguation_config(&self) -> &Disambiguation {
+        &self.disambiguate
+    }
+    pub fn get_localization_config(&self) -> &Localization {
+        &self.localization
+    }
+    pub fn get_date_config(&self) -> &StyleDate {
+        &self.dates
+    }
+}
+
+/* Localization and multilingual configuration. */
+// REVIEW correct name for this group?
+
+/// Localization configuration.
+///
+/// Terms and data localization configuration.
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct Localization {
+    /// The scope to use for localization.
+    ///
+    /// "per-item" uses the locale of the reference item, and "global" uses the target language
+    /// across all references.
+    pub scope: LocalizationScope,
+}
+
+/// The scope to use for localization.
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "kebab-case", untagged)]
+pub enum LocalizationScope {
+    //? Use the output locale.
+    Global,
+    /// Ues the locale of the reference item,
+    PerItem,
+}
+
+/* Disambiguation configuration. */
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct Disambiguation {
+    pub add_names: bool,
+    pub add_year_suffix: bool,
+}
+
+impl Default for Disambiguation {
+    fn default() -> Self {
+        Self { add_names: true, add_year_suffix: false }
+    }
+}
+
+/* Date-time configuration. */
+
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StyleDate {
@@ -207,19 +271,13 @@ pub enum MonthOptions {
     Numeric,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "lowercase", untagged)]
-pub enum SortGroupKey {
-    Title,
-    Author,
-    Year,
-}
+/* Contributor configuration. */
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "lowercase", untagged)]
-pub enum SortOrder {
-    Ascending,
-    Descending,
+// REVIEW: move to template.rs?
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct StyleTemplateContributors {
+    pub contributors: Contributors,
+    pub form: ContributorForm,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
@@ -268,6 +326,17 @@ pub enum DisplayAsSort {
     #[default]
     None,
 }
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum LabelOptions {
+    Long,
+    #[default]
+    Short,
+    Verb,
+}
+
+/* List formatting configuration. */
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -330,14 +399,7 @@ pub enum AndOptions {
     None,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum LabelOptions {
-    Long,
-    #[default]
-    Short,
-    Verb,
-}
+/* Title formatting configuration. */
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "kebab-case")] // REVIEW: is this correct?
@@ -376,6 +438,8 @@ pub enum ShortTitleOptions {
     #[default]
     AsIs,
 }
+
+/* Date-time formatting configuration. */
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct StyleTemplateDate {
@@ -437,9 +501,5 @@ pub enum TitleForm {
     Long,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct StyleTemplateContributors {
-    pub contributors: Contributors,
-    pub form: ContributorForm,
-}
+
 
