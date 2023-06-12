@@ -2,7 +2,7 @@ use edtf::level_1::Edtf;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use style::options::{StyleOptions};
+use style::options::{StyleOptions, StyleContributors};
 use url::Url;
 //use icu::calendar::DateTime;
 

@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::option::Option;
 use style::options::StyleOptions;
-use style::options::{MonthOptions, Sort, SortGroupKey, SortOrder};
+use style::options::{MonthOptions, SortOptions, SortGroupKey, SortOrder};
 #[allow(unused_imports)] // for now
 use style::template::{
     Contributors, DateForm, Dates, StyleTemplateComponent, StyleTemplateContributor,
@@ -423,9 +423,9 @@ impl Processor {
     ) -> Vec<InputReference> {
         let mut references: Vec<InputReference> = references;
         let options: &StyleOptions = &self.style.options;
-        let sort_config: &[Sort] = self.style.options.get_sort_config();
+        let sort_config: &SortOptions = self.style.options.get_sort_config();
         //println!("{:?}", sort_config);
-        sort_config.iter().rev().for_each(|sort| {
+        sort_config.template.iter().rev().for_each(|sort| {
             match sort.key {
                 SortGroupKey::Author => {
                     references.par_sort_by(|a, b| {
