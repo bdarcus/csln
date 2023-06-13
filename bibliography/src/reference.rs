@@ -2,7 +2,7 @@ use edtf::level_1::Edtf;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use style::options::{StyleOptions, StyleContributors};
+use style::options::StyleOptions;
 use url::Url;
 //use icu::calendar::DateTime;
 
@@ -232,9 +232,9 @@ fn test_names_list() {
     let options = StyleOptions {
         contributors: style::options::StyleContributors {
             display_as_sort: style::options::DisplayAsSort::First,
-            ..StyleContributors::default()
+            ..style::options::StyleContributors::default()
         },
-        ..StyleOptions::default()
+        ..style::options::StyleOptions::default()
     };
     assert_eq!(structured_name_list.names_list(options, false), "Doe, John, Jane Doe");
 }
