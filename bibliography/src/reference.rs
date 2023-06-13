@@ -1,9 +1,14 @@
-use edtf::level_1::Edtf;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use style::options::StyleOptions;
 use url::Url;
+use chrono::prelude::*;
+use edtf::level_1::{Date, Edtf, Component};
+use edtf::ParseError;
+use icu::calendar::{AnyCalendar, DateTime as icu_DateTime};
+use icu::datetime::{options::length, DateTimeFormatter};
+use icu::locid::locale as icu_locale;
 //use icu::calendar::DateTime;
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -33,28 +38,76 @@ pub struct StructuredName {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct EdtfString(pub String);
 
-impl EdtfString {    
-    pub fn as_date(&self) -> Option<Edtf> {
-        Edtf::parse(&self.0).ok()
+pub fn string_toi32(s: &str) -> i32 {
+    s.parse::<i32>().unwrap()
+}
+
+pub fn string_to_u8(s: &str) -> u8 {
+    s.parse::<u8>().unwrap()
+}
+
+pub fn string_to_u32(s: &str) -> u32 {
+    s.parse::<u32>().unwrap()
+}
+
+impl EdtfString {
+    // TODO: add more methods to this, handle date-times
+    pub fn parse(&self) -> Date {
+        let edtf = Edtf::parse(&self.to_string());
+        match edtf {
+            Ok(Edtf::Date(date)) => date,
+            // TODO: how to somehow get back the original string?
+            _ => Date::from_ymd(0000, 1, 1)
+        }
+    }
+    
+    /// Convert self to a [chrono::NaiveDate], regardless of whether it is a full date.
+    // REVIEW there must be a better way to do this!
+    pub fn to_chrono(&self) -> Option<NaiveDate> {
+        let parsed_date = self.parse();
+        let year = parsed_date.year();
+        let month = string_to_u32(&parsed_date.month().unwrap_or(Component::Value(0)).to_string());
+        let day = string_to_u32(&parsed_date.day().unwrap_or(Component::Value(0)).to_string());
+        NaiveDate::from_ymd_opt(year, month, day)
     }
 
-    // TODO do want this or string?
-    pub fn year(&self) -> Option<i32> {
-        self.as_date().and_then(|d| match d {
-            Edtf::Date(date) => Some(date.year()),
-            _ => None,
-        })
+    /// Convert self to a ISO date-time, regardless of whether it is a full date.
+    pub fn to_iso_datetime(&self) -> icu_DateTime<AnyCalendar> {
+        let parsed_date = self.parse();
+        let year = parsed_date.year();
+        let month = match parsed_date.month() {
+            Some(Component::Value(value)) => value,
+            _ => string_to_u32(&Component::Value(0).to_string()),
+        };
+        let day = match parsed_date.day() {
+            Some(Component::Value(value)) => value,
+            _ => string_to_u32(&Component::Value(0).to_string()),
+        };
+        let month = string_to_u8(&month.to_string());
+        let day = string_to_u8(&day.to_string());
+        let hour = 0;
+        let minute = 0;
+        let second = 0;
+        let iso_date =
+            icu_DateTime::try_new_iso_datetime(year, month, day, hour, minute, second).unwrap();
+        iso_date.to_any()
     }
 }
 
 #[test]
-fn test_edtf_dates () {
+fn parses_edtf_dates_to_year () {
     let date = EdtfString("2020-01-01".to_string());
-    assert_eq!(date.year(), Some(2020));
+    assert_eq!(date.parse().year(), 2020);
     let date = EdtfString("2021-10".to_string());
-    assert_eq!(date.year(), Some(2021));
+    assert_eq!(date.parse().year(), 2021);
     let date = EdtfString("2022".to_string());
-    assert_eq!(date.year(), Some(2022));
+    assert_eq!(date.parse().year(), 2022);
+}
+
+#[test]
+fn returns_string_if_not_edtf () {
+    let date = EdtfString("Han dynastry".to_string());
+    assert_eq!(format!("{}", date), "Han dynastry");
 }
 
 impl fmt::Display for EdtfString {

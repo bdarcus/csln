@@ -452,9 +452,9 @@ impl Processor {
                 }
                 SortGroupKey::Year => {
                     references.par_sort_by(|a, b| {
-                        let a_year = a.issued.as_ref().unwrap().year();
-                        let b_year = b.issued.as_ref().unwrap().year();
-                        //println!("a_year: {}", a_year);
+                        let a_year = a.issued.as_ref().unwrap().parse().year();
+                        let b_year = b.issued.as_ref().unwrap().parse().year();
+                        // println!("a_year: {}", b_year);
                         if sort.order == SortOrder::Ascending {
                             a_year.cmp(&b_year)
                         } else {
@@ -515,7 +515,8 @@ impl Processor {
             .par_iter()
             .map(|key| match key {
                 SortGroupKey::Author => reference.author.as_ref().unwrap().names(options.clone(), as_sorted),
-                SortGroupKey::Year => reference.issued.as_ref().unwrap().year().unwrap_or_default().to_string(),
+                // REVIEW: maybe better to sort on the integer?
+                SortGroupKey::Year => reference.issued.as_ref().unwrap().parse().year().to_string(),
                 SortGroupKey::Title => reference.title.as_ref().unwrap().to_string(),
             })
             .collect::<Vec<String>>()
