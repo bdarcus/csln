@@ -445,7 +445,7 @@ pub enum ShortTitleOptions {
 pub struct StyleTemplateDate {
     /// The format to use for a complete date.
     pub date: DateStyle,
-    /// The format to use for a time..
+    /// The format to use for a time.
     pub time: TimeStyle,
     /// The format to use for a month.
     pub month: MonthStyle,
