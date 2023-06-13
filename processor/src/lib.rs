@@ -508,30 +508,19 @@ impl Processor {
     /// Return a string to use for grouping for a given reference, using instructions in the style.
     fn make_group_key(&self, reference: &InputReference) -> String {
         let group_key_config: &[SortGroupKey] = self.style.options.get_group_key_config();
+        let options = self.style.options.clone();
+        let as_sorted = false;
         let group_key = group_key_config
             // This is likely unnecessary, but just in case.
             .par_iter()
             .map(|key| match key {
-                SortGroupKey::Author => "author",
-                SortGroupKey::Year => "year",
-                SortGroupKey::Title => "title",
+                SortGroupKey::Author => reference.author.as_ref().unwrap().names(options.clone(), as_sorted),
+                SortGroupKey::Year => reference.issued.as_ref().unwrap().year().unwrap_or_default().to_string(),
+                SortGroupKey::Title => reference.title.as_ref().unwrap().to_string(),
             })
-            .map(|key| self.string_for_key(reference, key))
             .collect::<Vec<String>>()
             .join(":");
         group_key
-    }
-
-    /// Return a string for a given key for a given reference.
-    fn string_for_key(&self, reference: &InputReference, key: &str) -> String {
-        let options = self.style.options.clone();
-        let as_sorted = false;
-        match key {
-            "author" => reference.author.as_ref().unwrap().names(options, as_sorted),
-            "year" => reference.issued.as_ref().unwrap().year().unwrap_or_default().to_string(),
-            "title" => reference.title.as_ref().unwrap().to_string(),
-            _ => panic!("Invalid key"),
-        }
     }
 
     /// Group references according to instructions in the style.
