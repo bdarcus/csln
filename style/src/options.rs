@@ -441,12 +441,20 @@ pub enum ShortTitleOptions {
 
 /* Date-time formatting configuration. */
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct StyleTemplateDate {
-    pub date: Option<DateStyle>,
-    pub time: Option<TimeStyle>,
-    pub month: Option<MonthStyle>,
-    pub year: Option<YearStyle>,
+    /// The format to use for a complete date.
+    pub date: DateStyle,
+    /// The format to use for a time..
+    pub time: TimeStyle,
+    /// The format to use for a month.
+    pub month: MonthStyle,
+    /// The format to use for a year.
+    pub year: YearStyle,
+    /// Wtih an approximate date, whether to add the circa prefix.
+    pub circa: bool,
+    /// With an uncertain date, whether to add the question mark suffix.
+    pub uncertain: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
