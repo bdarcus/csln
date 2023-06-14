@@ -7,8 +7,8 @@ use style::Style;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        panic!("Please provide the path of the style and bibliography files as command line arguments.");
+    if args.len() < 4 {
+        panic!("Please provide the paths of the style, locale, bibliography, and citation files as command line arguments.");
     }
 
     let style_path: &String = &args[1];
@@ -18,7 +18,10 @@ fn main() {
     let bibliography: Bibliography = Bibliography::from_file(bibliography_path);
     let citations: Vec<Citation> = Vec::new();
 
-    let processor: Processor = Processor::new(style, bibliography, citations, "en-US".to_string());
+    let locale_path: &String = &args[3];
+    let locale = style::locale::Locale::from_file(locale_path);
+
+    let processor: Processor = Processor::new(style, bibliography, citations, locale);
     let rendered_refs = processor.render_references();
     println!("{}", serde_json::to_string_pretty(&rendered_refs).unwrap());
 }

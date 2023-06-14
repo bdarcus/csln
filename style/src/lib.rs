@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::fs;
 
 pub mod options;
+pub mod locale;
 use options::StyleOptions;
 
 pub mod template;

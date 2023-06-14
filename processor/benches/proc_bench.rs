@@ -9,8 +9,9 @@ use std::time::Duration;
 fn proc_benchmark(c: &mut Criterion) {
     let style: Style = style::Style::from_file("examples/style.csl.yaml");
     let bibliography: Bibliography = bibliography::InputBibliography::from_file("examples/ex1.bib.yaml");
+    let locale = style::locale::Locale::from_file("locales/locale-en.yaml");
     let citations: Vec<Citation> = Vec::new();
-    let processor: Processor = Processor::new(style, bibliography, citations, "en-US".to_string());
+    let processor: Processor = Processor::new(style, bibliography, citations, locale);
     c.bench_function("sorting references", |b| {
         b.iter(|| {
             let refs = processor.get_references();
