@@ -24,3 +24,6 @@ bibliography:
     - date: issued
       form: year
     - title: title
+    - date: issued
+      form: month-day
+
