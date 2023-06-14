@@ -120,6 +120,8 @@ pub struct RenderOptions<'a> {
     global: &'a StyleOptions,
     // Options for the citaton or bibliography, that may override the style options.
     local: &'a StyleOptions,
+    // Locale for the output.
+    locale: &'a Locale,
 }
 
 // WTD???
@@ -249,23 +251,27 @@ impl RenderDate for StyleTemplateDate {
         &self,
         reference: &InputReference,
         hints: &ProcHints,
-        _options: &RenderOptions,
+        options: &RenderOptions,
     ) -> String {
-        let date_string: String = match self.date {
-            Dates::Issued => reference.issued.as_ref().unwrap().to_string(),
-            Dates::Accessed => reference.accessed.as_ref().unwrap().to_string(),
-            Dates::OriginalPublished => todo!(),
-        };
-        let parsed_date: Edtf = match Edtf::parse(&date_string) {
-            Ok(edtf) => edtf,
-            Err(_) => return date_string.to_string(),
-        };
-
+        let locale: &Locale = options.locale;
         let formatted_date: String = match self.form {
-            DateForm::Year => parsed_date.as_date().unwrap().year().to_string(),
-            DateForm::YearMonth => todo!(),
+            DateForm::Year => {
+                reference.issued.as_ref().unwrap().year().unwrap().to_string()
+            }
+            // TODO add the locale months somehow
+            DateForm::YearMonth => reference
+                .issued
+                .as_ref()
+                .unwrap()
+                .year_month(locale.dates.months.long.clone())
+                .unwrap(),
             DateForm::Full => todo!(),
-            DateForm::MonthDay => todo!(),
+            DateForm::MonthDay => reference
+                .issued
+                .as_ref()
+                .unwrap()
+                .month_day(locale.dates.months.long.clone())
+                .unwrap_or("".to_string()),
         };
 
         // TODO: implement this along with localized dates
@@ -360,6 +366,7 @@ impl Processor {
             global: &self.style.options,
             // TTODO: get local options
             local: &self.style.options,
+            locale: &self.locale,
         }
     }
 

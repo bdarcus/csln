@@ -2,7 +2,7 @@ use edtf::level_1::Edtf;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use style::options::StyleOptions;
+use style::{locale::MonthList, options::StyleOptions};
 use url::Url;
 //use icu::calendar::DateTime;
 
@@ -33,7 +33,7 @@ pub struct StructuredName {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct EdtfString(pub String);
 
-impl EdtfString {    
+impl EdtfString {
     pub fn as_date(&self) -> Option<Edtf> {
         Edtf::parse(&self.0).ok()
     }
@@ -45,10 +45,34 @@ impl EdtfString {
             _ => None,
         })
     }
+
+    // FIX these methods need to properly handle missing data
+    pub fn month(&self, months: &MonthList) -> Option<String> {
+        self.as_date().and_then(|d| match d {
+            Edtf::Date(date) => {
+                let month = date.month().unwrap();
+                let index = month.value().unwrap() as usize - 1;
+                if index < months.len() {
+                    Some(months[index].clone())
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        })
+    }
+
+    pub fn year_month(&self, months: MonthList) -> Option<String> {
+        Some(format!("{} {}", self.month(&months)?, self.year().unwrap()))
+    }
+
+    pub fn month_day(&self, months: MonthList) -> Option<String> {
+        Some(format!("{} {}", self.month(&months)?, self.as_date().unwrap().as_date()?.day().unwrap()))
+    }
 }
 
 #[test]
-fn test_edtf_dates () {
+fn year_from_edtf_dates() {
     let date = EdtfString("2020-01-01".to_string());
     assert_eq!(date.year(), Some(2020));
     let date = EdtfString("2021-10".to_string());
@@ -57,10 +81,28 @@ fn test_edtf_dates () {
     assert_eq!(date.year(), Some(2022));
 }
 
+#[test]
+fn month_from_edtf_dates() {
+    let months: MonthList = vec![
+        "January".to_string(),
+        "February".to_string(),
+        "March".to_string(),
+        "April".to_string(),
+        "May".to_string(),
+        "June".to_string(),
+        "July".to_string(),
+        "August".to_string(),
+        "September".to_string(),
+        "October".to_string(),
+        "November".to_string(),
+        "December".to_string(),
+    ];
+    let date = EdtfString("2020-01-01".to_string());
+    assert_eq!(date.month(&months), Some("January".to_string()));
+    //assert_eq!(date.year_month(months), Some("January 2020".to_string()));
+}
+
 impl fmt::Display for EdtfString {
-
-
-
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // TODO: finish this
         let parsed_date: Edtf = match Edtf::parse(&self.0) {
@@ -96,7 +138,7 @@ impl fmt::Display for Contributor {
 }
 
 #[test]
-fn test_display_contributor () {
+fn test_display_contributor() {
     let contributor = Contributor::SimpleName("John Smith".to_string());
     assert_eq!(contributor.to_string(), "John Smith");
     let contributor = Contributor::StructuredName(StructuredName {
@@ -214,7 +256,11 @@ fn test_names_list() {
     let options = StyleOptions::default();
     assert_eq!(contributor_list.names_list(options, false), "John Doe, Jane Doe");
     let options = StyleOptions::default();
-    assert_eq!(contributor_list.names_list(options, true), "John Doe, Jane Doe", "as_sorted=true should not affect simple names");
+    assert_eq!(
+        contributor_list.names_list(options, true),
+        "John Doe, Jane Doe",
+        "as_sorted=true should not affect simple names"
+    );
     let structured_name_list = ContributorList(vec![
         Contributor::StructuredName(StructuredName {
             given_name: "John".to_string(),
