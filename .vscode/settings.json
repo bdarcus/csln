@@ -5,6 +5,9 @@
     ],
     "./schemas/bibliography.json": [
       "/*.bib.yaml"
+    ],
+    "./schemas/locale.json": [
+      "/locale-*.yaml"
     ]
   },
 }
