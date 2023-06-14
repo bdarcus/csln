@@ -81,12 +81,14 @@ pub struct MonthNames {
     /// The ordered list of full month names.
     /// The list must contain exactly 12 elements.
     #[validate(range(min = 12, max = 12))]
-    pub long: Vec<String>,
+    pub long: MonthList,
     /// The ordered list of abbreviated month names.
     /// The list must contain exactly 12 elements.
     #[validate(range(min = 12, max = 12))]
-    pub short: Vec<String>,
+    pub short: MonthList,
 }
+
+pub type MonthList = Vec<String>;
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
