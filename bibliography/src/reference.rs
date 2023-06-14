@@ -33,52 +33,151 @@ pub struct StructuredName {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct EdtfString(pub String);
 
+#[derive(Debug, PartialEq)]
+/// Date inputs must be valid EDTF strings, or a literal string.
+pub enum RefDate {
+    Edtf(Edtf),
+    Literal(String),
+}
+
 impl EdtfString {
-    pub fn as_date(&self) -> Option<Edtf> {
-        Edtf::parse(&self.0).ok()
+    /// Parse the string as an EDTF date etc, or return the string as a literal.
+    pub fn parse(&self) -> RefDate {
+        match Edtf::parse(&self.0) {
+            Ok(edtf) => RefDate::Edtf(edtf),
+            Err(_) => RefDate::Literal(self.0.clone()),
+        }
     }
 
-    // TODO do want this or string?
-    pub fn year(&self) -> Option<i32> {
-        self.as_date().and_then(|d| match d {
-            Edtf::Date(date) => Some(date.year()),
-            _ => None,
-        })
+    pub fn year(&self) -> String {
+        let parsed_date = self.parse();
+        match parsed_date {
+            RefDate::Edtf(edtf) => match edtf {
+                Edtf::Date(date) => date.year().to_string(),
+                Edtf::YYear(year) => format!("{}", year.value()),
+                Edtf::DateTime(datetime) => datetime.date().year().to_string(),
+                Edtf::Interval(start, _end) => format!("{}", start.year()),
+                Edtf::IntervalFrom(date, _terminal) => format!("{}", date.year()),
+                Edtf::IntervalTo(_terminal, date) => format!("{}", date.year()),
+            },
+            RefDate::Literal(_) => "".to_string(),
+        }
     }
 
-    // FIX these methods need to properly handle missing data
-    pub fn month(&self, months: &MonthList) -> Option<String> {
-        self.as_date().and_then(|d| match d {
-            Edtf::Date(date) => {
-                let month = date.month().unwrap();
-                let index = month.value().unwrap() as usize - 1;
-                if index < months.len() {
-                    Some(months[index].clone())
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        })
+    fn month_to_string(month: u32, months: MonthList) -> String {
+        let index = month as usize - 1;
+        if index < months.len() {
+            months[index].clone()
+        } else {
+            "".to_string()
+        }
     }
 
-    pub fn year_month(&self, months: MonthList) -> Option<String> {
-        Some(format!("{} {}", self.month(&months)?, self.year().unwrap()))
+    pub fn month(&self, months: MonthList) -> String {
+        let parsed_date = self.parse();
+        let month = match parsed_date {
+            RefDate::Edtf(edtf) => match edtf {
+                Edtf::Date(date) => date.month(),
+                Edtf::YYear(_year) => None,
+                // types errors below that I couldn't figure out how to fix
+                Edtf::DateTime(_datetime) => todo!(),
+                Edtf::Interval(_start, _end) => todo!(),
+                Edtf::IntervalFrom(_date, _terminal) => todo!(),
+                Edtf::IntervalTo(_terminal, _date) => todo!(),
+            },
+            RefDate::Literal(_) => None,
+        };
+        match month {
+            Some(month) => EdtfString::month_to_string(month.value().unwrap(), months),
+            None => "".to_string(),
+        }
     }
 
-    pub fn month_day(&self, months: MonthList) -> Option<String> {
-        Some(format!("{} {}", self.month(&months)?, self.as_date().unwrap().as_date()?.day().unwrap()))
+    pub fn year_month(&self, months: MonthList) -> String {
+        let month = self.month(months);
+        let year = self.year();
+        if month.is_empty() || year.is_empty() {
+            "".to_string()
+        } else {
+            format!("{} {}", month, year)
+        }
+    }
+
+    pub fn month_day(&self, months: MonthList) -> String {
+        let month = self.month(months);
+        // TODO
+        let day = "1";
+        if month.is_empty() {
+            "".to_string()
+        } else {
+            format!("{} {}", month, day)
+        }
+    }
+}
+
+#[test]
+fn formats_year_months() {
+    let months: MonthList = vec![
+        "January".to_string(),
+        "February".to_string(),
+        "March".to_string(),
+        "April".to_string(),
+        "May".to_string(),
+        "June".to_string(),
+        "July".to_string(),
+        "August".to_string(),
+        "September".to_string(),
+        "October".to_string(),
+        "November".to_string(),
+        "December".to_string(),
+    ];
+    let date = EdtfString("2020-01-01".to_string());
+    assert_eq!(date.year_month(months), "January 2020");
+}
+
+#[test]
+fn parses_literal_dates() {
+    let date_string = EdtfString("foo bar".to_string());
+    assert_eq!(date_string.parse(), RefDate::Literal("foo bar".to_string()));
+}
+
+impl RefDate {
+    pub fn and_then<F, T>(self, f: F) -> Option<T>
+    where
+        F: FnOnce(Edtf) -> Option<T>,
+    {
+        match self {
+            RefDate::Edtf(edtf) => f(edtf),
+            RefDate::Literal(_) => None,
+        }
+    }
+
+    // TODO do we want this or string?
+    pub fn year(&self) -> i32 {
+        match self {
+            RefDate::Edtf(edtf) => match edtf {
+                Edtf::Date(date) => date.year(),
+                Edtf::YYear(year) => year.value() as i32,
+                Edtf::DateTime(datetime) => datetime.date().year(),
+                // REVIEW: the intervals need more thought.
+                Edtf::Interval(start, _end) => start.year(),
+                Edtf::IntervalFrom(date, _terminal) => date.year(),
+                Edtf::IntervalTo(_terminal, date) => date.year(),
+            },
+            // Since we need this for sorting, return 0 for now.
+            RefDate::Literal(_) => 0,
+        }
     }
 }
 
 #[test]
 fn year_from_edtf_dates() {
-    let date = EdtfString("2020-01-01".to_string());
-    assert_eq!(date.year(), Some(2020));
-    let date = EdtfString("2021-10".to_string());
-    assert_eq!(date.year(), Some(2021));
-    let date = EdtfString("2022".to_string());
-    assert_eq!(date.year(), Some(2022));
+    let date = EdtfString("2020-01-01".to_string()).parse();
+    assert_eq!(date.year(), 2020);
+    let date = EdtfString("2021-10".to_string()).parse();
+    assert_eq!(date.year(), 2021);
+    let date = EdtfString("2022".to_string()).parse();
+    assert_eq!(date.year(), 2022);
 }
 
 #[test]
@@ -98,8 +197,7 @@ fn month_from_edtf_dates() {
         "December".to_string(),
     ];
     let date = EdtfString("2020-01-01".to_string());
-    assert_eq!(date.month(&months), Some("January".to_string()));
-    //assert_eq!(date.year_month(months), Some("January 2020".to_string()));
+    assert_eq!(date.month(months), "January");
 }
 
 impl fmt::Display for EdtfString {

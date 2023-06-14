@@ -4,11 +4,10 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 */
 
 #[allow(unused_imports)] // for now
-use bibliography::reference::{Contributor, ContributorList, Name, NameList};
+use bibliography::reference::{Contributor, ContributorList, EdtfString, Name, NameList};
 use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
 use citation::Citation;
-use edtf::level_1::Edtf;
 use icu::datetime::DateTimeFormatterOptions;
 use itertools::Itertools;
 use rayon::prelude::*;
@@ -143,8 +142,6 @@ pub trait RenderDate {
         options: &RenderOptions,
         // context: &RenderContext<T>,
     ) -> String;
-
-    fn render_date(&self, date_string: &str, format_string: &str) -> String;
 }
 
 pub trait RenderTitle {
@@ -254,24 +251,20 @@ impl RenderDate for StyleTemplateDate {
         options: &RenderOptions,
     ) -> String {
         let locale: &Locale = options.locale;
+        let date = match &self.date {
+            Dates::Issued => reference.issued.as_ref().unwrap(),
+            Dates::OriginalPublished => todo!("original-published"),
+            Dates::Accessed => reference.accessed.as_ref().unwrap(),
+        };
+        let parsed_date = date.parse();
+        //print!("date form: {:?}", reference.issued);
         let formatted_date: String = match self.form {
-            DateForm::Year => {
-                reference.issued.as_ref().unwrap().year().unwrap().to_string()
-            }
-            // TODO add the locale months somehow
-            DateForm::YearMonth => reference
-                .issued
-                .as_ref()
-                .unwrap()
-                .year_month(locale.dates.months.long.clone())
-                .unwrap(),
+            DateForm::Year => parsed_date
+                .year() // this line causes a panic if the date is not a year
+                .to_string(),
+            DateForm::YearMonth => date.year_month(locale.dates.months.long.clone()),
             DateForm::Full => todo!(),
-            DateForm::MonthDay => reference
-                .issued
-                .as_ref()
-                .unwrap()
-                .month_day(locale.dates.months.long.clone())
-                .unwrap_or("".to_string()),
+            DateForm::MonthDay => date.month_day(locale.dates.months.long.clone()),
         };
 
         // TODO: implement this along with localized dates
@@ -291,28 +284,17 @@ impl RenderDate for StyleTemplateDate {
             }
         }
 
-        let suffix = if hints.disamb_condition {
+        let suffix = if hints.disamb_condition
+            // TODO need to check form here also
+            // && self.form == style::template::DateForm::Year
+            && formatted_date.len() == 4
+        {
             int_to_letter((hints.group_index % 26) as u32)
         } else {
             "".to_string()
         };
 
         formatted_date + &suffix
-    }
-    // REVIEW may want to just remove this; not clear ATM
-    fn render_date(&self, date_string: &str, _format_string: &str) -> String {
-        let edtf_date: Edtf = Edtf::parse(date_string).unwrap();
-        let formatted_date: String = match edtf_date {
-            // TODO need localized date rendering, using format_string
-            Edtf::Date(date) => date.to_string(),
-            Edtf::DateTime { .. } => todo!(),
-            Edtf::Interval { .. } => todo!(),
-            Edtf::IntervalFrom { .. } => todo!(),
-            Edtf::IntervalTo { .. } => todo!(),
-            Edtf::YYear { .. } => todo!(),
-        };
-
-        formatted_date
     }
 }
 
@@ -355,10 +337,12 @@ impl Processor {
                 style
                     .template
                     .par_iter()
-                    .map(|component| self.render_template_component(component, reference))
+                    .filter_map(|component| {
+                        self.render_template_component(component, reference)
+                    })
                     .collect()
             })
-            .unwrap_or_else(std::vec::Vec::new)
+            .unwrap_or_default()
     }
 
     fn get_render_options(&self) -> RenderOptions {
@@ -374,14 +358,16 @@ impl Processor {
         &self,
         component: &StyleTemplateComponent,
         reference: &InputReference,
-    ) -> ProcTemplateComponent {
+    ) -> Option<ProcTemplateComponent> {
         let hints = self.get_proc_hints();
         let reference_id = reference.id.as_ref().unwrap();
         let hint = hints.get(reference_id).cloned().unwrap_or_default();
         let options = self.get_render_options();
-        ProcTemplateComponent {
-            template_component: component.clone(),
-            value: component.render(reference, &hint, &options),
+        let value = component.render(reference, &hint, &options);
+        if value.is_empty() {
+            None
+        } else {
+            Some(ProcTemplateComponent { template_component: component.clone(), value })
         }
     }
 
@@ -463,8 +449,8 @@ impl Processor {
                 }
                 SortGroupKey::Year => {
                     references.par_sort_by(|a, b| {
-                        let a_year = a.issued.as_ref().unwrap().year();
-                        let b_year = b.issued.as_ref().unwrap().year();
+                        let a_year = a.issued.as_ref().unwrap().parse().year();
+                        let b_year = b.issued.as_ref().unwrap().parse().year();
                         //println!("a_year: {}", a_year);
                         if sort.order == SortOrder::Ascending {
                             a_year.cmp(&b_year)
@@ -528,13 +514,9 @@ impl Processor {
                 SortGroupKey::Author => {
                     reference.author.as_ref().unwrap().names(options.clone(), as_sorted)
                 }
-                SortGroupKey::Year => reference
-                    .issued
-                    .as_ref()
-                    .unwrap()
-                    .year()
-                    .unwrap_or_default()
-                    .to_string(),
+                SortGroupKey::Year => {
+                    reference.issued.as_ref().unwrap().parse().year().to_string()
+                }
                 SortGroupKey::Title => reference.title.as_ref().unwrap().to_string(),
             })
             .collect::<Vec<String>>()
