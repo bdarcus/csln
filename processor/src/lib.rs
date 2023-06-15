@@ -277,7 +277,7 @@ impl RenderDate for StyleTemplateDate {
         }
 
         fn int_to_letter(n: u32) -> String {
-            let c = n + 97;
+            let c = n + 96;
             match char::from_u32(c) {
                 Some(ch) => ch.to_string(),
                 None => "".to_string(),
