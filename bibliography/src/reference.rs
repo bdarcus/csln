@@ -127,7 +127,7 @@ impl EdtfString {
 }
 
 #[test]
-fn formats_year_months() {
+fn year_months() {
     let months: MonthList = vec![
         "January".to_string(),
         "February".to_string(),
@@ -147,7 +147,7 @@ fn formats_year_months() {
 }
 
 #[test]
-fn parses_literal_dates() {
+fn literal_dates() {
     let date_string = EdtfString("foo bar".to_string());
     assert_eq!(date_string.parse(), RefDate::Literal("foo bar".to_string()));
 }
@@ -247,7 +247,7 @@ impl fmt::Display for Contributor {
 }
 
 #[test]
-fn test_display_contributor() {
+fn contributor_name() {
     let contributor = Contributor::SimpleName("John Smith".to_string());
     assert_eq!(contributor.to_string(), "John Smith");
     let contributor = Contributor::StructuredName(StructuredName {
@@ -313,7 +313,7 @@ impl Name for Contributor {
 }
 
 #[test]
-fn test_names() {
+fn display_and_sort_names() {
     let simple = Contributor::SimpleName("John Doe".to_string());
     let structured = Contributor::StructuredName(StructuredName {
         given_name: "John".to_string(),
@@ -357,7 +357,7 @@ impl NameList for ContributorList {
 }
 
 #[test]
-fn test_names_list() {
+fn contributor_list() {
     let contributor_list = ContributorList(vec![
         Contributor::SimpleName("John Doe".to_string()),
         Contributor::SimpleName("Jane Doe".to_string()),
