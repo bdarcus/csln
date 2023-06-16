@@ -49,6 +49,13 @@ impl EdtfString {
         }
     }
 
+    fn component_to_u32(&self, component: Option<edtf::level_1::Component>) -> u32 {
+        match component {
+            Some(component) => component.value().unwrap(),
+            None => 0,
+        }
+    }
+
     pub fn year(&self) -> String {
         let parsed_date = self.parse();
         match parsed_date {
@@ -65,9 +72,13 @@ impl EdtfString {
     }
 
     fn month_to_string(month: u32, months: MonthList) -> String {
-        let index = month as usize - 1;
-        if index < months.len() {
-            months[index].clone()
+        if month > 0 {
+            let index = month - 1;
+            if index < months.len() as u32 {
+                months[index as usize].clone()
+            } else {
+                "".to_string()
+            }
         } else {
             "".to_string()
         }
@@ -75,12 +86,12 @@ impl EdtfString {
 
     pub fn month(&self, months: MonthList) -> String {
         let parsed_date = self.parse();
-        let month = match parsed_date {
+        let month: Option<u32> = match parsed_date {
             RefDate::Edtf(edtf) => match edtf {
-                Edtf::Date(date) => date.month(),
+                Edtf::Date(date) => Some(self.component_to_u32(date.month())),
                 Edtf::YYear(_year) => None,
                 // types errors below that I couldn't figure out how to fix
-                Edtf::DateTime(_datetime) => todo!(),
+                Edtf::DateTime(datetime) => Some(datetime.date().month()),
                 Edtf::Interval(_start, _end) => todo!(),
                 Edtf::IntervalFrom(_date, _terminal) => todo!(),
                 Edtf::IntervalTo(_terminal, _date) => todo!(),
@@ -88,7 +99,7 @@ impl EdtfString {
             RefDate::Literal(_) => None,
         };
         match month {
-            Some(month) => EdtfString::month_to_string(month.value().unwrap(), months),
+            Some(month) => EdtfString::month_to_string(month, months),
             None => "".to_string(),
         }
     }
