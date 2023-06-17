@@ -39,6 +39,7 @@ use crate::template::{Rendering, Contributors};
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(default)]
+/// Style configuration options.
 pub struct StyleOptions {
     /// Contributor list formatting configuration.
     pub contributors: StyleContributors,
@@ -63,7 +64,7 @@ impl Default for StyleOptions {
             dates: StyleDate::default(),
             disambiguate: Disambiguation::default(),
             group: GroupOptions::default().group,
-            localization: Localization { scope: LocalizationScope::PerItem },
+            localization: Localization { scope: LocalizationScope::Global },
             sort: SortOptions::default(),
             substitute: SubstituteOptions::default(),
         }
@@ -75,32 +76,16 @@ impl Default for StyleOptions {
 /// Sorting is configured by the [`SortOptions`] struct.
 /// It distinguishes between the templates, which specify the sequence of keys used for sorting 
 /// and order they are sorted in, and options which cusutomize the sorting process.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct SortOptions {
     pub options: SortConfig,
     pub template: Vec<Sort>,
 }
 
-impl Default for SortOptions {
-    fn default() -> Self {
-        Self {
-            options: SortConfig::default(),
-            template: vec![
-                Sort {
-                    key: SortGroupKey::Author,
-                    order: SortOrder::Ascending,
-                },
-                Sort {
-                    key: SortGroupKey::Year,
-                    order: SortOrder::Ascending,
-                },
-            ],
-        }
-    }
-}
 
 /// Configuration options for sorting.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+/// Sort configuration options.
 pub struct SortConfig {
     /// Shorten name lists for sorting the same as for display.
     // REVIEW: may need more options here.
@@ -111,6 +96,8 @@ pub struct SortConfig {
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase", untagged)]
+#[non_exhaustive]
+/// Keys for use in sorting and grouping.
 pub enum SortGroupKey {
     Title,
     Author,
@@ -136,7 +123,12 @@ impl Default for SortConfig {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct Sort {
     pub key: SortGroupKey,
-    pub order: SortOrder,
+    #[serde(default = "default_ascending")]
+    pub ascending: bool,
+}
+
+fn default_ascending() -> bool {
+    true
 }
 
 /* Grouping Options */
