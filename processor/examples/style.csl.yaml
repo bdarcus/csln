@@ -1,6 +1,11 @@
 ---
 info:
   title: APA
+options: 
+  sort: # TODO fix schema generation here; this should be valid
+    template:
+      - key: author
+      - key: year
 templates:
   title-apa:
     - title: title

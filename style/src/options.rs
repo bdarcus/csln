@@ -94,6 +94,15 @@ pub struct SortConfig {
     pub render_substitutions: bool,
 }
 
+impl Default for SortConfig {
+    fn default() -> Self {
+        Self {
+            shorten_names: false,
+            render_substitutions: true,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase", untagged)]
 #[non_exhaustive]
@@ -104,26 +113,10 @@ pub enum SortGroupKey {
     Year,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "lowercase", untagged)]
-pub enum SortOrder {
-    Ascending,
-    Descending,
-}
-
-impl Default for SortConfig {
-    fn default() -> Self {
-        Self {
-            shorten_names: false,
-            render_substitutions: true,
-        }
-    }
-}
-
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct Sort {
     pub key: SortGroupKey,
-    #[serde(default = "default_ascending")]
+    #[serde(default = "default_ascending")] // TODO: this seems to not convert to schema as expected
     pub ascending: bool,
 }
 

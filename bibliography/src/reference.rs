@@ -56,8 +56,8 @@ pub struct ContributorList(pub Vec<Contributor>);
 #[serde(rename_all = "camelCase")]
 /// Structured personal contributor names.
 pub struct StructuredName {
-    pub given_name: String,
-    pub family_name: String,
+    pub given: String,
+    pub family: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -312,7 +312,7 @@ impl fmt::Display for Contributor {
         match self {
             Contributor::SimpleName(name) => write!(f, "{}", name),
             Contributor::StructuredName(contributor) => {
-                write!(f, "{} {}", contributor.given_name, contributor.family_name)
+                write!(f, "{} {}", contributor.given, contributor.family)
             }
             Contributor::ContributorList(contributors) => {
                 write!(f, "{}", contributors)
@@ -326,8 +326,8 @@ fn contributor_name() {
     let contributor = Contributor::SimpleName("John Smith".to_string());
     assert_eq!(contributor.to_string(), "John Smith");
     let contributor = Contributor::StructuredName(StructuredName {
-        given_name: "John".to_string(),
-        family_name: "Smith".to_string(),
+        given: "John".to_string(),
+        family: "Smith".to_string(),
     });
     assert_eq!(contributor.to_string(), "John Smith");
     let contributor = Contributor::ContributorList(ContributorList(vec![
@@ -369,9 +369,9 @@ impl Name for Contributor {
             Contributor::SimpleName(name) => name.to_string(),
             Contributor::StructuredName(contributor) => {
                 if as_sorted {
-                    format!("{}, {}", contributor.family_name, contributor.given_name)
+                    format!("{}, {}", contributor.family, contributor.given)
                 } else {
-                    format!("{} {}", contributor.given_name, contributor.family_name)
+                    format!("{} {}", contributor.given, contributor.family)
                 }
             }
             Contributor::ContributorList(contributors) => {
@@ -394,8 +394,8 @@ impl Name for Contributor {
 fn display_and_sort_names() {
     let simple = Contributor::SimpleName("John Doe".to_string());
     let structured = Contributor::StructuredName(StructuredName {
-        given_name: "John".to_string(),
-        family_name: "Doe".to_string(),
+        given: "John".to_string(),
+        family: "Doe".to_string(),
     });
     let options = StyleOptions::default();
     assert_eq!(simple.names(options, false), "John Doe");
@@ -450,12 +450,12 @@ fn contributor_list() {
     );
     let structured_name_list = ContributorList(vec![
         Contributor::StructuredName(StructuredName {
-            given_name: "John".to_string(),
-            family_name: "Doe".to_string(),
+            given: "John".to_string(),
+            family: "Doe".to_string(),
         }),
         Contributor::StructuredName(StructuredName {
-            given_name: "Jane".to_string(),
-            family_name: "Doe".to_string(),
+            given: "Jane".to_string(),
+            family: "Doe".to_string(),
         }),
     ]);
     let options = StyleOptions::default();
