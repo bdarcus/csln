@@ -197,11 +197,11 @@ impl RenderTitle for StyleTemplateTitle {
         _hints: &ProcHints,
         _options: &RenderOptions,
     ) -> String {
-        let title: &str = match &self.title {
-            Titles::Title => reference.title.as_ref().unwrap(),
+        let title: String = match &self.title {
+            Titles::Title => reference.title.as_ref().unwrap().to_string(),
             Titles::ContainerTitle => todo!(),
         };
-        title.to_string()
+        title
     }
 }
 
@@ -461,8 +461,8 @@ impl Processor {
                 }
                 SortGroupKey::Title => {
                     references.par_sort_by(|a, b| {
-                        let a_title = a.title.as_ref().unwrap().to_lowercase();
-                        let b_title = b.title.as_ref().unwrap().to_lowercase();
+                        let a_title = a.title.as_ref().unwrap().to_string().to_lowercase();
+                        let b_title = b.title.as_ref().unwrap().to_string().to_lowercase();
                         if sort.order == SortOrder::Ascending {
                             a_title.cmp(&b_title)
                         } else {

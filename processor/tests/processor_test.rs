@@ -13,7 +13,7 @@ mod tests {
         let refs = processor.get_references();
         let sorted_refs = processor.sort_references(refs);
         assert_eq!(sorted_refs.len(), 36);
-        assert_eq!(sorted_refs.last().unwrap().title.as_deref(), Some("Title 4"));
+        assert_eq!(sorted_refs.last().unwrap().title.as_ref().unwrap().to_string(), "Title 4");
     }
 
     #[test]
