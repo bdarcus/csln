@@ -31,6 +31,7 @@ use url::Url;
 //use icu::calendar::DateTime;
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+/// The Reference model.
 pub struct InputReference {
     pub id: Option<String>,
     pub title: Option<Title>,
@@ -44,23 +45,25 @@ pub struct InputReference {
     pub note: Option<String>,
 }
 
+/// A locale string.
 pub type LangID = String;
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+/// The contributor list model.
 pub struct ContributorList(pub Vec<Contributor>);
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
+/// Structured personal contributor names.
 pub struct StructuredName {
     pub given_name: String,
     pub family_name: String,
 }
 
-/// A collection of formattable strings consisting of a title, a translated
-/// title, and a shorthand.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(untagged)]
 #[non_exhaustive]
+/// A collection of formattable strings consisting of a title, a translated title, and a shorthand.
 // REVIEW this needs a bit more work.
 pub enum Title {
     /// A title in a single language.
@@ -102,6 +105,7 @@ impl fmt::Display for Title {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+/// A string conforming to the EDTF specification.
 pub struct EdtfString(pub String);
 
 #[derive(Debug, PartialEq)]
@@ -340,10 +344,13 @@ impl fmt::Display for ContributorList {
         write!(f, "{}", contributors.join(", "))
     }
 }
+
+/// A Name is a string that can be formatted in different ways.
 pub trait Name {
     fn names(&self, options: StyleOptions, as_sorted: bool) -> String;
 }
 
+/// A NameList is a list of names that can be formatted in different ways, depending on configuration options, and context.
 pub trait NameList {
     /// Return a list of names, formatted according to the given options.
     /// If `as_sorted` is true, the names will be displayed as sorted.
