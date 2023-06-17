@@ -1,3 +1,27 @@
+/*
+SPDX-License-Identifier: MPL-2.0
+SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
+*/
+
+//! A reference is a bibliographic item, such as a book, article, or web page. 
+//! It is the basic unit of bibliographic data.
+//! 
+//! The model includes the following core data types. 
+//! Each is designed to be as simple as possible, while also allowing more complex data structures.
+//! 
+//! ## Title
+//! 
+//! A title can be a single string, a structured title, or a multilingual title.
+//! 
+//! ## Contributor
+//! 
+//! A contributor can be a single string, a structured name, or a list of contributors.
+//! 
+//! ## Date
+//! 
+//! Dates can either be EDTF strings, for flexible dates and date-times, or literal strings. 
+//! Literal strings can be used for examples like "Han Dynasty".
+
 use edtf::level_1::Edtf;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -9,7 +33,7 @@ use url::Url;
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct InputReference {
     pub id: Option<String>,
-    pub title: Option<String>,
+    pub title: Option<Title>,
     pub author: Option<Contributor>,
     pub editor: Option<Contributor>,
     pub translator: Option<Contributor>,
@@ -20,6 +44,8 @@ pub struct InputReference {
     pub note: Option<String>,
 }
 
+pub type LangID = String;
+
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct ContributorList(pub Vec<Contributor>);
 
@@ -28,6 +54,51 @@ pub struct ContributorList(pub Vec<Contributor>);
 pub struct StructuredName {
     pub given_name: String,
     pub family_name: String,
+}
+
+/// A collection of formattable strings consisting of a title, a translated
+/// title, and a shorthand.
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(untagged)]
+#[non_exhaustive]
+// REVIEW this needs a bit more work.
+pub enum Title {
+    /// A title in a single language.
+    Single(String),
+    /// A structured title.
+    Structured(StructuredTitle),
+    /// A title in multiple languages.
+    Multi(Vec<(LangID, String)>),
+    /// A structured title in multiple languages.
+    MultiStructured(Vec<(LangID, StructuredTitle)>),
+    /// An abbreviated title.
+    // Borrowed from Hayagriva
+    Shorthand(String, String),
+}
+
+/// Where title parts are meaningful, use this struct; CSLN processors will not parse title strings.
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+pub struct StructuredTitle {
+    pub full: String,
+    pub main: Option<String>,
+    pub sub: Option<Vec<String>>,
+}
+
+impl fmt::Display for Title {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Title::Single(s) => write!(f, "{}", s),
+            Title::Multi(_m) => todo!("multilingual title"),
+            Title::Structured(s) => write!(
+                f,
+                "{}: {}",
+                s.main.clone().unwrap(),
+                s.sub.clone().unwrap().join(", ")
+            ),
+            Title::MultiStructured(_m) => todo!("multilingual structured title"),
+            Title::Shorthand(s, t) => write!(f, "{} ({})", s, t),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
