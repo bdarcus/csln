@@ -42,7 +42,7 @@ impl Style {
     }
 }
 
-/// The CSL-Next style model.
+/// The Style model.
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct Style {
     /// Style metadata.
@@ -57,6 +57,7 @@ pub struct Style {
     pub bibliography: Option<StyleBibliography>,
 }
 
+/// The Template model.
 pub type StyleTemplate = Vec<StyleTemplateComponent>;
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
@@ -88,6 +89,7 @@ pub struct StyleInfo {
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[non_exhaustive]
+/// The categories the style belongs to; for purposes of indexing.
 pub enum StyleCategory {
     #[serde(rename = "biology")]
     Biology,
