@@ -18,7 +18,7 @@ use std::fmt::Debug;
 use std::option::Option;
 use style::locale::Locale;
 use style::options::StyleOptions;
-use style::options::{MonthOptions, SortGroupKey, SortOptions, SortOrder};
+use style::options::{MonthOptions, SortGroupKey, SortOptions};
 #[allow(unused_imports)] // for now
 use style::template::{
     Contributors, DateForm, Dates, StyleTemplateComponent, StyleTemplateContributor,
@@ -440,7 +440,7 @@ impl Processor {
                             .names(options.clone(), true)
                             .to_lowercase();
                         //println!("a_author: {}", a_author);
-                        if sort.order == SortOrder::Ascending {
+                        if sort.ascending {
                             a_author.cmp(&b_author)
                         } else {
                             b_author.cmp(&a_author)
@@ -452,7 +452,7 @@ impl Processor {
                         let a_year = a.issued.as_ref().unwrap().parse().year();
                         let b_year = b.issued.as_ref().unwrap().parse().year();
                         //println!("a_year: {}", a_year);
-                        if sort.order == SortOrder::Ascending {
+                        if sort.ascending {
                             a_year.cmp(&b_year)
                         } else {
                             b_year.cmp(&a_year)
@@ -463,13 +463,14 @@ impl Processor {
                     references.par_sort_by(|a, b| {
                         let a_title = a.title.as_ref().unwrap().to_string().to_lowercase();
                         let b_title = b.title.as_ref().unwrap().to_string().to_lowercase();
-                        if sort.order == SortOrder::Ascending {
+                        if sort.ascending {
                             a_title.cmp(&b_title)
                         } else {
                             b_title.cmp(&a_title)
                         }
                     });
-                }
+                },
+                _ => {}
             }
         });
         references
@@ -518,6 +519,7 @@ impl Processor {
                     reference.issued.as_ref().unwrap().parse().year().to_string()
                 }
                 SortGroupKey::Title => reference.title.as_ref().unwrap().to_string(),
+                _ => "".to_string(), // REVIEW is this right?
             })
             .collect::<Vec<String>>()
             .join(":");
