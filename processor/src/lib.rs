@@ -417,14 +417,8 @@ impl Processor {
         references: Vec<InputReference>,
     ) -> Vec<InputReference> {
         let mut references: Vec<InputReference> = references;
-        let options: &Config = &self.style.options.clone().unwrap_or_default();
-        let sort_config: Option<&style::options::Sort> = match &options.sort {
-            Some(sort) => Some(sort),
-            None => None,
-        };
-        //println!("{:?}", sort_config);
-        if let Some(sort_config) = sort_config {
-         //   let sort_config: &Sort = sort_config.unwrap();
+        let options: Config = self.style.options.clone().unwrap_or_default();
+        if let Some(sort_config) = options.processing.clone().unwrap_or_default().config().sort {
             sort_config.template.iter().rev().for_each(|sort| {
                 match sort.key {
                     SortKey::Author => {
@@ -442,37 +436,20 @@ impl Processor {
                                 .unwrap()
                                 .names(options.clone(), true)
                                 .to_lowercase();
-                            //println!("a_author: {}", a_author);
-                            if sort.ascending {
-                                a_author.cmp(&b_author)
-                            } else {
-                                b_author.cmp(&a_author)
-                            }
+                            a_author.cmp(&b_author)
                         });
                     }
                     SortKey::Year => {
-                        references.par_sort_by(|a, b| {
-                            let a_year = a.issued.as_ref().unwrap().parse().year();
-                            let b_year = b.issued.as_ref().unwrap().parse().year();
-                            //println!("a_year: {}", a_year);
-                            if sort.ascending {
-                                a_year.cmp(&b_year)
-                            } else {
-                                b_year.cmp(&a_year)
-                            }
-                        });
-                    }
-                    SortKey::Title => {
-                        references.par_sort_by(|a, b| {
-                            let a_title =
-                                a.title.as_ref().unwrap().to_string().to_lowercase();
-                            let b_title =
-                                b.title.as_ref().unwrap().to_string().to_lowercase();
-                            if sort.ascending {
-                                a_title.cmp(&b_title)
-                            } else {
-                                b_title.cmp(&a_title)
-                            }
+                        references.par_sort_by(|a: &InputReference, b: &InputReference| {
+                            let a_year = a.issued
+                                .as_ref()
+                                .unwrap()
+                                .year();
+                            let b_year = b.issued
+                                .as_ref()
+                                .unwrap()
+                                .year();
+                            b_year.cmp(&a_year)
                         });
                     }
                     _ => {}
@@ -515,19 +492,19 @@ impl Processor {
             Some(ref options) => options.clone(),
             None => Config::default(), // TODO is this right?
         };
-        let group_config = match options.group {
-            Some(group) => group,
-            None => return "".to_string(), // TODO is this right?
-        };
+        let group_config = options.processing.unwrap_or_default().config().group.unwrap();
         let options = self.style.options.clone();
         let as_sorted = false;
-        let group_key = group_config.template
+        let group_key = group_config
+            .template
             // This is likely unnecessary, but just in case.
             .par_iter()
             .map(|key| match key {
-                SortKey::Author => {
-                    reference.author.as_ref().unwrap().names(options.clone().unwrap(), as_sorted)
-                }
+                SortKey::Author => reference
+                    .author
+                    .as_ref()
+                    .unwrap()
+                    .names(options.clone().unwrap(), as_sorted),
                 SortKey::Year => {
                     reference.issued.as_ref().unwrap().parse().year().to_string()
                 }
