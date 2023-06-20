@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// Rendering instructions for a template component.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct Rendering {
     emph: Option<bool>,
     strong: Option<bool>,
@@ -12,7 +12,7 @@ pub struct Rendering {
 }
 
 /// The punctuation to wrap a template component in.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum WrapPunctuation {
     Parentheses,

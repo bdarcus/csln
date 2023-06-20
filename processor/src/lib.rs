@@ -17,8 +17,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::option::Option;
 use style::locale::Locale;
-use style::options::StyleOptions;
-use style::options::{MonthOptions, SortGroupKey, SortOptions};
+use style::options::{Config, MonthFormat, SortKey};
 #[allow(unused_imports)] // for now
 use style::template::{
     Contributors, DateForm, Dates, StyleTemplateComponent, StyleTemplateContributor,
@@ -112,15 +111,14 @@ pub trait Render<T> {
     ) -> String;
 }
 
-#[allow(dead_code)]
-// TODO need to hook this up, but depends on figuring out localized dates first
-pub struct RenderOptions<'a> {
+#[allow(unused)]
+pub struct RenderOptions {
     // Options for the style, including default options.
-    global: &'a StyleOptions,
+    global: Config,
     // Options for the citaton or bibliography, that may override the style options.
-    local: &'a StyleOptions,
+    local: Config,
     // Locale for the output.
-    locale: &'a Locale,
+    locale: Locale,
 }
 
 // WTD???
@@ -250,7 +248,7 @@ impl RenderDate for StyleTemplateDate {
         hints: &ProcHints,
         options: &RenderOptions,
     ) -> String {
-        let locale: &Locale = options.locale;
+        let locale: &Locale = &options.locale;
         let date = match &self.date {
             Dates::Issued => reference.issued.as_ref().unwrap(),
             Dates::OriginalPublished => todo!("original-published"),
@@ -269,10 +267,10 @@ impl RenderDate for StyleTemplateDate {
 
         // TODO: implement this along with localized dates
         fn _config_fmt(options: &RenderOptions) -> DateTimeFormatterOptions {
-            match options.global.dates.month {
-                MonthOptions::Long => todo!("long"),
-                MonthOptions::Short => todo!("short"),
-                MonthOptions::Numeric => todo!("numeric"),
+            match options.global.dates.as_ref().unwrap().month {
+                MonthFormat::Long => todo!("long"),
+                MonthFormat::Short => todo!("short"),
+                MonthFormat::Numeric => todo!("numeric"),
             };
         }
 
@@ -345,12 +343,11 @@ impl Processor {
             .unwrap_or_default()
     }
 
-    fn get_render_options(&self) -> RenderOptions {
+    fn get_render_options(&self, style: Style, locale: Locale) -> RenderOptions {
         RenderOptions {
-            global: &self.style.options,
-            // TTODO: get local options
-            local: &self.style.options,
-            locale: &self.locale,
+            global: style.options.unwrap_or_default(),
+            local: Config::default(),
+            locale,
         }
     }
 
@@ -362,12 +359,13 @@ impl Processor {
         let hints = self.get_proc_hints();
         let reference_id = reference.id.as_ref().unwrap();
         let hint = hints.get(reference_id).cloned().unwrap_or_default();
-        let options = self.get_render_options();
+        let options = self.get_render_options(self.style.clone(), self.locale.clone());
         let value = component.render(reference, &hint, &options);
         if value.is_empty() {
             None
         } else {
-            Some(ProcTemplateComponent { template_component: component.clone(), value })
+            let template_component = component.clone();
+            Some(ProcTemplateComponent { template_component, value })
         }
     }
 
@@ -419,60 +417,68 @@ impl Processor {
         references: Vec<InputReference>,
     ) -> Vec<InputReference> {
         let mut references: Vec<InputReference> = references;
-        let options: &StyleOptions = &self.style.options;
-        let sort_config: &SortOptions = self.style.options.get_sort_config();
+        let options: &Config = &self.style.options.clone().unwrap_or_default();
+        let sort_config: Option<&style::options::Sort> = match &options.sort {
+            Some(sort) => Some(sort),
+            None => None,
+        };
         //println!("{:?}", sort_config);
-        sort_config.template.iter().rev().for_each(|sort| {
-            match sort.key {
-                SortGroupKey::Author => {
-                    references.par_sort_by(|a, b| {
-                        // REVIEW would like to clean up all these unwrap etcs
-                        let a_author = a
-                            .author
-                            .as_ref()
-                            .unwrap()
-                            .names(options.clone(), true)
-                            .to_lowercase();
-                        let b_author = b
-                            .author
-                            .as_ref()
-                            .unwrap()
-                            .names(options.clone(), true)
-                            .to_lowercase();
-                        //println!("a_author: {}", a_author);
-                        if sort.ascending {
-                            a_author.cmp(&b_author)
-                        } else {
-                            b_author.cmp(&a_author)
-                        }
-                    });
+        if let Some(sort_config) = sort_config {
+         //   let sort_config: &Sort = sort_config.unwrap();
+            sort_config.template.iter().rev().for_each(|sort| {
+                match sort.key {
+                    SortKey::Author => {
+                        references.par_sort_by(|a, b| {
+                            // REVIEW would like to clean up all these unwrap etcs
+                            let a_author = a
+                                .author
+                                .as_ref()
+                                .unwrap()
+                                .names(options.clone(), true)
+                                .to_lowercase();
+                            let b_author = b
+                                .author
+                                .as_ref()
+                                .unwrap()
+                                .names(options.clone(), true)
+                                .to_lowercase();
+                            //println!("a_author: {}", a_author);
+                            if sort.ascending {
+                                a_author.cmp(&b_author)
+                            } else {
+                                b_author.cmp(&a_author)
+                            }
+                        });
+                    }
+                    SortKey::Year => {
+                        references.par_sort_by(|a, b| {
+                            let a_year = a.issued.as_ref().unwrap().parse().year();
+                            let b_year = b.issued.as_ref().unwrap().parse().year();
+                            //println!("a_year: {}", a_year);
+                            if sort.ascending {
+                                a_year.cmp(&b_year)
+                            } else {
+                                b_year.cmp(&a_year)
+                            }
+                        });
+                    }
+                    SortKey::Title => {
+                        references.par_sort_by(|a, b| {
+                            let a_title =
+                                a.title.as_ref().unwrap().to_string().to_lowercase();
+                            let b_title =
+                                b.title.as_ref().unwrap().to_string().to_lowercase();
+                            if sort.ascending {
+                                a_title.cmp(&b_title)
+                            } else {
+                                b_title.cmp(&a_title)
+                            }
+                        });
+                    }
+                    _ => {}
                 }
-                SortGroupKey::Year => {
-                    references.par_sort_by(|a, b| {
-                        let a_year = a.issued.as_ref().unwrap().parse().year();
-                        let b_year = b.issued.as_ref().unwrap().parse().year();
-                        //println!("a_year: {}", a_year);
-                        if sort.ascending {
-                            a_year.cmp(&b_year)
-                        } else {
-                            b_year.cmp(&a_year)
-                        }
-                    });
-                }
-                SortGroupKey::Title => {
-                    references.par_sort_by(|a, b| {
-                        let a_title = a.title.as_ref().unwrap().to_string().to_lowercase();
-                        let b_title = b.title.as_ref().unwrap().to_string().to_lowercase();
-                        if sort.ascending {
-                            a_title.cmp(&b_title)
-                        } else {
-                            b_title.cmp(&a_title)
-                        }
-                    });
-                },
-                _ => {}
-            }
-        });
+            });
+        }
         references
     }
 
@@ -505,20 +511,27 @@ impl Processor {
 
     /// Return a string to use for grouping for a given reference, using instructions in the style.
     fn make_group_key(&self, reference: &InputReference) -> String {
-        let group_key_config: &[SortGroupKey] = self.style.options.get_group_key_config();
+        let options: style::options::Config = match self.style.options {
+            Some(ref options) => options.clone(),
+            None => Config::default(), // TODO is this right?
+        };
+        let group_config = match options.group {
+            Some(group) => group,
+            None => return "".to_string(), // TODO is this right?
+        };
         let options = self.style.options.clone();
         let as_sorted = false;
-        let group_key = group_key_config
+        let group_key = group_config.template
             // This is likely unnecessary, but just in case.
             .par_iter()
             .map(|key| match key {
-                SortGroupKey::Author => {
-                    reference.author.as_ref().unwrap().names(options.clone(), as_sorted)
+                SortKey::Author => {
+                    reference.author.as_ref().unwrap().names(options.clone().unwrap(), as_sorted)
                 }
-                SortGroupKey::Year => {
+                SortKey::Year => {
                     reference.issued.as_ref().unwrap().parse().year().to_string()
                 }
-                SortGroupKey::Title => reference.title.as_ref().unwrap().to_string(),
+                SortKey::Title => reference.title.as_ref().unwrap().to_string(),
                 _ => "".to_string(), // REVIEW is this right?
             })
             .collect::<Vec<String>>()
