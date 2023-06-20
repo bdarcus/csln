@@ -1,6 +1,15 @@
 ---
 info:
   title: APA
+options:
+  sort: 
+    template:
+      - key: author
+      - key: year
+  group: 
+    template:
+      - author
+      - year
 templates:
   title-apa:
     - title: title
