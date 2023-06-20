@@ -1,27 +1,27 @@
-/* 
-SPDX-License-Identifier: MPL-2.0 
+/*
+SPDX-License-Identifier: MPL-2.0
 SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 */
 
 //! This submodule defines the configuration groups and options available in CSLN styles.
-//! 
+//!
 //! The details are adapted from:
-//! 
+//!
 //! 1. The [CSL 1.0 specification][CSL-spec] [options][CSL-options], and its template language (aka [layout][CSL-templates] and [rendering elements][CSL-render]), most notably from names, dates, and other formatting.
 //! 2. Patterns observed in the [CSL 1.0 styles repository][CSL-styles].
 //! 3. The [BibLaTeX preamble][BLTX] options.
-//! 
-//! In this model, much more logic is configured in these options, and the `template` submodule is comparatively simple. 
+//!
+//! In this model, much more logic is configured in these options, and the `template` submodule is comparatively simple.
 //! The intent is to make it easier to write and maintain styles, as well as softtware that uses them.
-//! 
+//!
 //! ## Style Options
-//! 
+//!
 //! The [`StyleOptions`] struct defines the configuration groups and options available in CSLN styles.
-//! 
+//!
 //! ## Status
-//! 
+//!
 //! Still early, with more work needed on adding options, and testing.
-//! 
+//!
 //! [CSL-spec]: https://docs.citationstyles.org/en/stable/specification.html
 //! [CSL-styles]: https://github.com/citation-style-language/styles
 //! [CSL-macros]: https://docs.citationstyles.org/en/stable/specification.html#macros
@@ -29,22 +29,71 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 //! [CSL-render]: https://docs.citationstyles.org/en/stable/specification.html#rendering-elements
 //! [CSL-options]: https://docs.citationstyles.org/en/stable/specification.html#options
 //! [BLTX]: https://github.com/plk/biblatex
-//! 
+//!
 
-
+use crate::template::Rendering;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::template::Rendering;
 
 #[derive(JsonSchema, Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Config {
+    pub substitute: Option<Substitute>,
+    pub processing: Option<Processing>,
     pub group: Option<Group>,
-    pub substitute: Option<Substitute>, 
     pub sort: Option<Sort>,
     pub localize: Option<Localize>,
     pub contributors: Option<Contributors>,
     pub disambiguation: Option<Disambiguation>,
     pub dates: Option<Date>,
+}
+
+#[derive(JsonSchema, Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+#[non_exhaustive]
+pub enum Processing {
+    #[default]
+    // FIX again, this pattern doesn't work
+    AuthorDate,
+    Numeric,
+    Custom(ProcessingCustom),
+}
+
+#[derive(JsonSchema, Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
+pub struct ProcessingCustom {
+    pub sort: Option<Sort>,
+    pub group: Option<Group>,
+}
+
+impl Processing {
+    pub fn config(&self) -> ProcessingCustom {
+        match self {
+            Processing::AuthorDate => {
+                ProcessingCustom {
+                    sort: Some(Sort {
+                        shorten_names: false,
+                        render_substitutions: false,
+                        template: vec![
+                            SortSpec { key: SortKey::Author, ascending: true },
+                            SortSpec { key: SortKey::Year, ascending: true },
+                        ],
+                    }),
+                    group: Some(Group {
+                        template: vec![
+                            SortKey::Author,
+                            SortKey::Year,
+                        ],
+                    }),
+                }
+            },
+            Processing::Numeric => {
+                ProcessingCustom {
+                    sort: None,
+                    group: None,
+                }
+            },
+            Processing::Custom(custom) => custom.clone(),
+        }
+    }
 }
 
 #[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -66,12 +115,6 @@ fn disambiguation_config_default() {
     assert!(config.disambiguation.unwrap_or_default().names);
 }
 
-#[test]
-fn group_config_default() {
-    let config = Config::default();
-    assert!(config.group.is_none(), "{}", true);
-}
-
 #[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Date {
     pub month: MonthFormat,
@@ -86,12 +129,9 @@ pub enum MonthFormat {
     Numeric,
 }
 
-
 impl Default for Date {
     fn default() -> Self {
-        Self {
-            month: MonthFormat::Long,
-        }
+        Self { month: MonthFormat::Long }
     }
 }
 
@@ -196,9 +236,7 @@ pub enum Scope {
 
 impl Default for Localize {
     fn default() -> Self {
-        Self {
-            scope: Scope::Global,
-        }
+        Self { scope: Scope::Global }
     }
 }
 
@@ -246,7 +284,7 @@ fn sort_config_default() {
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Sort {
-        /// Shorten name lists for sorting the same as for display.
+    /// Shorten name lists for sorting the same as for display.
     // REVIEW: may need more options here.
     #[serde(default = "default_shorten_names")]
     pub shorten_names: bool,

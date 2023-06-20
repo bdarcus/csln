@@ -1,15 +1,8 @@
 ---
 info:
   title: APA
-options:
-  sort: 
-    template:
-      - key: author
-      - key: year
-  group: 
-    template:
-      - author
-      - year
+options: 
+  processing: author-date # this sets sorting and grouping for author-date
 templates:
   title-apa:
     - title: title
