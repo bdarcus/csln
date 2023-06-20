@@ -3,19 +3,6 @@ SPDX-License-Identifier: MPL-2.0
 SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 */
 
-//! # The CSL-Next style model.
-//! 
-//! This crate provides a Rust model for the CSL-Next style format.
-//! 
-//! ## Usage
-//! 
-//! ```rust
-//! use style::Style;
-//! 
-//! let style = Style::from_file("examples/style.csl.yaml");
-//! ```
-//! 
-
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -23,7 +10,7 @@ use std::fs;
 
 pub mod options;
 pub mod locale;
-use options::StyleOptions;
+use options::Config;
 
 pub mod template;
 use template::StyleTemplateComponent;
@@ -50,7 +37,7 @@ pub struct Style {
     pub templates: Option<HashMap<String, StyleTemplate>>,
     /// Parameter groups.
     #[serde(default)]
-    pub options: StyleOptions,
+    pub options: Option<Config>,
     /// The citation specification.
     pub citation: Option<StyleCitation>,
     /// The bibliography specification.
@@ -63,14 +50,14 @@ pub type StyleTemplate = Vec<StyleTemplateComponent>;
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 /// The bibliography specification.
 pub struct StyleBibliography {
-    pub options: Option<StyleOptions>,
+    pub options: Option<options::Config>,
     pub template: StyleTemplate,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 /// The citation specification.
 pub struct StyleCitation {
-    pub options: Option<StyleOptions>,
+    pub options: Option<Config>,
     pub template: StyleTemplate,
 }
 

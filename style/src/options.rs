@@ -1,3 +1,8 @@
+/* 
+SPDX-License-Identifier: MPL-2.0 
+SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
+*/
+
 //! This submodule defines the configuration groups and options available in CSLN styles.
 //! 
 //! The details are adapted from:
@@ -26,288 +31,88 @@
 //! [BLTX]: https://github.com/plk/biblatex
 //! 
 
-/* 
-SPDX-License-Identifier: MPL-2.0 
-SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
-*/
-
-//use std::default;
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::template::{Rendering, Contributors};
+use crate::template::Rendering;
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(default)]
-/// Style configuration options.
-pub struct StyleOptions {
-    /// Contributor list formatting configuration.
-    pub contributors: StyleContributors,
-    /// Date formatting configuration.
-    pub dates: StyleDate,
-    /// Disambiguation configuration of rendererd group display names.
-    pub disambiguate: Disambiguation,
-    /// Grouping configuration.
-    pub group: Vec<SortGroupKey>,
-    /// Localization configuration.
-    pub localization: Localization,
-    /// Sorting configuration.
-    pub sort: SortOptions,
-    /// Substitution configuration.
-    pub substitute: SubstituteOptions,
+#[derive(JsonSchema, Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Config {
+    pub group: Option<Group>,
+    pub substitute: Option<Substitute>, 
+    pub sort: Option<Sort>,
+    pub localize: Option<Localize>,
+    pub contributors: Option<Contributors>,
+    pub disambiguation: Option<Disambiguation>,
+    pub dates: Option<Date>,
 }
 
-impl Default for StyleOptions {
-    fn default() -> Self {
-        Self {
-            contributors: StyleContributors::default(),
-            dates: StyleDate::default(),
-            disambiguate: Disambiguation::default(),
-            group: GroupOptions::default().group,
-            localization: Localization { scope: LocalizationScope::Global },
-            sort: SortOptions::default(),
-            substitute: SubstituteOptions::default(),
-        }
-    }
-}
-
-/* Sorting Configuration */
-
-/// Sorting is configured by the [`SortOptions`] struct.
-/// It distinguishes between the templates, which specify the sequence of keys used for sorting 
-/// and order they are sorted in, and options which cusutomize the sorting process.
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct SortOptions {
-    pub options: SortConfig,
-    pub template: Vec<Sort>,
-}
-
-
-/// Configuration options for sorting.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-/// Sort configuration options.
-pub struct SortConfig {
-    /// Shorten name lists for sorting the same as for display.
-    // REVIEW: may need more options here.
-    pub shorten_names: bool,
-    /// Use same substitutions for sorting as for rendering.
-    pub render_substitutions: bool,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "lowercase", untagged)]
-#[non_exhaustive]
-/// Keys for use in sorting and grouping.
-pub enum SortGroupKey {
-    Title,
-    Author,
-    Year,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "lowercase", untagged)]
-pub enum SortOrder {
-    Ascending,
-    Descending,
-}
-
-impl Default for SortConfig {
-    fn default() -> Self {
-        Self {
-            shorten_names: false,
-            render_substitutions: true,
-        }
-    }
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct Sort {
-    pub key: SortGroupKey,
-    #[serde(default = "default_ascending")]
-    pub ascending: bool,
-}
-
-fn default_ascending() -> bool {
-    true
-}
-
-/* Grouping Options */
-
-pub struct GroupOptions {
-    pub group: Vec<SortGroupKey>,
-}
-
-impl Default for GroupOptions {
-    fn default() -> Self {
-        Self {
-            group: vec![SortGroupKey::Author, SortGroupKey::Year],
-        }
-    }
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct DateOptions {
-    pub date: StyleDate,
-}
-
-/* Substition configuration. */
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct Substitution {
-    /// When author is nil, substitute the first non-nil listed variable.
-    /// Once a substitution is made, the substituted variable shall be set to nil for purposes of
-    /// later rendering.
-    pub author: Vec<Substitute>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case", untagged)]
-pub enum Substitute {
-    Editor,
-    Title,
-    Translator,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct SubstituteOptions {
-    pub substitute: Vec<Substitute>,
-}
-
-impl Default for SubstituteOptions {
-    fn default() -> Self {
-        Self {
-            substitute: vec![
-                Substitute::Editor,
-                Substitute::Title,
-                Substitute::Translator,
-            ],
-        }
-    }
-}
-
-impl StyleOptions {
-    pub fn get_group_key_config(&self) -> &[SortGroupKey] {
-        self.group.as_slice()
-    }
-    pub fn get_sort_config(&self) -> &SortOptions {
-        &self.sort
-    }
-    pub fn get_contributors_config(&self) -> &StyleContributors {
-        &self.contributors
-    }
-    pub fn get_disambiguation_config(&self) -> &Disambiguation {
-        &self.disambiguate
-    }
-    pub fn get_localization_config(&self) -> &Localization {
-        &self.localization
-    }
-    pub fn get_date_config(&self) -> &StyleDate {
-        &self.dates
-    }
-}
-
-/* Localization and multilingual configuration. */
-// REVIEW correct name for this group?
-
-/// Localization configuration.
-///
-/// Terms and data localization configuration.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct Localization {
-    /// The scope to use for localization.
-    ///
-    /// "per-item" uses the locale of the reference item, and "global" uses the target language
-    /// across all references.
-    pub scope: LocalizationScope,
-}
-
-/// The scope to use for localization.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case", untagged)]
-pub enum LocalizationScope {
-    //? Use the output locale.
-    Global,
-    /// Ues the locale of the reference item,
-    PerItem,
-}
-
-/* Disambiguation configuration. */
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Disambiguation {
-    pub add_names: bool,
-    pub add_year_suffix: bool,
+    pub names: bool,
+    pub year_suffix: bool,
 }
 
 impl Default for Disambiguation {
     fn default() -> Self {
-        Self { add_names: true, add_year_suffix: false }
+        Self { names: true, year_suffix: false }
     }
 }
 
-/* Date-time configuration. */
+#[test]
+fn disambiguation_config_default() {
+    let config = Config::default();
+    assert!(config.disambiguation.unwrap_or_default().names);
+}
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct StyleDate {
-    pub month: MonthOptions,
+#[test]
+fn group_config_default() {
+    let config = Config::default();
+    assert!(config.group.is_none(), "{}", true);
+}
+
+#[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Date {
+    pub month: MonthFormat,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase")]
-pub enum MonthOptions {
+pub enum MonthFormat {
     #[default]
     Long,
     Short,
     Numeric,
 }
 
-/* Contributor configuration. */
 
-// REVIEW: move to template.rs?
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct StyleTemplateContributors {
-    pub contributors: Contributors,
-    pub form: ContributorForm,
+impl Default for Date {
+    fn default() -> Self {
+        Self {
+            month: MonthFormat::Long,
+        }
+    }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct StyleContributors {
+#[test]
+fn date_default_config() {
+    let config = Config::default();
+    assert_eq!(config.dates.unwrap_or_default().month, MonthFormat::Long);
+}
+
+#[derive(JsonSchema, Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Contributors {
     /// When to display a contributor's name in sort order.
     pub display_as_sort: DisplayAsSort,
     /// Shorten the list of contributors.
     pub shorten: ShortenListOptions,
     /// The delimiter or separator to use between contributors.
-    pub delimiter: DelimiterOptions,
-    /// Whether to sepaaate the last two contributors with a natural language conjunction, and if so what form it should take.
+    pub delimiter: String,
+    /// Whether to separate the last two contributors with a natural language conjunction, and if so what form it should take.
     pub and: AndOptions,
     /// When and how to display contributor roles.
     pub role: RoleOptions,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct RoleOptions {
-    /// Contributor roles for which to omit the role description.
-    ///
-    /// The default value is `["author"]`, which omits the role for authors, including for any
-    /// author substitutions.
-    // TODO
-    pub omit: Vec<String>,
-    pub form: Option<ContributorForm>,
-    pub rendering: Option<Rendering>,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum ContributorForm {
-    #[default]
-    Long,
-    Short,
-    Verb,
-    VerbShort,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -321,16 +126,42 @@ pub enum DisplayAsSort {
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase")]
-pub enum LabelOptions {
-    Long,
-    #[default]
-    Short,
-    Verb,
+#[non_exhaustive]
+pub enum AndOptions {
+    #[default] // REVIEW: is this correct?
+    Text,
+    Symbol,
+    None,
 }
 
-/* List formatting configuration. */
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RoleOptions {
+    /// Contributor roles for which to omit the role description.
+    ///
+    /// The default value is `["author"]`, which omits the role for authors, including for any
+    /// author substitutions.
+    // TODO
+    pub omit: Vec<String>,
+    pub form: String, // TODO
+    pub rendering: Option<Rendering>,
+}
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub enum DelimiterLastOptions {
+    /// Delimiter is only used if preceding name is inverted as a result of the`asSort` parameter. E.g. with `asSort` set to “first”.
+    AfterInvertedName,
+    /// Delimiter is always used when more than two, regardless of shortening.
+    Always,
+    /// Delimiter is never used.
+    Never,
+    #[default]
+    /// The delimiter is only used when shortening is applied.
+    Contextual,
+}
+
+#[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ShortenListOptions {
     pub min: u8,
@@ -351,155 +182,112 @@ impl Default for ShortenListOptions {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Localize {
+    pub scope: Scope,
+}
+
+#[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub enum DelimiterLastOptions {
-    /// Delimiter is only used if preceding name is inverted as a result of the`asSort` parameter. E.g. with `asSort` set to “first”.
-    AfterInvertedName,
-    /// Delimiter is always used when more than two, regardless of shortening.
-    Always,
-    /// Delimiter is never used.
-    Never,
-    #[default]
-    /// The delimiter is only used when shortening is applied.
-    Contextual,
+pub enum Scope {
+    Global,
+    PerItem,
+}
+
+impl Default for Localize {
+    fn default() -> Self {
+        Self {
+            scope: Scope::Global,
+        }
+    }
+}
+
+#[test]
+fn localize_config_default() {
+    let config = Config::default();
+    assert_eq!(config.localize.unwrap_or_default().scope, Scope::Global);
+}
+
+#[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Group {
+    pub template: Vec<SortKey>,
+}
+
+#[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Substitute {
+    pub template: Vec<SubstituteKey>,
+}
+
+impl Default for Substitute {
+    fn default() -> Self {
+        Self {
+            template: vec![
+                SubstituteKey::Editor,
+                SubstituteKey::Title,
+                SubstituteKey::Translator,
+            ],
+        }
+    }
+}
+
+#[test]
+fn substitute_default() {
+    let config = Config::default();
+    assert_eq!(config.substitute.unwrap_or_default().template.len(), 3);
+}
+
+#[test]
+fn sort_config_default() {
+    let config = Config::default();
+    // the result for config.sort should be None
+    assert!(config.sort.is_none(), "{}", true);
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum DelimiterOptions {
-    Comma,
-    SemiColon,
-    Period,
-    #[default]
-    Space,
-    Hyphen,
-    Ampersand,
-    Underscore,
-    Colon,
-    Hash,
-    NoDelimiter,
+#[serde(rename_all = "camelCase")]
+pub struct Sort {
+        /// Shorten name lists for sorting the same as for display.
+    // REVIEW: may need more options here.
+    #[serde(default = "default_shorten_names")]
+    pub shorten_names: bool,
+    /// Use same substitutions for sorting as for rendering.
+    #[serde(default = "default_render_substitutions")]
+    pub render_substitutions: bool,
+    pub template: Vec<SortSpec>,
+}
+
+fn default_shorten_names() -> bool {
+    false
+}
+
+fn default_render_substitutions() -> bool {
+    false
+}
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+pub struct SortSpec {
+    pub key: SortKey,
+    #[serde(default = "default_ascending")]
+    pub ascending: bool,
+}
+
+fn default_ascending() -> bool {
+    true
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
-pub enum AndOptions {
-    #[default] // REVIEW: is this correct?
-    Text,
-    Symbol,
-    None,
-}
-
-/* Title formatting configuration. */
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "kebab-case")] // REVIEW: is this correct?
-pub struct StyleTitles {
-    pub title: TitleOptions,
-    pub subtitle: SubtitleOptions,
-    pub short_title: ShortTitleOptions,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum TitleOptions {
-    CapitalizeAll,
-    CapitalizeFirst,
-    Lowercase,
+pub enum SortKey {
     #[default]
-    AsIs,
+    Author,
+    Year,
+    Title,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum SubtitleOptions {
-    CapitalizeAll,
-    CapitalizeFirst,
-    Lowercase,
-    #[default]
-    AsIs,
+#[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SubstituteKey {
+    Editor,
+    Title,
+    Translator,
 }
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum ShortTitleOptions {
-    CapitalizeAll,
-    CapitalizeFirst,
-    Lowercase,
-    #[default]
-    AsIs,
-}
-
-/* Date-time formatting configuration. */
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-pub struct StyleTemplateDate {
-    /// The format to use for a complete date.
-    pub date: DateStyle,
-    /// The format to use for a time.
-    pub time: TimeStyle,
-    /// The format to use for a month.
-    pub month: MonthStyle,
-    /// The format to use for a year.
-    pub year: YearStyle,
-    /// Wtih an approximate date, whether to add the circa prefix.
-    pub circa: bool,
-    /// With an uncertain date, whether to add the question mark suffix.
-    pub uncertain: bool,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum YearStyle {
-    #[default]
-    Numeric,
-    TwoDigit,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum MonthStyle {
-    Numeric,
-    #[default] // REVIEW: is this correct?
-    Long,
-    Short,
-    Narrow,
-    TwoDigit,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum TimeStyle {
-    Full,
-    Short,
-    #[default] // REVIEW: is this correct?
-    Medium,
-    Long,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum DateStyle {
-    Full,
-    Short,
-    #[default] // REVIEW: is this correct?
-    Long,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct StyleTemplateTitle {
-    pub title: String,
-    pub form: TitleForm,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum TitleForm {
-    Short,
-    #[default] // REVIEW: is this correct?
-    Long,
-}
-
-
-

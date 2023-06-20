@@ -3,30 +3,30 @@ SPDX-License-Identifier: MPL-2.0
 SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 */
 
-//! A reference is a bibliographic item, such as a book, article, or web page. 
+//! A reference is a bibliographic item, such as a book, article, or web page.
 //! It is the basic unit of bibliographic data.
-//! 
-//! The model includes the following core data types. 
+//!
+//! The model includes the following core data types.
 //! Each is designed to be as simple as possible, while also allowing more complex data structures.
-//! 
+//!
 //! ## Title
-//! 
+//!
 //! A title can be a single string, a structured title, or a multilingual title.
-//! 
+//!
 //! ## Contributor
-//! 
+//!
 //! A contributor can be a single string, a structured name, or a list of contributors.
-//! 
+//!
 //! ## Date
-//! 
-//! Dates can either be EDTF strings, for flexible dates and date-times, or literal strings. 
+//!
+//! Dates can either be EDTF strings, for flexible dates and date-times, or literal strings.
 //! Literal strings can be used for examples like "Han Dynasty".
 
 use edtf::level_1::Edtf;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use style::{locale::MonthList, options::StyleOptions};
+use style::{locale::MonthList, options::Config};
 use url::Url;
 //use icu::calendar::DateTime;
 
@@ -347,24 +347,25 @@ impl fmt::Display for ContributorList {
 
 /// A Name is a string that can be formatted in different ways.
 pub trait Name {
-    fn names(&self, options: StyleOptions, as_sorted: bool) -> String;
+    fn names(&self, options: Config, as_sorted: bool) -> String;
 }
 
 /// A NameList is a list of names that can be formatted in different ways, depending on configuration options, and context.
 pub trait NameList {
     /// Return a list of names, formatted according to the given options.
     /// If `as_sorted` is true, the names will be displayed as sorted.
-    fn names_list(&self, options: StyleOptions, as_sorted: bool) -> String;
+    fn names_list(&self, options: Config, as_sorted: bool) -> String;
 }
 
 impl Name for Contributor {
     // if as_sorted is true, the name will be displayed as sorted.
-    fn names(&self, options: StyleOptions, as_sorted: bool) -> String {
-        let as_sorted_config = match options.contributors.display_as_sort {
-            style::options::DisplayAsSort::All => true,
-            style::options::DisplayAsSort::First => true,
-            style::options::DisplayAsSort::None => false,
-        };
+    fn names(&self, options: Config, as_sorted: bool) -> String {
+        let as_sorted_config =
+            match options.contributors.clone().unwrap_or_default().display_as_sort {
+                style::options::DisplayAsSort::All => true,
+                style::options::DisplayAsSort::First => true,
+                style::options::DisplayAsSort::None => false,
+            };
         match self {
             Contributor::SimpleName(name) => name.to_string(),
             Contributor::StructuredName(contributor) => {
@@ -397,28 +398,33 @@ fn display_and_sort_names() {
         given_name: "John".to_string(),
         family_name: "Doe".to_string(),
     });
-    let options = StyleOptions::default();
+    let options = Config::default();
     assert_eq!(simple.names(options, false), "John Doe");
-    let options = StyleOptions::default();
+    let options = Config::default();
     assert_eq!(
         simple.names(options, true),
         "John Doe",
         "as_sorted=true should not affect a simple name"
     );
-    let options = StyleOptions::default();
+    let options = Config::default();
     assert_eq!(structured.names(options, false), "John Doe");
-    let options = StyleOptions::default();
+    let options = Config::default();
     assert_eq!(structured.names(options, true), "Doe, John");
 }
 
 impl NameList for ContributorList {
-    fn names_list(&self, options: StyleOptions, as_sorted: bool) -> String {
+    fn names_list(&self, options: Config, as_sorted: bool) -> String {
         let names: Vec<String> = self
             .0
             .iter()
             .enumerate()
             .map(|(i, c)| {
-                let as_sorted_config = match options.contributors.display_as_sort {
+                let as_sorted_config = match options
+                    .contributors
+                    .clone()
+                    .unwrap_or_default()
+                    .display_as_sort
+                {
                     style::options::DisplayAsSort::All => true,
                     style::options::DisplayAsSort::First => i == 0,
                     style::options::DisplayAsSort::None => false,
@@ -440,9 +446,9 @@ fn contributor_list() {
         Contributor::SimpleName("John Doe".to_string()),
         Contributor::SimpleName("Jane Doe".to_string()),
     ]);
-    let options = StyleOptions::default();
+    let options = Config::default();
     assert_eq!(contributor_list.names_list(options, false), "John Doe, Jane Doe");
-    let options = StyleOptions::default();
+    let options = Config::default();
     assert_eq!(
         contributor_list.names_list(options, true),
         "John Doe, Jane Doe",
@@ -458,16 +464,16 @@ fn contributor_list() {
             family_name: "Doe".to_string(),
         }),
     ]);
-    let options = StyleOptions::default();
+    let options = Config::default();
     assert_eq!(structured_name_list.names_list(options, false), "John Doe, Jane Doe");
-    let options = StyleOptions::default();
+    let options = Config::default();
     assert_eq!(structured_name_list.names_list(options, true), "Doe, John, Doe, Jane");
-    let options = StyleOptions {
-        contributors: style::options::StyleContributors {
+    let options = Config {
+        contributors: Some(style::options::Contributors {
             display_as_sort: style::options::DisplayAsSort::First,
-            ..style::options::StyleContributors::default()
-        },
-        ..style::options::StyleOptions::default()
+            ..style::options::Contributors::default()
+        }),
+        ..style::options::Config::default()
     };
     assert_eq!(structured_name_list.names_list(options, false), "Doe, John, Jane Doe");
 }
