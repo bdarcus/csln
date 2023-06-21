@@ -1,0 +1,12 @@
+---
+- mode: integral
+  references:
+    - refId: "smith-2021"
+      suffix: ["page 42", "ff."]
+    - refId: "jones-2020"
+      suffix: ["chapter 3", "para. 2"]
+  suffix: " for more information."
+- mode: non-integral
+  prefix: "see "
+  references:
+    - refId: "doe-2020"

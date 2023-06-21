@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::Write;
 
 use style::Style;
-use citation::Citation;
+use citation::CitationList;
 use bibliography::InputBibliography;
 use style::locale::Locale;
 
@@ -12,7 +12,7 @@ fn main() {
     fs::create_dir_all("schemas").unwrap();
 
     let style_schema = schema_for!(Style);
-    let citation_schema = schema_for!(Citation);
+    let citation_schema = schema_for!(CitationList);
     let bib_schema = schema_for!(InputBibliography);
     let locale_schema = schema_for!(Locale);
 

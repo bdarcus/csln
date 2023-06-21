@@ -8,6 +8,10 @@
     ],
     "./schemas/locale.json": [
       "/locale-*.yaml"
+    ],
+    "./schemas/citation.json": [
+      "/citation*.yaml"
     ]
+    
   },
 }
