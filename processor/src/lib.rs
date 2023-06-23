@@ -285,6 +285,8 @@ impl RenderDate for StyleTemplateDate {
         let suffix = if hints.disamb_condition
             // TODO need to check form here also
             // && self.form == style::template::DateForm::Year
+            // REVIEW: ugly, and needs to be smarter
+            && options.global.processing.clone().unwrap().config().disambiguate.unwrap().year_suffix
             && formatted_date.len() == 4
         {
             int_to_letter((hints.group_index % 26) as u32)
