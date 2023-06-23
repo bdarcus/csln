@@ -39,8 +39,6 @@ use serde::{Deserialize, Serialize};
 pub struct Config {
     pub substitute: Option<Substitute>,
     pub processing: Option<Processing>,
-    pub group: Option<Group>,
-    pub sort: Option<Sort>,
     pub localize: Option<Localize>,
     pub contributors: Option<Contributors>,
     pub disambiguation: Option<Disambiguation>,
