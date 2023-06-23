@@ -41,7 +41,6 @@ pub struct Config {
     pub processing: Option<Processing>,
     pub localize: Option<Localize>,
     pub contributors: Option<Contributors>,
-    pub disambiguation: Option<Disambiguation>,
     pub dates: Option<Date>,
 }
 
@@ -60,6 +59,7 @@ pub enum Processing {
 pub struct ProcessingCustom {
     pub sort: Option<Sort>,
     pub group: Option<Group>,
+    pub disambiguate: Option<Disambiguation>,
 }
 
 impl Processing {
@@ -81,17 +81,31 @@ impl Processing {
                             SortKey::Year,
                         ],
                     }),
+                    disambiguate: Some(Disambiguation {
+                        names: true,
+                        year_suffix: true,
+                    }),
                 }
             },
             Processing::Numeric => {
                 ProcessingCustom {
                     sort: None,
                     group: None,
+                    disambiguate: None,
                 }
             },
             Processing::Custom(custom) => custom.clone(),
         }
     }
+}
+
+#[test]
+fn author_date_config() {
+    let config = Processing::AuthorDate.config();
+    let sort = config.sort.unwrap_or_default();
+    assert_eq!(sort.template[0].key, SortKey::Author);
+    assert_eq!(sort.template[1].key, SortKey::Year);
+    assert!(config.disambiguate.unwrap().year_suffix);
 }
 
 #[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -105,12 +119,6 @@ impl Default for Disambiguation {
     fn default() -> Self {
         Self { names: true, year_suffix: false }
     }
-}
-
-#[test]
-fn disambiguation_config_default() {
-    let config = Config::default();
-    assert!(config.disambiguation.unwrap_or_default().names);
 }
 
 #[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -270,13 +278,6 @@ impl Default for Substitute {
 fn substitute_default() {
     let config = Config::default();
     assert_eq!(config.substitute.unwrap_or_default().template.len(), 3);
-}
-
-#[test]
-fn sort_config_default() {
-    let config = Config::default();
-    // the result for config.sort should be None
-    assert!(config.sort.is_none(), "{}", true);
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
