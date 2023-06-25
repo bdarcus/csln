@@ -48,18 +48,6 @@ pub struct InputReference {
 /// A locale string.
 pub type LangID = String;
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-/// The contributor list model.
-pub struct ContributorList(pub Vec<Contributor>);
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "camelCase")]
-/// Structured personal contributor names.
-pub struct StructuredName {
-    pub given_name: String,
-    pub family_name: String,
-}
-
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(untagged)]
 #[non_exhaustive]
@@ -82,9 +70,18 @@ pub enum Title {
 /// Where title parts are meaningful, use this struct; CSLN processors will not parse title strings.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct StructuredTitle {
-    pub full: String,
-    pub main: Option<String>,
-    pub sub: Option<Vec<String>>,
+    pub full: Option<String>,
+    pub main: String,
+    pub sub: Subtitle, // FIX allow string
+
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(untagged)]
+/// The subtitle can either be a string, as is the common case, or a vector of strings.
+pub enum Subtitle {
+    String(String),
+    Vector(Vec<String>),
 }
 
 impl fmt::Display for Title {
@@ -92,12 +89,18 @@ impl fmt::Display for Title {
         match self {
             Title::Single(s) => write!(f, "{}", s),
             Title::Multi(_m) => todo!("multilingual title"),
-            Title::Structured(s) => write!(
-                f,
-                "{}: {}",
-                s.main.clone().unwrap(),
-                s.sub.clone().unwrap().join(", ")
-            ),
+            Title::Structured(s) => {
+                let subtitle = match &s.sub {
+                    Subtitle::String(s) => s.clone(),
+                    Subtitle::Vector(v) => v.join(", "),
+                };
+                write!(
+                            f,
+                            "{}: {}",
+                            s.main.clone(),
+                            subtitle
+                        )
+            },
             Title::MultiStructured(_m) => todo!("multilingual structured title"),
             Title::Shorthand(s, t) => write!(f, "{} ({})", s, t),
         }
@@ -305,6 +308,24 @@ pub enum Contributor {
     SimpleName(String),
     StructuredName(StructuredName),
     ContributorList(ContributorList),
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+pub struct SimpleName {
+    pub name: String,
+    pub location: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+/// The contributor list model.
+pub struct ContributorList(pub Vec<Contributor>);
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "camelCase")]
+/// Structured personal contributor names.
+pub struct StructuredName {
+    pub given_name: String,
+    pub family_name: String,
 }
 
 impl fmt::Display for Contributor {
