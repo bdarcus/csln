@@ -1,0 +1,53 @@
+---
+title: Chicago 17, author-date
+processing: author-date-chicago
+titles: # this would need to be more flexible
+  monograph:
+    containerPrefix: in
+    italics: true
+  component:
+    quoted: true
+contributors:
+  citation: short
+  bibliography: full-chicago # name formatting and role
+substitute:
+  role: short
+  items:
+    # this is the default value, so not needed
+    - editor
+    - title
+    - translator
+dates:
+  bibliography: long
+numbers:
+  label: contextual # Chicago 15.47-8
+citation:
+  integral:
+    # what does this actually refer to though? the author-year groups?  What about items within the groups?
+    # Doe (2020, 2021), Jones (2019) and Smtih (2021) argued X.
+    delimiter: ", "
+    items:
+      - contributor: author
+      - wrap: parentheses
+        items:
+          - date: issued
+            form: year
+          - prefix: ", "
+            locators: true
+  nonIntegral:
+    delimiter: ", "
+    wrap: parentheses
+    items:
+      - contributor: author
+      - date: issued
+        form: year
+      - prefix: ", "
+        locators: true
+bibliography:
+  delimiter: ". "
+  items:
+    - contributor: author
+    - date: issued
+      form: year
+    - title: title
+    - title: container-title
