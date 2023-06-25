@@ -2,142 +2,192 @@
 un:
   type: article
   title: Title 4
-  author: ["United Nations"]
+  author:
+    name: United Nations
   issued: '2020'
 smith1:
   type: book
   title: Title 3
-  author: ["Smith, Sam"]
+  author:
+    family: Smith
+    given: John
   issued: '2023-10'
 doe1:
   type: book
   title: Title 2
-  author: ["Doe, Jane"]
+  author:
+    family: Doe
+    given: Jane
   issued: '2023-10'
 doe2:
   type: book
   title: Title 1
-  author: ["Doe, Jane"]
+  author:
+    family: Doe
+    given: Jane
   issued: '2020'
 doe3:
   type: article
   title: Title 0
-  author: ["Doe, Jane"]
+  author: 
+    family: Doe
+    given: Jane
   issued: '2020'
 brown1:
   type: article
   title: Title 5
-  author: ["Brown, John"]
+  author: 
+    name: Brown, John
   issued: '2021'
 lee1:
   type: book
   title: Title 6
-  author: ["Lee, Sarah"]
+  author:
+    family: Lee
+    given: Sarah
   issued: '2022'
 lee2:
   type: article
   title: Title 7
-  author: ["Lee, Sarah"]
+  author: 
+    family: Lee
+    given: Sarah
   issued: '2022'
 miller1:
   type: book
   title: Title 8
-  author: ["Miller, David"]
+  author: 
+    family: Miller
+    given: David
   issued: '2018'
 miller2:
   type: article
   title: Title 9
-  author: ["Miller, David"]
+  author: 
+    family: Miller
+    given: David
   issued: '2018'
 jones1:
   type: book
   title: Title 10
-  author: ["Jones, Michael"]
+  author:
+    family: Jones
+    given: Michael
   issued: '2022'
 jones2:
   type: article
   title: Title 11
-  author: ["Jones, Michael"]
+  author: 
+    family: Jones
+    given: Michael
   issued: '2022'
 smith2:
   type: book
   title: Title 12
-  author: ["Smith, John"]
+  author: 
+    family: Smith
+    given: John
   issued: '2020'
 smith3:
   type: article
   title: Title 13
-  author: ["Smith, John"]
+  author: 
+    family: Smith
+    given: John
   issued: '2020'
 miller3:
   type: book
   title: Title 14
-  author: ["Miller, Sarah"]
+  author: 
+    family: Miller
+    given: Sarah
   issued: '2017'
 miller4:
   type: article
   title: Title 15
-  author: ["Miller, Sarah"]
+  author: 
+    family: Miller
+    given: Sarah
   issued: '2018'
 jones3:
   type: book
   title: Title 16
-  author: ["Jones, David"]
+  author: 
+    name: Jones, David
   issued: '2019'
 jones4:
   type: article
   title: Title 17
-  author: ["Jones, David"]
+  author: 
+    name: Jones, David
   issued: '2019'
 brown2:
   type: book
   title: Title 18
-  author: ["Brown, Sarah"]
+  author: 
+    name: Brown, Sarah
   issued: '2019'
 brown3:
   type: article
   title: Title 19
-  author: ["Brown, Sarah"]
+  author:
+    name: Brown, Sarah
   issued: '2019'
 lee3:
   type: book
   title: Title 20
-  author: ["Lee, David"]
+  author: 
+    family: Lee
+    given: David
   issued: '2006'
 lee4:
   type: article
   title: Title 21
-  author: ["Lee, David"]
+  author: 
+    family: Lee
+    given: David
   issued: '2006'
 doe4:
   type: book
   title: Title 22
-  author: ["Doe, John"]
+  author: 
+    family: Doe
+    given: John
   issued: '2013'
 doe5:
   type: article
   title: Title 23
-  author: ["Doe, John"]
+  author: 
+    family: Doe
+    given: John
   issued: '2013'
 smith4:
   type: book
   title: Title 24
-  author: ["Smith, Sarah"]
+  author: 
+    family: Smith
+    given: Sarah
   issued: '2014'
 smith5:
   type: article
   title: Title 25
-  author: ["Smith, Sarah"]
+  author: 
+    family: Smith
+    given: Sarah
   issued: '2015'
 miller5:
   type: book
   title: Title 26
-  author: ["Miller, John"]
+  author: 
+    family: Miller
+    given: John
   issued: '2016'
 miller6:
   type: article
   title: Title 27
-  author: ["Miller, John"]
+  author:
+    family: Miller
+    given: John
   issued: '2032'
 jones5:
   type: book
@@ -145,48 +195,57 @@ jones5:
   # for single author pieces, there's no point in a list
   # but if we need structured data, as we do with Western names,let's structure it
   author:
-    familyName: Doe
-    givenName: Jane
+    family: Doe
+    given: Jane
   issued: '2018'
 jones6:
   type: article
   title: Title 29
   author:
-    familyName: Jones
-    givenName: Sarah
+    family: Jones
+    given: Sarah
   issued: '2018'
 brown4:
   type: book
   title: Title 30
-  author: ["Brown, David"]
+  author: 
+    family: Brown
+    given: David
   issued: '2021'
 brown5:
   type: article
   title: Title 31
   # here we need a list
   author:
-    - familyName: Brown
-      givenName: David
-    - familyName: Lee
-      givenName: Jane
+    - family: Brown
+      given: David
+    - family: Lee
+      given: Jane
   issued: '2021'
 lee5:
   type: book
   title: Title 32
-  author: ["Lee, John"]
+  author: 
+    name: Lee, John
   issued: '2022'
 lee6:
   type: article
   title: Title 33
-  author: ["Lee, John"]
+  author: 
+    family: Lee
+    given: John
   issued: '2022'
 doe6:
   type: book
   title: Title 34
-  author: ["Doe, Sarah"]
+  author:
+    family: Doe
+    given: Sarah
   issued: 'non-EDTF date'
 doe7:
   type: article
   title: Title 35
-  author: ["Doe, Sarah"]
+  author: 
+    family: Doe
+    given: Sarah
   issued: '2009'
