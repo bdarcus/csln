@@ -34,6 +34,8 @@ use url::Url;
 /// The Reference model.
 pub struct InputReference {
     pub id: Option<String>,
+    // Make this an option, since we don't want to rely on it.
+    pub r#type: Option<RefType>,
     pub title: Option<Title>,
     pub author: Option<Contributor>,
     pub editor: Option<Contributor>,
@@ -43,6 +45,28 @@ pub struct InputReference {
     pub url: Option<Url>,
     pub accessed: Option<EdtfString>,
     pub note: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[non_exhaustive]
+#[serde(rename_all = "kebab-case")]
+pub enum RefType {
+    #[default]
+    Article,
+    Book,
+    Chapter,
+    Dataset,
+    Document,
+    Entry,
+    JournalArticle,
+    Manuscript,
+    Map,
+    Patent,
+    PersonalCommunication,
+    Report,
+    Review,
+    Software,
+    Thesis,
 }
 
 /// A locale string.
