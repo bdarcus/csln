@@ -4,7 +4,9 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 */
 
 #[allow(unused_imports)] // for now
-use bibliography::reference::{Contributor, ContributorList, EdtfString, Name, NameList};
+use bibliography::reference::{
+    Contributor, ContributorList, EdtfString, Name, NameList, RefDate, RefID, Title
+};
 use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
 use citation::Citation;
@@ -24,6 +26,7 @@ use style::template::{
     StyleTemplateDate, StyleTemplateList, StyleTemplateTitle, Titles,
 };
 use style::Style;
+use std::cmp::Ordering;
 
 /*
 This is the processor code.
@@ -129,7 +132,7 @@ pub trait RenderComponent {
         reference: &InputReference,
         hints: &ProcHints,
         options: &RenderOptions,
-    ) -> String;
+    ) -> Option<String>;
 }
 
 pub trait RenderDate {
@@ -139,7 +142,7 @@ pub trait RenderDate {
         hints: &ProcHints,
         options: &RenderOptions,
         // context: &RenderContext<T>,
-    ) -> String;
+    ) -> Option<String>;
 }
 
 pub trait RenderTitle {
@@ -149,7 +152,7 @@ pub trait RenderTitle {
         hints: &ProcHints,
         options: &RenderOptions,
         // context: &RenderContext<T>,
-    ) -> String;
+    ) -> Option<String>;
 }
 
 pub trait RenderContributor {
@@ -158,7 +161,7 @@ pub trait RenderContributor {
         reference: &InputReference,
         hints: &ProcHints,
         options: &RenderOptions,
-    ) -> String;
+    ) -> Option<String>;
 }
 
 impl RenderComponent for StyleTemplateComponent {
@@ -168,10 +171,10 @@ impl RenderComponent for StyleTemplateComponent {
         hints: &ProcHints,
         options: &RenderOptions,
         // context: &RenderContext<T>,
-    ) -> String {
+    ) -> Option<String> {
         match self {
             StyleTemplateComponent::Title(title) => {
-                title.render(reference, hints, options)
+                Some(title.render(reference, hints, options).unwrap_or_default())
             }
             StyleTemplateComponent::Contributor(contributor) => {
                 contributor.render(reference, hints, options)
@@ -194,12 +197,9 @@ impl RenderTitle for StyleTemplateTitle {
         reference: &InputReference,
         _hints: &ProcHints,
         _options: &RenderOptions,
-    ) -> String {
-        let title: String = match &self.title {
-            Titles::Title => reference.title.as_ref().unwrap().to_string(),
-            Titles::ContainerTitle => todo!(),
-        };
-        title
+    ) -> Option<String> {
+        let title: Option<Title> = reference.title();
+        Some(title.unwrap().to_string())
     }
 }
 
@@ -209,26 +209,15 @@ impl RenderContributor for StyleTemplateContributor {
         reference: &InputReference,
         _hints: &ProcHints,
         options: &RenderOptions,
-    ) -> String {
+    ) -> Option<String> {
         match &self.contributor {
-            Contributors::Author => {
-                // REVIEW how to fix these ugly method calls?
+            Contributors::Author => Some(reference.author()?.names(options.global.clone(), false)),
+            Contributors::Editor => Some(reference.editor()?.names(options.global.clone(), false)),
+            Contributors::Translator => Some(
                 reference
-                    .author
-                    .as_ref()
-                    .unwrap()
-                    .names(options.global.clone(), false)
-            }
-            Contributors::Editor => reference
-                .editor
-                .as_ref()
-                .unwrap()
-                .names(options.global.clone(), false),
-            Contributors::Translator => reference
-                .translator
-                .as_ref()
-                .unwrap()
-                .names(options.global.clone(), false),
+                    .translator()?
+                    .names(options.global.clone(), false),
+            ),
             Contributors::Director => todo!(),
             Contributors::Publisher => todo!(),
             Contributors::Recipient => todo!(),
@@ -247,22 +236,22 @@ impl RenderDate for StyleTemplateDate {
         reference: &InputReference,
         hints: &ProcHints,
         options: &RenderOptions,
-    ) -> String {
+    ) -> Option<String> {
         let locale: &Locale = &options.locale;
-        let date = match &self.date {
-            Dates::Issued => reference.issued.as_ref().unwrap(),
+        let input_date: EdtfString = match &self.date {
+            Dates::Issued => reference.issued()?,
             Dates::OriginalPublished => todo!("original-published"),
-            Dates::Accessed => reference.accessed.as_ref().unwrap(),
+            Dates::Accessed => todo!("accessed"),
         };
-        let parsed_date = date.parse();
+        let parsed_date = input_date.parse();
         //print!("date form: {:?}", reference.issued);
         let formatted_date: String = match self.form {
             DateForm::Year => parsed_date
                 .year() // this line causes a panic if the date is not a year
                 .to_string(),
-            DateForm::YearMonth => date.year_month(locale.dates.months.long.clone()),
+            DateForm::YearMonth => input_date.year_month(locale.dates.months.long.clone()),
+            DateForm::MonthDay => input_date.month_day(locale.dates.months.long.clone()),
             DateForm::Full => todo!(),
-            DateForm::MonthDay => date.month_day(locale.dates.months.long.clone()),
         };
 
         // TODO: implement this along with localized dates
@@ -294,7 +283,7 @@ impl RenderDate for StyleTemplateDate {
             "".to_string()
         };
 
-        formatted_date + &suffix
+        Some(formatted_date + &suffix)
     }
 }
 
@@ -359,15 +348,15 @@ impl Processor {
         reference: &InputReference,
     ) -> Option<ProcTemplateComponent> {
         let hints = self.get_proc_hints();
-        let reference_id = reference.id.as_ref().unwrap();
-        let hint = hints.get(reference_id).cloned().unwrap_or_default();
+        let reference_id: Option<RefID> = reference.id();
+        let hint: ProcHints = hints.get(&reference_id.unwrap()).cloned().unwrap_or_default();
         let options = self.get_render_options(self.style.clone(), self.locale.clone());
-        let value = component.render(reference, &hint, &options);
-        if value.is_empty() {
-            None
-        } else {
-            let template_component = component.clone();
+        let value = component.render(reference, &hint, &options)?;
+        let template_component = component.clone();
+        if !value.is_empty() {
             Some(ProcTemplateComponent { template_component, value })
+        } else {
+            None
         }
     }
 
@@ -376,9 +365,30 @@ impl Processor {
         self.bibliography
             .iter()
             .map(|(key, reference)| {
-                let mut input_reference = reference.clone();
-                input_reference.id = Some(key.clone());
-                input_reference
+                match reference {
+                    InputReference::Monograph(monograph) => {
+                        let mut input_reference = InputReference::Monograph(monograph.clone());
+                        input_reference.set_id(key.clone());
+                        input_reference
+                    }
+                    InputReference::MonographComponent(monograph_component) => {
+                        let mut input_reference =
+                            InputReference::MonographComponent(monograph_component.clone());
+                        input_reference.set_id(key.clone());
+                        input_reference
+                    }
+                    InputReference::SerialComponent(serial_component) => {
+                        let mut input_reference =
+                            InputReference::SerialComponent(serial_component.clone());
+                        input_reference.set_id(key.clone());
+                        input_reference
+                    }
+                    InputReference::Collection(collection) => {
+                        let mut input_reference = InputReference::Collection(collection.clone());
+                        input_reference.set_id(key.clone());
+                        input_reference
+                    }
+                }
             })
             .collect()
     }
@@ -420,39 +430,32 @@ impl Processor {
     ) -> Vec<InputReference> {
         let mut references: Vec<InputReference> = references;
         let options: Config = self.style.options.clone().unwrap_or_default();
-        if let Some(sort_config) = options.processing.clone().unwrap_or_default().config().sort {
+        if let Some(sort_config) =
+            options.processing.clone().unwrap_or_default().config().sort
+        {
             sort_config.template.iter().rev().for_each(|sort| {
                 match sort.key {
                     SortKey::Author => {
                         references.par_sort_by(|a, b| {
-                            // REVIEW would like to clean up all these unwrap etcs
-                            let a_author = a
-                                .author
-                                .as_ref()
-                                .unwrap()
-                                .names(options.clone(), true)
-                                .to_lowercase();
-                            let b_author = b
-                                .author
-                                .as_ref()
-                                .unwrap()
-                                .names(options.clone(), true)
-                                .to_lowercase();
-                            a_author.cmp(&b_author)
+                            let a_author = match a.author() {
+                                Some(author) => author.names(options.clone(), true),
+                                None => return Ordering::Equal,
+                            };
+                            let b_author = match b.author() {
+                                Some(author) => author.names(options.clone(), true),
+                                None => return Ordering::Equal,
+                            };
+                            a_author.to_lowercase().cmp(&b_author.to_lowercase())
                         });
                     }
                     SortKey::Year => {
-                        references.par_sort_by(|a: &InputReference, b: &InputReference| {
-                            let a_year = a.issued
-                                .as_ref()
-                                .unwrap()
-                                .year();
-                            let b_year = b.issued
-                                .as_ref()
-                                .unwrap()
-                                .year();
-                            b_year.cmp(&a_year)
-                        });
+                        references.par_sort_by(
+                            |a: &InputReference, b: &InputReference| {
+                                let a_year = a.issued().as_ref().unwrap().year();
+                                let b_year = b.issued().as_ref().unwrap().year();
+                                b_year.cmp(&a_year)
+                            },
+                        );
                     }
                     _ => {}
                 }
@@ -480,7 +483,17 @@ impl Processor {
                             group_length: group_len,
                             group_key: key.clone(),
                         };
-                        (reference.id.as_ref().unwrap().clone(), proc_hint)
+                        let ref_id = match reference {
+                            InputReference::Monograph(monograph) => monograph.id.clone(),
+                            InputReference::MonographComponent(monograph_component) => {
+                                monograph_component.id.clone()
+                            }
+                            InputReference::SerialComponent(serial_component) => {
+                                serial_component.id.clone()
+                            }
+                            InputReference::Collection(collection) => collection.id.clone(),
+                        };
+                        (ref_id.unwrap(), proc_hint)
                     },
                 )
             })
@@ -502,15 +515,14 @@ impl Processor {
             // This is likely unnecessary, but just in case.
             .par_iter()
             .map(|key| match key {
-                SortKey::Author => reference
-                    .author
-                    .as_ref()
-                    .unwrap()
-                    .names(options.clone().unwrap(), as_sorted),
+                SortKey::Author => match reference.author() {
+                    Some(author) => author.names(options.clone().unwrap(), as_sorted),
+                    None => "".to_string(),
+                },
                 SortKey::Year => {
-                    reference.issued.as_ref().unwrap().parse().year().to_string()
+                    reference.issued().as_ref().unwrap().parse().year().to_string()
                 }
-                SortKey::Title => reference.title.as_ref().unwrap().to_string(),
+                SortKey::Title => reference.title().as_ref().unwrap().to_string(),
                 _ => "".to_string(), // REVIEW is this right?
             })
             .collect::<Vec<String>>()

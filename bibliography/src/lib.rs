@@ -5,8 +5,6 @@ pub mod reference;
 pub use reference::InputReference;
 
 /// A bibliography is a collection of references.
-// This would likely be as an IndexMap, sorted upon creation.
-// But needs to be compatible with serde_yaml and serde_json, and the auto schema creation.
 pub type InputBibliography = HashMap<String, InputReference>;
 
 // REVIEW move this to a core traits.rs module?

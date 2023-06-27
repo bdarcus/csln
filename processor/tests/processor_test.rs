@@ -7,13 +7,18 @@ mod tests {
     fn sorts_references() {
         let style = style::Style::from_file("examples/style.csl.yaml");
         let locale = style::locale::Locale::from_file("locales/locale-en.yaml");
-        let bibliography = bibliography::InputBibliography::from_file("examples/ex1.bib.yaml");
+        let bibliography =
+            bibliography::InputBibliography::from_file("examples/ex1.bib.yaml");
         let citations: Vec<Citation> = Vec::new();
-        let processor = csln_processor::Processor::new(style, bibliography, citations, locale);
+        let processor =
+            csln_processor::Processor::new(style, bibliography, citations, locale);
         let refs = processor.get_references();
         let sorted_refs = processor.sort_references(refs);
         assert_eq!(sorted_refs.len(), 36);
-        assert_eq!(sorted_refs.last().unwrap().title.as_ref().unwrap().to_string(), "Title 4");
+        assert_eq!(
+            sorted_refs.last().unwrap().title().unwrap().to_string(),
+            "Title 4"
+        );
     }
 
     #[test]
@@ -21,8 +26,10 @@ mod tests {
         let style = style::Style::from_file("examples/style.csl.yaml");
         let locale = style::locale::Locale::from_file("locales/locale-en.yaml");
         let citations: Vec<Citation> = Vec::new();
-        let bibliography = bibliography::InputBibliography::from_file("examples/ex1.bib.yaml");
-        let processor = csln_processor::Processor::new(style, bibliography, citations, locale);
+        let bibliography =
+            bibliography::InputBibliography::from_file("examples/ex1.bib.yaml");
+        let processor =
+            csln_processor::Processor::new(style, bibliography, citations, locale);
         let proc_hints = processor.get_proc_hints();
         assert_eq!(proc_hints["doe7"].group_index, 1);
         assert_eq!(proc_hints["doe7"].group_length, 1);
