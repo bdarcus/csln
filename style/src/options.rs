@@ -16,7 +16,7 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 //!
 //! ## Style Options
 //!
-//! The [`StyleOptions`] struct defines the configuration groups and options available in CSLN styles.
+//! The [`Config`] struct defines the configuration groups and options available in CSLN styles.
 //!
 //! ## Status
 //!
@@ -65,35 +65,21 @@ pub struct ProcessingCustom {
 impl Processing {
     pub fn config(&self) -> ProcessingCustom {
         match self {
-            Processing::AuthorDate => {
-                ProcessingCustom {
-                    sort: Some(Sort {
-                        shorten_names: false,
-                        render_substitutions: false,
-                        template: vec![
-                            SortSpec { key: SortKey::Author, ascending: true },
-                            SortSpec { key: SortKey::Year, ascending: true },
-                        ],
-                    }),
-                    group: Some(Group {
-                        template: vec![
-                            SortKey::Author,
-                            SortKey::Year,
-                        ],
-                    }),
-                    disambiguate: Some(Disambiguation {
-                        names: true,
-                        year_suffix: true,
-                    }),
-                }
+            Processing::AuthorDate => ProcessingCustom {
+                sort: Some(Sort {
+                    shorten_names: false,
+                    render_substitutions: false,
+                    template: vec![
+                        SortSpec { key: SortKey::Author, ascending: true },
+                        SortSpec { key: SortKey::Year, ascending: true },
+                    ],
+                }),
+                group: Some(Group { template: vec![SortKey::Author, SortKey::Year] }),
+                disambiguate: Some(Disambiguation { names: true, year_suffix: true }),
             },
             Processing::Numeric => {
-                ProcessingCustom {
-                    sort: None,
-                    group: None,
-                    disambiguate: None,
-                }
-            },
+                ProcessingCustom { sort: None, group: None, disambiguate: None }
+            }
             Processing::Custom(custom) => custom.clone(),
         }
     }
