@@ -26,4 +26,5 @@ chrono = { version = "0.4", features = ["unstable-locales"] }
 style = { path = "../style", package = "csln-style" }
 icu = { version = "1.2.0", features = ["icu_datetime_experimental"] }
 icu_testdata = { version = "1.2.0", features = ["icu_datetime_experimental"] }
+indexmap = { version = "2.0.0", features = ["std"] }
 

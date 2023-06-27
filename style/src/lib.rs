@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 
-pub mod options;
 pub mod locale;
+pub mod options;
 use options::Config;
 
 pub mod template;

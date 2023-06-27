@@ -21,6 +21,12 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 //!
 //! Dates can either be EDTF strings, for flexible dates and date-times, or literal strings.
 //! Literal strings can be used for examples like "Han Dynasty".
+//!
+//! ## Parent References
+//!
+//! A reference can be a component of a larger work, such as a chapter in a book, or an article.
+//! The parent is represented inline as a Monograph or Serial. 
+//! I would like to add ability to reference a parent by ID, but that is not yet implemented.
 
 use edtf::level_1::Edtf;
 use schemars::JsonSchema;
@@ -30,21 +36,238 @@ use style::{locale::MonthList, options::Config};
 use url::Url;
 //use icu::calendar::DateTime;
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(untagged)]
 /// The Reference model.
-pub struct InputReference {
-    pub id: Option<String>,
-    // Make this an option, since we don't want to rely on it.
-    pub r#type: Option<RefType>,
-    pub title: Option<Title>,
+pub enum InputReference {
+    /// A monograph, such as a book or a report, is a monolithic work published or produced as a complete entity.
+    Monograph(Monograph),
+    /// A component of a larger Monography, such as a chapter in a book.
+    /// The parent monograph is referenced by its ID.
+    MonographComponent(MonographComponent),
+    /// A componet of a larger serial publication; for example a journal or newspaper article.
+    /// The parent serial is referenced by its ID.
+    SerialComponent(SerialComponent),
+    /// A collection of works, such as an anthology or proceedings.
+    Collection(Collection),
+}
+
+impl InputReference {
+    // REVIEW: is this sensible?
+
+    /// Return the reference ID.
+    /// If the reference does not have an ID, return None.
+    pub fn id(&self) -> Option<RefID> {
+        match self {
+            InputReference::Monograph(r) => r.id.clone(),
+            InputReference::MonographComponent(r) => r.id.clone(),
+            InputReference::SerialComponent(r) => r.id.clone(),
+            InputReference::Collection(r) => r.id.clone(),
+        }
+    }
+
+    /// Return the author.
+    /// If the reference does not have an author, return None.
+    pub fn author(&self) -> Option<Contributor> {
+        match self {
+            // REVIEW: return string instead?
+            InputReference::Monograph(r) => r.author.clone(),
+            InputReference::MonographComponent(r) => r.author.clone(),
+            InputReference::SerialComponent(r) => r.author.clone(),
+            InputReference::Collection(r) => r.editor.clone(),
+        }
+    }
+
+    /// Return the editor.
+    /// If the reference does not have an editor, return None.
+    pub fn editor(&self) -> Option<Contributor> {
+        match self {
+            // REVIEW: return string instead?
+            InputReference::Monograph(_) => None,
+            InputReference::MonographComponent(_) => None,
+            InputReference::SerialComponent(_) => None,
+            InputReference::Collection(r) => r.editor.clone(),
+        }
+    }
+
+    /// Return the translator.
+    /// If the reference does not have a translator, return None.
+    pub fn translator(&self) -> Option<Contributor> {
+        match self {
+            // REVIEW: return string instead?
+            InputReference::Monograph(r) => r.translator.clone(),
+            InputReference::MonographComponent(r) => r.translator.clone(),
+            InputReference::SerialComponent(r) => r.translator.clone(),
+            InputReference::Collection(r) => r.translator.clone(),
+        }
+    }
+
+    /// Return the title.
+    /// If the reference does not have a title, return None.
+    pub fn title(&self) -> Option<Title> {
+        match self {
+            InputReference::Monograph(r) => Some(r.title.clone()),
+            InputReference::MonographComponent(r) => r.title.clone(),
+            InputReference::SerialComponent(r) => r.title.clone(),
+            InputReference::Collection(r) => r.title.clone(),
+        }
+    }
+
+    /// Return the issued date.
+    /// If the reference does not have an issued date, return None.
+    pub fn issued(&self) -> Option<EdtfString> {
+        match self {
+            InputReference::Monograph(r) => Some(r.issued.clone()),
+            InputReference::MonographComponent(r) => Some(r.issued.clone()),
+            InputReference::SerialComponent(r) => Some(r.issued.clone()),
+            InputReference::Collection(r) => Some(r.issued.clone()),
+        }
+    }
+
+    pub fn set_id(&mut self, id: String) {
+        match self {
+            InputReference::Monograph(monograph) => monograph.id = Some(id),
+            InputReference::MonographComponent(monograph_component) => {
+                monograph_component.id = Some(id)
+            }
+            InputReference::SerialComponent(serial_component) => serial_component.id = Some(id),
+            InputReference::Collection(collection) => collection.id = Some(id),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+/// A monograph, such as a book or a report, is a monolithic work published or produced as a complete entity.
+pub struct Monograph {
+    pub id: Option<RefID>,
+    pub r#type: MonographType,
+    pub title: Title,
     pub author: Option<Contributor>,
-    pub editor: Option<Contributor>,
     pub translator: Option<Contributor>,
-    pub issued: Option<EdtfString>,
+    pub issued: EdtfString,
     pub publisher: Option<Contributor>,
     pub url: Option<Url>,
     pub accessed: Option<EdtfString>,
     pub note: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub struct Collection {
+    pub id: Option<RefID>,
+    pub r#type: CollectionType,
+    pub title: Option<Title>,
+    pub editor: Option<Contributor>,
+    pub translator: Option<Contributor>,
+    pub issued: EdtfString,
+    pub publisher: Option<Contributor>,
+    pub url: Option<Url>,
+    pub accessed: Option<EdtfString>,
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+#[non_exhaustive]
+pub enum CollectionType {
+    Anthology,
+    Proceedings,
+    EditedBook,
+    EditedVolume,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+/// A componet of a larger serial publication; for example a journal or newspaper article.
+/// The parent serial is referenced by its ID.
+pub struct SerialComponent {
+    pub id: Option<RefID>,
+    pub r#type: SerialComponentType,
+    pub title: Option<Title>,
+    pub author: Option<Contributor>,
+    pub translator: Option<Contributor>,
+    pub issued: EdtfString,
+    /// The parent work, such a magazine or journal.
+    pub parent: Serial,
+    pub url: Option<Url>,
+    pub accessed: Option<EdtfString>,
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(untagged)]
+pub enum ParentReference {
+    Monograph(Monograph),
+    Serial(Serial),
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub enum SerialComponentType {
+    Article,
+    Post,
+    Review,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+pub struct Serial {
+    pub r#type: SerialType,
+    pub title: Title,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+#[non_exhaustive]
+pub enum SerialType {
+    AcademicJournal,
+    Blog,
+    Magazine,
+    Newspaper,
+    Newsletter,
+    Proceedings,
+    Podcast,
+    BroadcastProgram,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+/// A component of a larger Monography, such as a chapter in a book.
+/// The parent monograph is referenced by its ID.
+pub struct MonographComponent {
+    pub id: Option<RefID>,
+    pub r#type: MonographComponentType,
+    pub title: Option<Title>,
+    pub author: Option<Contributor>,
+    pub translator: Option<Contributor>,
+    pub issued: EdtfString,
+    /// The parent work, as either a Monograph.
+    // I would like to allow this to be either a Monograph or a RefID, but I can't figure out how to do that.
+    pub parent: Monograph,
+    pub url: Option<Url>,
+    pub accessed: Option<EdtfString>,
+    pub note: Option<String>,
+}
+
+pub type RefID = String;
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+#[non_exhaustive]
+pub enum MonographComponentType {
+    Chapter,
+    /// A generic part of a monograph, such as a preface or an appendix.
+    Document,
+    Section,
+    Part,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+#[non_exhaustive]
+pub enum MonographType {
+    #[default]
+    Book,
+    /// A standalone generic item.
+    Document,
+    Report,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
