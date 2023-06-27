@@ -34,6 +34,8 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use style::{locale::MonthList, options::Config};
 use url::Url;
+use fmt::Display;
+use std::fmt::Formatter;
 //use icu::calendar::DateTime;
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -136,6 +138,26 @@ impl InputReference {
     }
 }
 
+/// A value that could be either a number or a string.
+// Borrowed from Hayagriva
+#[derive(Clone, Debug, PartialEq, Eq, JsonSchema, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum NumOrStr {
+    /// It's a number!
+    Number(i64),
+    /// It's a string!
+    Str(String),
+}
+
+impl Display for NumOrStr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            Self::Number(i) => write!(f, "{}", i),
+            Self::Str(s) => write!(f, "{}", s),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 /// A monograph, such as a book or a report, is a monolithic work published or produced as a complete entity.
 pub struct Monograph {
@@ -149,6 +171,9 @@ pub struct Monograph {
     pub url: Option<Url>,
     pub accessed: Option<EdtfString>,
     pub note: Option<String>,
+    pub isbn: Option<String>,
+    pub doi: Option<String>,
+    pub edition: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -164,6 +189,7 @@ pub struct Collection {
     pub url: Option<Url>,
     pub accessed: Option<EdtfString>,
     pub note: Option<String>,
+    pub issn: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -191,6 +217,10 @@ pub struct SerialComponent {
     pub url: Option<Url>,
     pub accessed: Option<EdtfString>,
     pub note: Option<String>,
+    pub doi: Option<String>,
+    pub pages: Option<String>,
+    pub volume: Option<NumOrStr>,
+    pub issue: Option<NumOrStr>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -244,6 +274,7 @@ pub struct MonographComponent {
     pub url: Option<Url>,
     pub accessed: Option<EdtfString>,
     pub note: Option<String>,
+    pub doi: Option<String>,
 }
 
 pub type RefID = String;
@@ -273,6 +304,7 @@ pub enum MonographType {
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[non_exhaustive]
 #[serde(rename_all = "kebab-case")]
+// TODO merge into refactor
 pub enum RefType {
     #[default]
     Article,
