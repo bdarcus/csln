@@ -13,28 +13,31 @@ biss:
     location: New York
     name: Vintage Books
 hutt:
-  type: book
+  type: chapter
+  issued: "2011"
   author: 
     family: Hutter
     given: Michael
-  issued: "2011"
   title: 
     main: Infinite Surprises
     sub: Value in the Creative Industries
-  containerTitle: 
-    main: The Worth of Goods
-    sub: Valuation and Pricing in the Economy
-  editor: 
-    - family: Beckert
-      given: Jens
-    - family: Aspers
-      given: Patrick
+  parent:
+    type: book
+    issued: "2011" # currerntly required in both places
+    title: 
+      main: The Worth of Goods
+      sub: Valuation and Pricing in the Economy
+    editor: 
+      - family: Beckert
+        given: Jens
+      - family: Aspers
+        given: Patrick
+    publisher:
+      location: New York
+      name: Oxford University Press
   pages: 201-220
-  publisher:
-    location: New York
-    name: Oxford University Press.
 lamp:
-  type: journal-article
+  type: article
   author:
     - family: Lampel
       given: Joseph
@@ -42,11 +45,13 @@ lamp:
       given: Theresa
     - family: Shamsie
       given: Jamal
-  isued: "2000"
+  issued: "2000"
   title: 
     main: Balancing Act
     sub: Learning from Organizing Practices in Cultural Industries
-  containerTitle: Organization Science
+  parent:
+    type: academic-journal
+    title: Organization Science
   volume: 11 
   issue: 3
   pages: 263-269
@@ -63,7 +68,7 @@ daum:
     name: Picador
     location: New York
 liu:
-  type: journal-article
+  type: article
   author:
     family: Liu
     given: Jui-Ch’i
@@ -71,26 +76,31 @@ liu:
   title:
     main: Beholding the Feminine Sublime
     sub: Lee Miller’s War Photography
-  containerTitle: Signs
+  parent:
+    title: Signs
+    type: academic-journal
   volume: 40
   issue: 2 # printed as 'no. 2'; not sure why
   pages: '308-19'
   doi: 10.1086/678242
 gund:
   # 15.48 exception:
-  type: journal-article
+  type: article
   author:
-  -  family: Gunderson
-     given: Alex R
+  - family: Gunderson
+    given: Alex R
   - family: Leal
     given: Manuel
   issued: '2015-05'
   title: Patterns of Thermal Constraint on Ectotherm Activity
-  containerTitle: American Naturalist
+  parent:
+    type: academic-journal
+    title: American Naturalist
   issue: 185 # no volume, so preface with label to disambiguate
   pages: 653–64
   doi: 10.1086/680849
 glass:
+  type: article
   author:
   - family: Glass
     given: Jennifer
@@ -100,19 +110,24 @@ glass:
   title:
     main: Red States, Blue States, and Divorce
     sub: Understanding the Impact of Conservative Protestantism on Regional Variation in Divorce Rates
-  containerTitle: American Journal of Sociology
+  parent:
+    type: academic-journal
+    title: American Journal of Sociology
   volume: 119
   issue: 4
   pages: 1002–46
   doi: 10.1086/674703
 meyer:
   # 15.47 exception (only an issue number, no volume):
+  type: article
   author: 
     family: Meyerovitch
     given: Eva
   issued: '1959'
   title: The Gnostic Manuscripts of Upper Egypt
-  containerTitle: Diogenes
+  parent:
+    type: academic-journal
+    title: Diogenes
   issue: 25
   pages: 84–117
 

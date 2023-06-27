@@ -1,12 +1,12 @@
-use bibliography::InputBibliography as Bibliography;
 use bibliography::HasFile;
+use bibliography::InputBibliography as Bibliography;
 use citation::Citation;
+use clap::Parser;
 use processor::Processor;
 use style::Style;
-use clap::Parser;
 
-#[derive(Parser,Default,Debug)] 
-#[clap(author="Bruce D'Arcus", version, about="A CLI for CSLN")]
+#[derive(Parser, Default, Debug)]
+#[clap(author = "Bruce D'Arcus", version, about = "A CLI for CSLN")]
 pub struct Opts {
     #[clap(short, long)]
     /// The path to the CSLN style file

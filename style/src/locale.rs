@@ -6,14 +6,15 @@ use std::fs;
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct Locale {
     pub locale: String,
-   // pub options: LocaleOptions,
+    // pub options: LocaleOptions,
     pub dates: DateTerms,
     //pub contributors: ContributorTerms,
 }
 
 impl Locale {
     pub fn from_file(locale_path: &str) -> Locale {
-        let contents = fs::read_to_string(locale_path).expect("Failed to read locale file");
+        let contents =
+            fs::read_to_string(locale_path).expect("Failed to read locale file");
         if locale_path.ends_with(".json") {
             serde_json::from_str(&contents).expect("Failed to parse JSON")
         } else if locale_path.ends_with(".yaml") || locale_path.ends_with(".yml") {
