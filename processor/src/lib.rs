@@ -5,7 +5,7 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 
 #[allow(unused_imports)] // for now
 use bibliography::reference::{
-    Contributor, ContributorList, EdtfString, Name, NameList, RefDate, RefID, Title
+    Contributor, ContributorList, EdtfString, Name, NameList, RefDate, RefID, Title, NumOrStr,
 };
 use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
@@ -23,7 +23,7 @@ use style::options::{Config, MonthFormat, SortKey};
 #[allow(unused_imports)] // for now
 use style::template::{
     Contributors, DateForm, Dates, StyleTemplateComponent, StyleTemplateContributor,
-    StyleTemplateDate, StyleTemplateList, StyleTemplateTitle, Titles,
+    StyleTemplateDate, StyleTemplateList, StyleTemplateNumber, StyleTemplateTitle, Titles, Numbers
 };
 use style::Style;
 use std::cmp::Ordering;
@@ -155,6 +155,16 @@ pub trait RenderTitle {
     ) -> Option<String>;
 }
 
+pub trait RenderNumber {
+    fn render(
+        &self,
+        reference: &InputReference,
+        hints: &ProcHints,
+        options: &RenderOptions,
+        // context: &RenderContext<T>,
+    ) -> Option<String>;
+}
+
 pub trait RenderContributor {
     fn render(
         &self,
@@ -180,7 +190,9 @@ impl RenderComponent for StyleTemplateComponent {
                 contributor.render(reference, hints, options)
             }
             StyleTemplateComponent::Date(date) => date.render(reference, hints, options),
+            StyleTemplateComponent::Number(number) => number.render(reference, hints, options),
             StyleTemplateComponent::List(_list) => todo!(),
+            _ => None,
         }
     }
 }
@@ -188,6 +200,32 @@ impl RenderComponent for StyleTemplateComponent {
 impl<T: RenderContributor + ?Sized> dyn Render<T> {
     pub fn render(names: Vec<String>) -> String {
         names.join(", ")
+    }
+}
+
+impl RenderNumber for StyleTemplateNumber {
+    fn render(
+        &self,
+        reference: &InputReference,
+        _hints: &ProcHints,
+        _options: &RenderOptions,
+    ) -> Option<String> {
+        let number: Option<String> = match  &self.number {
+            Numbers::Volume => match reference {
+                InputReference::SerialComponent(serial_component) => Some(serial_component.volume.as_ref()?.to_string()),
+                _ => None,
+            },
+            Numbers::Issue => match reference {
+                InputReference::SerialComponent(serial_component) => Some(serial_component.issue.as_ref()?.to_string()),
+                _ => None,
+            },
+            Numbers::Pages => match reference {
+                InputReference::SerialComponent(serial_component) => Some(serial_component.pages.as_ref()?.to_string()),
+                InputReference::MonographComponent(monograph_component) => Some(monograph_component.pages.as_ref()?.to_string()),
+                _ => None,
+            },
+        };
+        number
     }
 }
 
