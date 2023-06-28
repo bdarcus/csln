@@ -30,6 +30,23 @@ pub enum StyleTemplateComponent {
     List(StyleTemplateList),
     Title(StyleTemplateTitle),
     Number(StyleTemplateNumber),
+    SimpleString(StyleTemplateSimpleString),
+}
+
+/// A simple string component, to render a string variable.
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct StyleTemplateSimpleString {
+    pub variable: Variables,
+    pub rendering: Option<Rendering>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum Variables {
+    // TODO: add more variables
+    Doi,
+    Isbn,
+    Issn,
 }
 
 /// A number component, to render a number.
