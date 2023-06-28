@@ -5,7 +5,8 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 
 #[allow(unused_imports)] // for now
 use bibliography::reference::{
-    Contributor, ContributorList, EdtfString, Name, NameList, RefDate, RefID, Title, NumOrStr,
+    Contributor, ContributorList, EdtfString, Name, NameList, NumOrStr, RefDate, RefID,
+    Title,
 };
 use bibliography::InputBibliography as Bibliography;
 use bibliography::InputReference;
@@ -15,6 +16,7 @@ use itertools::Itertools;
 use rayon::prelude::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::option::Option;
@@ -22,11 +24,11 @@ use style::locale::Locale;
 use style::options::{Config, MonthFormat, SortKey};
 #[allow(unused_imports)] // for now
 use style::template::{
-    Contributors, DateForm, Dates, StyleTemplateComponent, StyleTemplateContributor,
-    StyleTemplateDate, StyleTemplateList, StyleTemplateNumber, StyleTemplateTitle, Titles, Numbers
+    Contributors, DateForm, Dates, Numbers, StyleTemplateComponent,
+    StyleTemplateContributor, StyleTemplateDate, StyleTemplateList, StyleTemplateNumber,
+    StyleTemplateSimpleString, StyleTemplateTitle, Titles, Variables,
 };
 use style::Style;
-use std::cmp::Ordering;
 
 /*
 This is the processor code.
@@ -165,6 +167,16 @@ pub trait RenderNumber {
     ) -> Option<String>;
 }
 
+pub trait RenderString {
+    fn render(
+        &self,
+        reference: &InputReference,
+        hints: &ProcHints,
+        options: &RenderOptions,
+        // context: &RenderContext<T>,
+    ) -> Option<String>;
+}
+
 pub trait RenderContributor {
     fn render(
         &self,
@@ -190,7 +202,12 @@ impl RenderComponent for StyleTemplateComponent {
                 contributor.render(reference, hints, options)
             }
             StyleTemplateComponent::Date(date) => date.render(reference, hints, options),
-            StyleTemplateComponent::Number(number) => number.render(reference, hints, options),
+            StyleTemplateComponent::Number(number) => {
+                number.render(reference, hints, options)
+            },
+            StyleTemplateComponent::SimpleString(string) => {
+                string.render(reference, hints, options)
+            },
             StyleTemplateComponent::List(_list) => todo!(),
             _ => None,
         }
@@ -210,22 +227,63 @@ impl RenderNumber for StyleTemplateNumber {
         _hints: &ProcHints,
         _options: &RenderOptions,
     ) -> Option<String> {
-        let number: Option<String> = match  &self.number {
+        let number: Option<String> = match &self.number {
             Numbers::Volume => match reference {
-                InputReference::SerialComponent(serial_component) => Some(serial_component.volume.as_ref()?.to_string()),
+                InputReference::SerialComponent(serial_component) => {
+                    Some(serial_component.volume.as_ref()?.to_string())
+                }
                 _ => None,
             },
             Numbers::Issue => match reference {
-                InputReference::SerialComponent(serial_component) => Some(serial_component.issue.as_ref()?.to_string()),
+                InputReference::SerialComponent(serial_component) => {
+                    Some(serial_component.issue.as_ref()?.to_string())
+                }
                 _ => None,
             },
             Numbers::Pages => match reference {
-                InputReference::SerialComponent(serial_component) => Some(serial_component.pages.as_ref()?.to_string()),
-                InputReference::MonographComponent(monograph_component) => Some(monograph_component.pages.as_ref()?.to_string()),
+                InputReference::SerialComponent(serial_component) => {
+                    Some(serial_component.pages.as_ref()?.to_string())
+                }
+                InputReference::MonographComponent(monograph_component) => {
+                    Some(monograph_component.pages.as_ref()?.to_string())
+                }
                 _ => None,
             },
         };
         number
+    }
+}
+
+impl RenderString for StyleTemplateSimpleString {
+    fn render(
+        &self,
+        reference: &InputReference,
+        _hints: &ProcHints,
+        _options: &RenderOptions,
+    ) -> Option<String> {
+        match self.variable {
+            Variables::Doi => match reference {
+                InputReference::SerialComponent(serial_component) => {
+                    Some(serial_component.doi.as_ref()?.to_string())
+                }
+                InputReference::MonographComponent(monograph_component) => {
+                    Some(monograph_component.doi.as_ref()?.to_string())
+                }
+                _ => None,
+            },
+            Variables::Isbn => match reference {
+                InputReference::Monograph(monograph_component) => {
+                    Some(monograph_component.isbn.as_ref()?.to_string())
+                }
+                _ => None,
+            },
+            Variables::Issn => match reference {
+                InputReference::Collection(collection) => {
+                    Some(collection.issn.as_ref()?.to_string())
+                }
+                _ => None,
+            },
+        }
     }
 }
 
@@ -249,13 +307,15 @@ impl RenderContributor for StyleTemplateContributor {
         options: &RenderOptions,
     ) -> Option<String> {
         match &self.contributor {
-            Contributors::Author => Some(reference.author()?.names(options.global.clone(), false)),
-            Contributors::Editor => Some(reference.editor()?.names(options.global.clone(), false)),
-            Contributors::Translator => Some(
-                reference
-                    .translator()?
-                    .names(options.global.clone(), false),
-            ),
+            Contributors::Author => {
+                Some(reference.author()?.names(options.global.clone(), false))
+            }
+            Contributors::Editor => {
+                Some(reference.editor()?.names(options.global.clone(), false))
+            }
+            Contributors::Translator => {
+                Some(reference.translator()?.names(options.global.clone(), false))
+            }
             Contributors::Director => todo!(),
             Contributors::Publisher => todo!(),
             Contributors::Recipient => todo!(),
@@ -287,7 +347,9 @@ impl RenderDate for StyleTemplateDate {
             DateForm::Year => parsed_date
                 .year() // this line causes a panic if the date is not a year
                 .to_string(),
-            DateForm::YearMonth => input_date.year_month(locale.dates.months.long.clone()),
+            DateForm::YearMonth => {
+                input_date.year_month(locale.dates.months.long.clone())
+            }
             DateForm::MonthDay => input_date.month_day(locale.dates.months.long.clone()),
             DateForm::Full => todo!(),
         };
@@ -387,7 +449,8 @@ impl Processor {
     ) -> Option<ProcTemplateComponent> {
         let hints = self.get_proc_hints();
         let reference_id: Option<RefID> = reference.id();
-        let hint: ProcHints = hints.get(&reference_id.unwrap()).cloned().unwrap_or_default();
+        let hint: ProcHints =
+            hints.get(&reference_id.unwrap()).cloned().unwrap_or_default();
         let options = self.get_render_options(self.style.clone(), self.locale.clone());
         let value = component.render(reference, &hint, &options)?;
         let template_component = component.clone();
@@ -402,30 +465,30 @@ impl Processor {
     pub fn get_references(&self) -> Vec<InputReference> {
         self.bibliography
             .iter()
-            .map(|(key, reference)| {
-                match reference {
-                    InputReference::Monograph(monograph) => {
-                        let mut input_reference = InputReference::Monograph(monograph.clone());
-                        input_reference.set_id(key.clone());
-                        input_reference
-                    }
-                    InputReference::MonographComponent(monograph_component) => {
-                        let mut input_reference =
-                            InputReference::MonographComponent(monograph_component.clone());
-                        input_reference.set_id(key.clone());
-                        input_reference
-                    }
-                    InputReference::SerialComponent(serial_component) => {
-                        let mut input_reference =
-                            InputReference::SerialComponent(serial_component.clone());
-                        input_reference.set_id(key.clone());
-                        input_reference
-                    }
-                    InputReference::Collection(collection) => {
-                        let mut input_reference = InputReference::Collection(collection.clone());
-                        input_reference.set_id(key.clone());
-                        input_reference
-                    }
+            .map(|(key, reference)| match reference {
+                InputReference::Monograph(monograph) => {
+                    let mut input_reference =
+                        InputReference::Monograph(monograph.clone());
+                    input_reference.set_id(key.clone());
+                    input_reference
+                }
+                InputReference::MonographComponent(monograph_component) => {
+                    let mut input_reference =
+                        InputReference::MonographComponent(monograph_component.clone());
+                    input_reference.set_id(key.clone());
+                    input_reference
+                }
+                InputReference::SerialComponent(serial_component) => {
+                    let mut input_reference =
+                        InputReference::SerialComponent(serial_component.clone());
+                    input_reference.set_id(key.clone());
+                    input_reference
+                }
+                InputReference::Collection(collection) => {
+                    let mut input_reference =
+                        InputReference::Collection(collection.clone());
+                    input_reference.set_id(key.clone());
+                    input_reference
                 }
             })
             .collect()
@@ -471,32 +534,28 @@ impl Processor {
         if let Some(sort_config) =
             options.processing.clone().unwrap_or_default().config().sort
         {
-            sort_config.template.iter().rev().for_each(|sort| {
-                match sort.key {
-                    SortKey::Author => {
-                        references.par_sort_by(|a, b| {
-                            let a_author = match a.author() {
-                                Some(author) => author.names(options.clone(), true),
-                                None => return Ordering::Equal,
-                            };
-                            let b_author = match b.author() {
-                                Some(author) => author.names(options.clone(), true),
-                                None => return Ordering::Equal,
-                            };
-                            a_author.to_lowercase().cmp(&b_author.to_lowercase())
-                        });
-                    }
-                    SortKey::Year => {
-                        references.par_sort_by(
-                            |a: &InputReference, b: &InputReference| {
-                                let a_year = a.issued().as_ref().unwrap().year();
-                                let b_year = b.issued().as_ref().unwrap().year();
-                                b_year.cmp(&a_year)
-                            },
-                        );
-                    }
-                    _ => {}
+            sort_config.template.iter().rev().for_each(|sort| match sort.key {
+                SortKey::Author => {
+                    references.par_sort_by(|a, b| {
+                        let a_author = match a.author() {
+                            Some(author) => author.names(options.clone(), true),
+                            None => return Ordering::Equal,
+                        };
+                        let b_author = match b.author() {
+                            Some(author) => author.names(options.clone(), true),
+                            None => return Ordering::Equal,
+                        };
+                        a_author.to_lowercase().cmp(&b_author.to_lowercase())
+                    });
                 }
+                SortKey::Year => {
+                    references.par_sort_by(|a: &InputReference, b: &InputReference| {
+                        let a_year = a.issued().as_ref().unwrap().year();
+                        let b_year = b.issued().as_ref().unwrap().year();
+                        b_year.cmp(&a_year)
+                    });
+                }
+                _ => {}
             });
         }
         references
@@ -529,7 +588,9 @@ impl Processor {
                             InputReference::SerialComponent(serial_component) => {
                                 serial_component.id.clone()
                             }
-                            InputReference::Collection(collection) => collection.id.clone(),
+                            InputReference::Collection(collection) => {
+                                collection.id.clone()
+                            }
                         };
                         (ref_id.unwrap(), proc_hint)
                     },

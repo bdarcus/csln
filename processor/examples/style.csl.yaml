@@ -29,5 +29,5 @@ bibliography:
     - date: issued
       form: month-day
     - number: volume
-
+    - variable: doi
 
