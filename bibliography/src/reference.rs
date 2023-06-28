@@ -85,10 +85,8 @@ impl InputReference {
     pub fn editor(&self) -> Option<Contributor> {
         match self {
             // REVIEW: return string instead?
-            InputReference::Monograph(_) => None,
-            InputReference::MonographComponent(_) => None,
-            InputReference::SerialComponent(_) => None,
             InputReference::Collection(r) => r.editor.clone(),
+            _ => None,
         }
     }
 
@@ -271,6 +269,7 @@ pub struct MonographComponent {
     /// The parent work, as either a Monograph.
     // I would like to allow this to be either a Monograph or a RefID, but I can't figure out how to do that.
     pub parent: Monograph,
+    pub pages: Option<NumOrStr>,
     pub url: Option<Url>,
     pub accessed: Option<EdtfString>,
     pub note: Option<String>,

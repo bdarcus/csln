@@ -28,4 +28,6 @@ bibliography:
     - title: title
     - date: issued
       form: month-day
+    - number: volume
+
 
