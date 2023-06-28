@@ -23,11 +23,37 @@ pub enum WrapPunctuation {
 /// The Template component model. Each item is for a specific datatype.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(untagged)]
+#[non_exhaustive]
 pub enum StyleTemplateComponent {
     Contributor(StyleTemplateContributor),
     Date(StyleTemplateDate),
     List(StyleTemplateList),
     Title(StyleTemplateTitle),
+    Number(StyleTemplateNumber),
+}
+
+/// A number component, to render a number.
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct StyleTemplateNumber {
+    pub number: Numbers,
+    pub form: Option<NumberForm>,
+    pub rendering: Option<Rendering>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum Numbers {
+    Volume,
+    Issue,
+    Pages
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum NumberForm {
+    #[default]
+    Numeric,
+    Ordinal,
 }
 
 /// To render is a list of more than one item; primarily to enable use of a delimiter to join the items.
