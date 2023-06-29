@@ -1,31 +1,46 @@
 ---
-title: Chicago 17, author-date
-processing: author-date-chicago
-titles: # this would need to be more flexible
-  monograph:
-    containerPrefix: in
-    italics: true
-  component:
-    quoted: true
-contributors:
-  citation: short
-  bibliography: full-chicago # name formatting and role
-substitute:
-  role: short
-  items:
-    # this is the default value, so not needed
-    - editor
-    - title
-    - translator
-dates:
-  bibliography: long
-numbers:
-  label: contextual # Chicago 15.47-8
-citation:
-  integral:
-    # what does this actually refer to though? the author-year groups?  What about items within the groups?
-    # Doe (2020, 2021), Jones (2019) and Smtih (2021) argued X.
+info:
+  title: Chicago 17, author-date
+  description: | 
+    How simple can we make a Chicago author-date style? 
+
+    The goal here is to add:
+
+    1. configurable conditional logic without adding it to templates
+    2. presets in key places
+options:
+  processing: author-date # preset for sorting, grouping, disambiguation
+  # titles are unique in that their rendering is dependent, more so than other content, on their type
+  # this is a very common pattern, where component titles (articles, chapters, etc) are quoted, but
+  # titles otherwise render in italics
+  titles:
+    component: # chapter and article titles render the same
+      quoted: true
+    default:
+      emph: true
+  contributors:
     delimiter: ", "
+    andAs: text,
+    citation: short # preset
+    bibliography: full-chicago # preset name formatting and role
+  substitute:
+    role: short # non-author roles need to be included in the bibliography, but formatted differently than otherwise
+    items:
+     # this is the default value, so not needed
+      - editor
+      - title
+      - translator
+  dates: long
+  numbers:
+    label: contextual # Chicago 15.47-8
+citation: # this should allow presets; "citation-author-date-chicago"
+  integral:
+    # Doe (2020, 2021), Jones (2019) and Smtih (2021) argued X.
+    author: # since we have author and substitution in the core, am less concerned about this
+      delimiter: ", " 
+      andAs: text
+    reference:
+      delimiter: ", "
     items:
       - contributor: author
       - wrap: parentheses
@@ -35,7 +50,8 @@ citation:
           - prefix: ", "
             locators: true
   nonIntegral:
-    delimiter: ", "
+    author:
+      delimiter: "; "
     wrap: parentheses
     items:
       - contributor: author
@@ -49,5 +65,9 @@ bibliography:
     - contributor: author
     - date: issued
       form: year
-    - title: title
-    - title: container-title
+    - title: title # how to distinguish formatting here though?
+    - title: parent-monograph
+      prefix: In 
+      emph: true
+    - title: parent-serial
+      quoted: true
