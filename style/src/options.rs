@@ -42,11 +42,11 @@ pub struct Config {
     pub localize: Option<Localize>,
     pub contributors: Option<ContributorConfig>,
     pub dates: Option<Date>,
-    pub titles: Option<Titles>,
+    pub titles: Option<TitlesConfig>,
 }
 
 #[derive(JsonSchema, Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
-pub struct Titles {
+pub struct TitlesConfig {
     component: Option<Rendering>,
     monograph: Option<Rendering>,
     default: Option<Rendering>,

@@ -13,11 +13,15 @@ options:
 templates:
   title-apa:
     - title: title
+  container-title:
+  # the below titles are mutually-exclusive, so at most one will be output
+    - title: parent-monograph
+      prefix: In 
+      emph: true
+    - title: parent-serial
   author-apa-full:
     - contributor: author
       form: long
-  container-apa:
-    - title: containerTitle
   howpublished-apa:
     - contributor: publisher
       form: short
@@ -33,6 +37,10 @@ bibliography:
     - date: issued
       form: year
     - title: title
+    - title: parent-monograph
+      prefix: In 
+      emph: true
+    - title: parent-serial
     - date: issued
       form: month-day
     - number: volume
