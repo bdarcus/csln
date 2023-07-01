@@ -107,15 +107,6 @@ impl Default for ProcHints {
     }
 }
 
-pub trait Render<T> {
-    fn render(
-        &self,
-        reference: &InputReference,
-        component: &T,
-        options: RenderOptions,
-    ) -> String;
-}
-
 #[allow(unused)]
 pub struct RenderOptions {
     // Options for the style, including default options.
@@ -126,58 +117,16 @@ pub struct RenderOptions {
     locale: Locale,
 }
 
-// WTD???
+pub trait Render<T> {
+    fn render(
+        &self,
+        reference: &InputReference,
+        component: &T,
+        options: RenderOptions,
+    ) -> String;
+}
 
 pub trait RenderComponent {
-    fn render(
-        &self,
-        reference: &InputReference,
-        hints: &ProcHints,
-        options: &RenderOptions,
-    ) -> Option<String>;
-}
-
-pub trait RenderDate {
-    fn render(
-        &self,
-        reference: &InputReference,
-        hints: &ProcHints,
-        options: &RenderOptions,
-        // context: &RenderContext<T>,
-    ) -> Option<String>;
-}
-
-pub trait RenderTitle {
-    fn render(
-        &self,
-        reference: &InputReference,
-        hints: &ProcHints,
-        options: &RenderOptions,
-        // context: &RenderContext<T>,
-    ) -> Option<String>;
-}
-
-pub trait RenderNumber {
-    fn render(
-        &self,
-        reference: &InputReference,
-        hints: &ProcHints,
-        options: &RenderOptions,
-        // context: &RenderContext<T>,
-    ) -> Option<String>;
-}
-
-pub trait RenderString {
-    fn render(
-        &self,
-        reference: &InputReference,
-        hints: &ProcHints,
-        options: &RenderOptions,
-        // context: &RenderContext<T>,
-    ) -> Option<String>;
-}
-
-pub trait RenderContributor {
     fn render(
         &self,
         reference: &InputReference,
@@ -214,13 +163,7 @@ impl RenderComponent for StyleTemplateComponent {
     }
 }
 
-impl<T: RenderContributor + ?Sized> dyn Render<T> {
-    pub fn render(names: Vec<String>) -> String {
-        names.join(", ")
-    }
-}
-
-impl RenderNumber for StyleTemplateNumber {
+impl RenderComponent for StyleTemplateNumber {
     fn render(
         &self,
         reference: &InputReference,
@@ -254,7 +197,7 @@ impl RenderNumber for StyleTemplateNumber {
     }
 }
 
-impl RenderString for StyleTemplateSimpleString {
+impl RenderComponent for StyleTemplateSimpleString {
     fn render(
         &self,
         reference: &InputReference,
@@ -287,7 +230,7 @@ impl RenderString for StyleTemplateSimpleString {
     }
 }
 
-impl RenderTitle for StyleTemplateTitle {
+impl RenderComponent for StyleTemplateTitle {
     fn render(
         &self,
         reference: &InputReference,
@@ -299,7 +242,7 @@ impl RenderTitle for StyleTemplateTitle {
     }
 }
 
-impl RenderContributor for StyleTemplateContributor {
+impl RenderComponent for StyleTemplateContributor {
     fn render(
         &self,
         reference: &InputReference,
@@ -328,7 +271,7 @@ impl RenderContributor for StyleTemplateContributor {
     }
 }
 
-impl RenderDate for StyleTemplateDate {
+impl RenderComponent for StyleTemplateDate {
     fn render(
         &self,
         reference: &InputReference,
