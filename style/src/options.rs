@@ -42,6 +42,14 @@ pub struct Config {
     pub localize: Option<Localize>,
     pub contributors: Option<Contributors>,
     pub dates: Option<Date>,
+    pub titles: Option<Titles>,
+}
+
+#[derive(JsonSchema, Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Titles {
+    component: Option<Rendering>,
+    monograph: Option<Rendering>,
+    default: Option<Rendering>,
 }
 
 #[derive(JsonSchema, Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
