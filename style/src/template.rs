@@ -4,11 +4,12 @@ use serde::{Deserialize, Serialize};
 /// Rendering instructions for a template component.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct Rendering {
-    emph: Option<bool>,
-    strong: Option<bool>,
-    prefix: Option<String>,
-    suffix: Option<String>,
-    wrap: Option<WrapPunctuation>,
+    pub emph: Option<bool>,
+    pub quote: Option<bool>,
+    pub strong: Option<bool>,
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+    pub wrap: Option<WrapPunctuation>,
 }
 
 /// The punctuation to wrap a template component in.
@@ -62,7 +63,7 @@ pub struct StyleTemplateNumber {
 pub enum Numbers {
     Volume,
     Issue,
-    Pages
+    Pages,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
@@ -165,10 +166,15 @@ pub struct StyleTemplateTitle {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "kebab-case")]
+#[non_exhaustive]
 pub enum Titles {
+    /// The primary title for the cited work.
     Title,
-    ContainerTitle,
+    /// The title of a book or other monograph that the cited work is a part of.
+    ParentMonograph,
+    /// The titles of a periodical or other serial that the cited work is a part of.
+    ParentSerial,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
