@@ -40,7 +40,7 @@ pub struct Config {
     pub substitute: Option<Substitute>,
     pub processing: Option<Processing>,
     pub localize: Option<Localize>,
-    pub contributors: Option<Contributors>,
+    pub contributors: Option<ContributorConfig>,
     pub dates: Option<Date>,
     pub titles: Option<Titles>,
 }
@@ -142,21 +142,21 @@ fn date_default_config() {
 }
 
 #[derive(JsonSchema, Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
-pub struct Contributors {
+pub struct ContributorConfig {
     /// When to display a contributor's name in sort order.
-    pub display_as_sort: DisplayAsSort,
+    pub display_as_sort: Option<DisplayAsSort>,
     /// Shorten the list of contributors.
-    pub shorten: ShortenListOptions,
+    pub shorten: Option<ShortenListOptions>,
     /// The delimiter or separator to use between contributors.
-    pub delimiter: String,
+    pub delimiter: Option<String>,
     /// Whether to separate the last two contributors with a natural language conjunction, and if so what form it should take.
-    pub and: AndOptions,
+    pub and: Option<AndOptions>,
     /// When and how to display contributor roles.
-    pub role: RoleOptions,
+    pub role: Option<RoleOptions>,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[serde(rename_all = "lowercase", untagged)]
+#[serde(rename_all = "lowercase")]
 pub enum DisplayAsSort {
     All,
     First,
