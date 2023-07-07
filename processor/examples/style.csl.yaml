@@ -3,6 +3,13 @@ info:
   title: APA
 options: 
   processing: author-date # this sets sorting and grouping for author-date
+  titles:
+    component:
+      quote: true
+    default:
+      emph: true
+  contributors:
+    display_as_sort: first
 templates:
   title-apa:
     - title: title

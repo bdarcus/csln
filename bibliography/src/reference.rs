@@ -25,17 +25,17 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 //! ## Parent References
 //!
 //! A reference can be a component of a larger work, such as a chapter in a book, or an article.
-//! The parent is represented inline as a Monograph or Serial. 
+//! The parent is represented inline as a Monograph or Serial.
 //! I would like to add ability to reference a parent by ID, but that is not yet implemented.
 
 use edtf::level_1::Edtf;
+use fmt::Display;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::fmt::Formatter;
 use style::{locale::MonthList, options::Config};
 use url::Url;
-use fmt::Display;
-use std::fmt::Formatter;
 //use icu::calendar::DateTime;
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
@@ -130,7 +130,9 @@ impl InputReference {
             InputReference::MonographComponent(monograph_component) => {
                 monograph_component.id = Some(id)
             }
-            InputReference::SerialComponent(serial_component) => serial_component.id = Some(id),
+            InputReference::SerialComponent(serial_component) => {
+                serial_component.id = Some(id)
+            }
             InputReference::Collection(collection) => collection.id = Some(id),
         }
     }
@@ -662,9 +664,10 @@ impl Name for Contributor {
     fn names(&self, options: Config, as_sorted: bool) -> String {
         let as_sorted_config =
             match options.contributors.clone().unwrap_or_default().display_as_sort {
-                style::options::DisplayAsSort::All => true,
-                style::options::DisplayAsSort::First => true,
-                style::options::DisplayAsSort::None => false,
+                Some(style::options::DisplayAsSort::All) => true,
+                Some(style::options::DisplayAsSort::First) => true,
+                Some(style::options::DisplayAsSort::None) => false,
+                None => false,
             };
         match self {
             Contributor::SimpleName(c) => c.name.to_string(),
@@ -728,9 +731,10 @@ impl NameList for ContributorList {
                     .unwrap_or_default()
                     .display_as_sort
                 {
-                    style::options::DisplayAsSort::All => true,
-                    style::options::DisplayAsSort::First => i == 0,
-                    style::options::DisplayAsSort::None => false,
+                    Some(style::options::DisplayAsSort::All) => true,
+                    Some(style::options::DisplayAsSort::First) => i == 0,
+                    Some(style::options::DisplayAsSort::None) => false,
+                    None => false,
                 };
                 if as_sorted {
                     c.names(options.clone(), true)
@@ -778,9 +782,9 @@ fn contributor_list() {
     let options = Config::default();
     assert_eq!(structured_name_list.names_list(options, true), "Doe, John, Doe, Jane");
     let options = Config {
-        contributors: Some(style::options::Contributors {
-            display_as_sort: style::options::DisplayAsSort::First,
-            ..style::options::Contributors::default()
+        contributors: Some(style::options::ContributorConfig {
+            display_as_sort: Some(style::options::DisplayAsSort::First),
+            ..style::options::ContributorConfig::default()
         }),
         ..style::options::Config::default()
     };

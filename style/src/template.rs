@@ -104,7 +104,7 @@ pub enum DelimiterPunctuation {
 // TODO incomplete
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct StyleTemplateContributor {
-    pub contributor: Contributors,
+    pub contributor: ContributorRole,
     pub form: ContributorForm,
     pub rendering: Option<Rendering>,
 }
@@ -118,7 +118,7 @@ pub enum ContributorForm {
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-pub enum Contributors {
+pub enum ContributorRole {
     Author,
     Editor,
     Translator,
