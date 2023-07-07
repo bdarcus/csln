@@ -24,9 +24,9 @@ use style::locale::Locale;
 use style::options::{Config, MonthFormat, SortKey};
 #[allow(unused_imports)] // for now
 use style::template::{
-    Contributors, DateForm, Dates, Numbers, StyleTemplateComponent,
-    StyleTemplateContributor, StyleTemplateDate, StyleTemplateList, StyleTemplateNumber,
-    StyleTemplateSimpleString, StyleTemplateTitle, Titles, Variables,
+    ContributorRole, DateForm, Dates, Numbers, StyleTemplateContributor,
+    StyleTemplateDate, StyleTemplateList, StyleTemplateNumber, StyleTemplateSimpleString,
+    StyleTemplateTitle, TemplateComponent, Titles, Variables,
 };
 use style::Style;
 
@@ -150,14 +150,14 @@ impl RenderComponent for StyleTemplateComponent {
             StyleTemplateComponent::Contributor(contributor) => {
                 contributor.render(reference, hints, options)
             }
-            StyleTemplateComponent::Date(date) => date.render(reference, hints, options),
-            StyleTemplateComponent::Number(number) => {
+            TemplateComponent::Date(date) => date.render(reference, hints, options),
+            TemplateComponent::Number(number) => {
                 number.render(reference, hints, options)
             },
-            StyleTemplateComponent::SimpleString(string) => {
+            TemplateComponent::SimpleString(string) => {
                 string.render(reference, hints, options)
-            },
-            StyleTemplateComponent::List(_list) => todo!(),
+            }
+            TemplateComponent::List(_list) => todo!(),
             _ => None,
         }
     }
@@ -250,23 +250,23 @@ impl RenderComponent for StyleTemplateContributor {
         options: &RenderOptions,
     ) -> Option<String> {
         match &self.contributor {
-            Contributors::Author => {
+            ContributorRole::Author => {
                 Some(reference.author()?.names(options.global.clone(), false))
             }
-            Contributors::Editor => {
+            ContributorRole::Editor => {
                 Some(reference.editor()?.names(options.global.clone(), false))
             }
-            Contributors::Translator => {
+            ContributorRole::Translator => {
                 Some(reference.translator()?.names(options.global.clone(), false))
             }
-            Contributors::Director => todo!(),
-            Contributors::Publisher => todo!(),
-            Contributors::Recipient => todo!(),
-            Contributors::Interviewer => todo!(),
-            Contributors::Interviewee => todo!(),
-            Contributors::Composer => todo!(),
-            Contributors::Inventor => todo!(),
-            Contributors::Counsel => todo!(),
+            ContributorRole::Director => todo!(),
+            ContributorRole::Publisher => todo!(),
+            ContributorRole::Recipient => todo!(),
+            ContributorRole::Interviewer => todo!(),
+            ContributorRole::Interviewee => todo!(),
+            ContributorRole::Composer => todo!(),
+            ContributorRole::Inventor => todo!(),
+            ContributorRole::Counsel => todo!(),
         }
     }
 }
