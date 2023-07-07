@@ -24,9 +24,9 @@ use style::locale::Locale;
 use style::options::{Config, MonthFormat, SortKey};
 #[allow(unused_imports)] // for now
 use style::template::{
-    ContributorRole, DateForm, Dates, Numbers, StyleTemplateContributor,
-    StyleTemplateDate, StyleTemplateList, StyleTemplateNumber, StyleTemplateSimpleString,
-    StyleTemplateTitle, TemplateComponent, Titles, Variables,
+    ContributorRole, DateForm, Dates, Numbers, TemplateComponent, TemplateContributor,
+    TemplateDate, TemplateList, TemplateNumber, TemplateSimpleString, TemplateTitle,
+    Titles, Variables,
 };
 use style::Style;
 
@@ -62,7 +62,7 @@ pub type ProcTemplate = Vec<ProcTemplateComponent>;
 #[serde(rename_all = "camelCase")]
 pub struct ProcTemplateComponent {
     /// The original input style template component, which provides rendering instructions.
-    pub template_component: StyleTemplateComponent,
+    pub template_component: TemplateComponent,
     /// The string to render.
     pub value: String,
 }
@@ -135,7 +135,7 @@ pub trait RenderComponent {
     ) -> Option<String>;
 }
 
-impl RenderComponent for StyleTemplateComponent {
+impl RenderComponent for TemplateComponent {
     fn render(
         &self,
         reference: &InputReference,
@@ -144,10 +144,10 @@ impl RenderComponent for StyleTemplateComponent {
         // context: &RenderContext<T>,
     ) -> Option<String> {
         match self {
-            StyleTemplateComponent::Title(title) => {
+            TemplateComponent::Title(title) => {
                 Some(title.render(reference, hints, options).unwrap_or_default())
             }
-            StyleTemplateComponent::Contributor(contributor) => {
+            TemplateComponent::Contributor(contributor) => {
                 contributor.render(reference, hints, options)
             }
             TemplateComponent::Date(date) => date.render(reference, hints, options),
@@ -156,14 +156,14 @@ impl RenderComponent for StyleTemplateComponent {
             },
             TemplateComponent::SimpleString(string) => {
                 string.render(reference, hints, options)
-            }
+            },
             TemplateComponent::List(_list) => todo!(),
             _ => None,
         }
     }
 }
 
-impl RenderComponent for StyleTemplateNumber {
+impl RenderComponent for TemplateNumber {
     fn render(
         &self,
         reference: &InputReference,
@@ -197,7 +197,7 @@ impl RenderComponent for StyleTemplateNumber {
     }
 }
 
-impl RenderComponent for StyleTemplateSimpleString {
+impl RenderComponent for TemplateSimpleString {
     fn render(
         &self,
         reference: &InputReference,
@@ -230,7 +230,7 @@ impl RenderComponent for StyleTemplateSimpleString {
     }
 }
 
-impl RenderComponent for StyleTemplateTitle {
+impl RenderComponent for TemplateTitle {
     fn render(
         &self,
         reference: &InputReference,
@@ -242,7 +242,7 @@ impl RenderComponent for StyleTemplateTitle {
     }
 }
 
-impl RenderComponent for StyleTemplateContributor {
+impl RenderComponent for TemplateContributor {
     fn render(
         &self,
         reference: &InputReference,
@@ -271,7 +271,7 @@ impl RenderComponent for StyleTemplateContributor {
     }
 }
 
-impl RenderComponent for StyleTemplateDate {
+impl RenderComponent for TemplateDate {
     fn render(
         &self,
         reference: &InputReference,
@@ -387,7 +387,7 @@ impl Processor {
 
     fn render_template_component(
         &self,
-        component: &StyleTemplateComponent,
+        component: &TemplateComponent,
         reference: &InputReference,
     ) -> Option<ProcTemplateComponent> {
         let hints = self.get_proc_hints();
