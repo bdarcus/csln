@@ -25,18 +25,18 @@ pub enum WrapPunctuation {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(untagged)]
 #[non_exhaustive]
-pub enum StyleTemplateComponent {
-    Contributor(StyleTemplateContributor),
-    Date(StyleTemplateDate),
-    List(StyleTemplateList),
-    Title(StyleTemplateTitle),
-    Number(StyleTemplateNumber),
-    SimpleString(StyleTemplateSimpleString),
+pub enum TemplateComponent {
+    Contributor(TemplateContributor),
+    Date(TemplateDate),
+    List(TemplateList),
+    Title(TemplateTitle),
+    Number(TemplateNumber),
+    SimpleString(TemplateSimpleString),
 }
 
 /// A simple string component, to render a string variable.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct StyleTemplateSimpleString {
+pub struct TemplateSimpleString {
     pub variable: Variables,
     pub rendering: Option<Rendering>,
 }
@@ -52,7 +52,7 @@ pub enum Variables {
 
 /// A number component, to render a number.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct StyleTemplateNumber {
+pub struct TemplateNumber {
     pub number: Numbers,
     pub form: Option<NumberForm>,
     pub rendering: Option<Rendering>,
@@ -76,12 +76,12 @@ pub enum NumberForm {
 
 /// To render is a list of more than one item; primarily to enable use of a delimiter to join the items.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct StyleTemplateList {
+pub struct TemplateList {
     pub delimiter: Option<DelimiterPunctuation>,
     pub prefix: Option<String>,
     pub suffix: Option<String>,
     pub wrap: Option<WrapPunctuation>,
-    pub items: Vec<StyleTemplateComponent>,
+    pub items: Vec<TemplateComponent>,
 }
 
 /// The punctuation to use as a delimiter between items in a list.
@@ -103,7 +103,7 @@ pub enum DelimiterPunctuation {
 /// A contributor component, to render a list of contributors.
 // TODO incomplete
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct StyleTemplateContributor {
+pub struct TemplateContributor {
     pub contributor: ContributorRole,
     pub form: ContributorForm,
     pub rendering: Option<Rendering>,
@@ -134,7 +134,7 @@ pub enum ContributorRole {
 
 /// A date component, to render a date.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct StyleTemplateDate {
+pub struct TemplateDate {
     pub date: Dates,
     pub form: DateForm,
     pub rendering: Option<Rendering>,
@@ -159,7 +159,7 @@ pub enum DateForm {
 
 /// A title component, to render a title.
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct StyleTemplateTitle {
+pub struct TemplateTitle {
     pub title: Titles,
     pub form: Option<TitleForm>,
     pub rendering: Option<Rendering>,
