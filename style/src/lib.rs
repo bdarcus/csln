@@ -13,7 +13,7 @@ pub mod options;
 use options::Config;
 
 pub mod template;
-use template::StyleTemplateComponent;
+use template::TemplateComponent;
 
 impl Style {
     /// Load and parse a YAML or JSON style file.
@@ -33,39 +33,39 @@ impl Style {
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct Style {
     /// Style metadata.
-    pub info: StyleInfo,
-    pub templates: Option<HashMap<String, StyleTemplate>>,
+    pub info: Info,
+    pub templates: Option<HashMap<String, Template>>,
     /// Parameter groups.
     #[serde(default)]
     pub options: Option<Config>,
     /// The citation specification.
-    pub citation: Option<StyleCitation>,
+    pub citation: Option<Citation>,
     /// The bibliography specification.
-    pub bibliography: Option<StyleBibliography>,
+    pub bibliography: Option<Bibliography>,
 }
 
 /// The Template model.
-pub type StyleTemplate = Vec<StyleTemplateComponent>;
+pub type Template = Vec<TemplateComponent>;
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 /// The bibliography specification.
-pub struct StyleBibliography {
+pub struct Bibliography {
     pub options: Option<options::Config>,
-    pub template: StyleTemplate,
+    pub template: Template,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 /// The citation specification.
-pub struct StyleCitation {
+pub struct Citation {
     pub options: Option<Config>,
-    pub template: StyleTemplate,
+    pub template: Template,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 /// Style metadata.
-pub struct StyleInfo {
+pub struct Info {
     /// The categories the style belongs to; for purposes of indexing.
-    pub categories: Option<Vec<StyleCategory>>,
+    pub categories: Option<Vec<Category>>,
     /// The description of the style.
     pub description: Option<String>,
     /// The machine-readable token that uniquely identifies the style.
@@ -77,7 +77,7 @@ pub struct StyleInfo {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[non_exhaustive]
 /// The categories the style belongs to; for purposes of indexing.
-pub enum StyleCategory {
+pub enum Category {
     #[serde(rename = "biology")]
     Biology,
     #[serde(rename = "science")]
