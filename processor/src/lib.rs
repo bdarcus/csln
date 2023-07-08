@@ -151,12 +151,10 @@ impl RenderComponent for TemplateComponent {
                 contributor.render(reference, hints, options)
             }
             TemplateComponent::Date(date) => date.render(reference, hints, options),
-            TemplateComponent::Number(number) => {
-                number.render(reference, hints, options)
-            },
+            TemplateComponent::Number(number) => number.render(reference, hints, options),
             TemplateComponent::SimpleString(string) => {
                 string.render(reference, hints, options)
-            },
+            }
             TemplateComponent::List(_list) => todo!(),
             _ => None,
         }
@@ -237,8 +235,39 @@ impl RenderComponent for TemplateTitle {
         _hints: &ProcHints,
         _options: &RenderOptions,
     ) -> Option<String> {
-        let title: Option<Title> = reference.title();
-        Some(title.unwrap().to_string())
+        match &self.title {
+            Titles::ParentMonograph => {
+                if let InputReference::MonographComponent(monograph_component) = reference
+                {
+                    Some(monograph_component.parent.title.to_string())
+                } else {
+                    None
+                }
+            }
+            Titles::ParentSerial => {
+                if let InputReference::SerialComponent(serial_component) = reference {
+                    Some(serial_component.parent.title.to_string())
+                } else {
+                    None
+                }
+            }
+            Titles::Title => {
+                if let InputReference::Monograph(monograph) = reference {
+                    Some(monograph.title.to_string())
+                } else if let InputReference::MonographComponent(monograph_component) =
+                    reference
+                {
+                    Some(monograph_component.title.as_ref()?.to_string())
+                } else if let InputReference::SerialComponent(serial_component) =
+                    reference
+                {
+                    Some(serial_component.title.as_ref()?.to_string())
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
     }
 }
 
