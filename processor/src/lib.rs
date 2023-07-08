@@ -233,7 +233,7 @@ impl RenderComponent for TemplateTitle {
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
-        _options: &RenderOptions,
+        _options: &RenderOptions, // TODO: implement title options
     ) -> Option<String> {
         match &self.title {
             Titles::ParentMonograph => {
