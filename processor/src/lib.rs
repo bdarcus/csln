@@ -288,8 +288,10 @@ impl RenderComponent for TemplateContributor {
             ContributorRole::Translator => {
                 Some(reference.translator()?.names(options.global.clone(), false))
             }
+            ContributorRole::Publisher => {
+                Some(reference.publisher()?.names(options.global.clone(), false))
+            }
             ContributorRole::Director => todo!(),
-            ContributorRole::Publisher => todo!(),
             ContributorRole::Recipient => todo!(),
             ContributorRole::Interviewer => todo!(),
             ContributorRole::Interviewee => todo!(),
