@@ -102,6 +102,17 @@ impl InputReference {
         }
     }
 
+    /// Return the publisher.
+    /// If the reference does not have a publisher, return None.
+    pub fn publisher(&self) -> Option<Contributor> {
+        match self {
+            // REVIEW: return string instead?
+            InputReference::Monograph(r) => r.publisher.clone(),
+            InputReference::MonographComponent(r) => r.parent.publisher.clone(),
+            _ => None,
+        }
+    }
+
     /// Return the title.
     /// If the reference does not have a title, return None.
     pub fn title(&self) -> Option<Title> {
