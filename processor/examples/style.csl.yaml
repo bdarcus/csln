@@ -45,4 +45,6 @@ bibliography:
       form: month-day
     - number: volume
     - variable: doi
-
+    - contributor: publisher
+      form: long # make optional, with default?
+      delimiter: colon # scope? delimiter vs item-delimiter?
