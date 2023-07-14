@@ -14,4 +14,10 @@
     ]
     
   },
+  "rust-analyzer.linkedProjects": [
+    "./csln/Cargo.toml",
+    "./csln/Cargo.toml",
+    "./csln/Cargo.toml",
+    "./csln/Cargo.toml"
+  ],
 }
