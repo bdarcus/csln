@@ -3,10 +3,10 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-use bibliography::InputBibliography;
-use citation::CitationList;
-use style::locale::Locale;
-use style::Style;
+use csln::bibliography::InputBibliography;
+use csln::citation::CitationList;
+use csln::style::locale::Locale;
+use csln::style::Style;
 
 fn main() {
     fs::create_dir_all("schemas").unwrap();

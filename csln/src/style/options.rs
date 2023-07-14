@@ -31,7 +31,7 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 //! [BLTX]: https://github.com/plk/biblatex
 //!
 
-use crate::template::Rendering;
+use crate::style::template::Rendering;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
