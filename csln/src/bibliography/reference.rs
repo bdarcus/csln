@@ -28,13 +28,14 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 //! The parent is represented inline as a Monograph or Serial.
 //! I would like to add ability to reference a parent by ID, but that is not yet implemented.
 
+use crate::style::options::DisplayAsSort;
+use crate::style::{locale::MonthList, options::Config};
 use edtf::level_1::Edtf;
 use fmt::Display;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::Formatter;
-use style::{locale::MonthList, options::Config};
 use url::Url;
 //use icu::calendar::DateTime;
 
@@ -675,9 +676,9 @@ impl Name for Contributor {
     fn names(&self, options: Config, as_sorted: bool) -> String {
         let as_sorted_config =
             match options.contributors.clone().unwrap_or_default().display_as_sort {
-                Some(style::options::DisplayAsSort::All) => true,
-                Some(style::options::DisplayAsSort::First) => true,
-                Some(style::options::DisplayAsSort::None) => false,
+                Some(DisplayAsSort::All) => true,
+                Some(DisplayAsSort::First) => true,
+                Some(DisplayAsSort::None) => false,
                 None => false,
             };
         match self {
@@ -742,9 +743,9 @@ impl NameList for ContributorList {
                     .unwrap_or_default()
                     .display_as_sort
                 {
-                    Some(style::options::DisplayAsSort::All) => true,
-                    Some(style::options::DisplayAsSort::First) => i == 0,
-                    Some(style::options::DisplayAsSort::None) => false,
+                    Some(DisplayAsSort::All) => true,
+                    Some(DisplayAsSort::First) => i == 0,
+                    Some(DisplayAsSort::None) => false,
                     None => false,
                 };
                 if as_sorted {
@@ -793,11 +794,11 @@ fn contributor_list() {
     let options = Config::default();
     assert_eq!(structured_name_list.names_list(options, true), "Doe, John, Doe, Jane");
     let options = Config {
-        contributors: Some(style::options::ContributorConfig {
-            display_as_sort: Some(style::options::DisplayAsSort::First),
-            ..style::options::ContributorConfig::default()
+        contributors: Some(crate::style::options::ContributorConfig {
+            display_as_sort: Some(DisplayAsSort::First),
+            ..crate::style::options::ContributorConfig::default()
         }),
-        ..style::options::Config::default()
+        ..crate::style::options::Config::default()
     };
     assert_eq!(structured_name_list.names_list(options, false), "Doe, John, Jane Doe");
 }
