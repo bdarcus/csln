@@ -21,9 +21,7 @@ serde_derive = "1.0.162"
 serde_json = "1.0.96"
 serde_yaml = "0.9.21"
 edtf = { version = "0.2.0", features = ["chrono"] }
-style = { path = "../style", package = "csln-style" }
-citation = { path = "../citation", package = "csln-citation" }
-bibliography = { path = "../bibliography", package = "csln-bibliography" }
+csln = { path = "../csln", package = "csln" }
 itertools = "0.10.5"
 rayon = "1.7.0"
 icu = "1.2.0"

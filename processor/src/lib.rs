@@ -3,14 +3,17 @@ SPDX-License-Identifier: MPL-2.0
 SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 */
 
-#[allow(unused_imports)] // for now
-use bibliography::reference::{
-    Contributor, ContributorList, EdtfString, Name, NameList, NumOrStr, RefDate, RefID,
-    Title,
+use csln::bibliography::reference::{EdtfString, Name, RefID};
+use csln::bibliography::InputBibliography as Bibliography;
+use csln::bibliography::InputReference;
+use csln::citation::Citation;
+use csln::style::locale::Locale;
+use csln::style::options::{Config, MonthFormat, SortKey};
+use csln::style::template::{
+    ContributorRole, DateForm, Dates, Numbers, TemplateComponent, TemplateContributor,
+    TemplateDate, TemplateNumber, TemplateSimpleString, TemplateTitle, Titles, Variables,
 };
-use bibliography::InputBibliography as Bibliography;
-use bibliography::InputReference;
-use citation::Citation;
+use csln::style::Style;
 use icu::datetime::DateTimeFormatterOptions;
 use itertools::Itertools;
 use rayon::prelude::*;
@@ -20,15 +23,6 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::option::Option;
-use style::locale::Locale;
-use style::options::{Config, MonthFormat, SortKey};
-#[allow(unused_imports)] // for now
-use style::template::{
-    ContributorRole, DateForm, Dates, Numbers, TemplateComponent, TemplateContributor,
-    TemplateDate, TemplateList, TemplateNumber, TemplateSimpleString, TemplateTitle,
-    Titles, Variables,
-};
-use style::Style;
 
 /*
 This is the processor code.
@@ -576,7 +570,7 @@ impl Processor {
 
     /// Return a string to use for grouping for a given reference, using instructions in the style.
     fn make_group_key(&self, reference: &InputReference) -> String {
-        let options: style::options::Config = match self.style.options {
+        let options: csln::style::options::Config = match self.style.options {
             Some(ref options) => options.clone(),
             None => Config::default(), // TODO is this right?
         };
