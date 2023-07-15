@@ -271,28 +271,6 @@ pub enum SerialType {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-/// A component of a larger Monography, such as a chapter in a book.
-/// The parent monograph is referenced by its ID.
-pub struct MonographComponent {
-    pub id: Option<RefID>,
-    pub r#type: MonographComponentType,
-    pub title: Option<Title>,
-    pub author: Option<Contributor>,
-    pub translator: Option<Contributor>,
-    pub issued: EdtfString,
-    /// The parent work, as either a Monograph.
-    // I would like to allow this to be either a Monograph or a RefID, but I can't figure out how to do that.
-    pub parent: Monograph,
-    pub pages: Option<NumOrStr>,
-    pub url: Option<Url>,
-    pub accessed: Option<EdtfString>,
-    pub note: Option<String>,
-    pub doi: Option<String>,
-}
-
-pub type RefID = String;
-
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 #[non_exhaustive]
 pub enum MonographComponentType {
@@ -314,28 +292,27 @@ pub enum MonographType {
     Report,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
-#[non_exhaustive]
-#[serde(rename_all = "kebab-case")]
-// TODO merge into refactor
-pub enum RefType {
-    #[default]
-    Article,
-    Book,
-    Chapter,
-    Dataset,
-    Document,
-    Entry,
-    JournalArticle,
-    Manuscript,
-    Map,
-    Patent,
-    PersonalCommunication,
-    Report,
-    Review,
-    Software,
-    Thesis,
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+/// A component of a larger Monography, such as a chapter in a book.
+/// The parent monograph is referenced by its ID.
+pub struct MonographComponent {
+    pub id: Option<RefID>,
+    pub r#type: MonographComponentType,
+    pub title: Option<Title>,
+    pub author: Option<Contributor>,
+    pub translator: Option<Contributor>,
+    pub issued: EdtfString,
+    /// The parent work, as either a Monograph.
+    // I would like to allow this to be either a Monograph or a RefID, but I can't figure out how to do that.
+    pub parent: Monograph,
+    pub pages: Option<NumOrStr>,
+    pub url: Option<Url>,
+    pub accessed: Option<EdtfString>,
+    pub note: Option<String>,
+    pub doi: Option<String>,
 }
+
+pub type RefID = String;
 
 /// A locale string.
 pub type LangID = String;

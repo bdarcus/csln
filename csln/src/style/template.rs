@@ -1,3 +1,4 @@
+use crate::bibliography::reference::MonographType;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +11,18 @@ pub struct Rendering {
     pub prefix: Option<String>,
     pub suffix: Option<String>,
     pub wrap: Option<WrapPunctuation>,
+    /// When to use non-default rendering instructions.
+    pub alternate: Option<Vec<Condition>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[serde(rename_all = "camelCase")]
+/// Conditions under which to use alternate rendering.
+// EXPERIMENTAL
+pub struct Condition {
+    // For now, keep this simple.
+    pub r#type: MonographType,
+    pub rendering: Rendering,
 }
 
 /// The punctuation to wrap a template component in.
