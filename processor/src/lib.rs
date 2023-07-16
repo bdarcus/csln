@@ -245,7 +245,7 @@ impl RenderComponent for TemplateTitle {
                     None
                 }
             }
-            Titles::Title => {
+            Titles::Primary => {
                 if let InputReference::Monograph(monograph) = reference {
                     Some(monograph.title.to_string())
                 } else if let InputReference::MonographComponent(monograph_component) =

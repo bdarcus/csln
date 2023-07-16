@@ -183,7 +183,7 @@ pub struct TemplateTitle {
 #[non_exhaustive]
 pub enum Titles {
     /// The primary title for the cited work.
-    Title,
+    Primary,
     /// The title of a book or other monograph that the cited work is a part of.
     ParentMonograph,
     /// The titles of a periodical or other serial that the cited work is a part of.
