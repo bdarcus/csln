@@ -37,6 +37,12 @@ bibliography:
     - date: issued
       form: year
     - title: title
+      rendering: 
+        emph: true
+        alternate:
+          - type: book # should be list
+            rendering:
+              quote: true
     - title: parent-monograph
       prefix: In 
       emph: true
