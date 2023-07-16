@@ -13,7 +13,6 @@ bench = true
 doc = true
 edition = "2021" 
 crate-type = ["lib"] 
-include = ["src/lib.rs", "src/style/*.rs", "src/bibliography/*rs"]
 
 [dependencies]
 schemars = { version = "0.8", features = ["url"] }
