@@ -14,10 +14,11 @@ options:
   # this is a very common pattern, where component titles (articles, chapters, etc) are quoted, but
   # titles otherwise render in italics
   titles:
-    component: # chapter and article titles render the same
-      quoted: true
+    match:
+    - class: component # chapter and article titles render the same
+      style: [quote]
     default:
-      emph: true
+      style: [emph]
   contributors:
     delimiter: ", "
     andAs: text,
@@ -65,9 +66,14 @@ bibliography:
     - contributor: author
     - date: issued
       form: year
-    - title: title # how to distinguish formatting here though?
+      wrap: parentheses
+    - title: title-part
+      type: [chapter]
+      style: [emph]
+    - title: title-part # default, but how to know not to print if the above?
+      style: [quote]
     - title: parent-monograph
       prefix: In 
-      emph: true
+      style: [emph]
     - title: parent-serial
-      quoted: true
+      style: [quote]
