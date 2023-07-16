@@ -12,7 +12,7 @@ options:
     display_as_sort: first
 templates:
   title-apa:
-    - title: title
+    - title: primary
   container-title:
   # the below titles are mutually-exclusive, so at most one will be output
     - title: parent-monograph
@@ -36,13 +36,7 @@ bibliography:
       form: long
     - date: issued
       form: year
-    - title: title
-      rendering: 
-        emph: true
-        alternate:
-          - type: book # should be list
-            rendering:
-              quote: true
+    - title: primary
     - title: parent-monograph
       prefix: In 
       emph: true
