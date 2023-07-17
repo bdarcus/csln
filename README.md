@@ -4,8 +4,6 @@ This is not particularly close to ready for actual use, and needs more developme
 
 ## Vision
 
-This is a project to write the [CSL-Next][CSLNJS] typescript model and supporting libraries and tools in Rust, and convert to JSON Schema from there.
-
 At a high-level, the vision of the project is to:
 
 1. Adapt what we've learned in almost 20 years of experience with [CSL 1.0][CSL] to modern programming idioms and formats.
@@ -40,6 +38,7 @@ For the `InputReference` and `Citation` models:
 1. The [CSL 1.0 specification][CSL-spec] [options][CSL-options], and its template language (aka [layout][CSL-templates] and [rendering elements][CSL-render]), most notably from names, dates, and other formatting.
 2. Patterns observed in the [CSL 1.0 styles repository][CSL-styles].
 3. The [BibLaTeX preamble][BLTX] options.
+4. The [Typst Hayagriva][haya] project has some interesting details; particularly its input data model, and its [selector macro][sel].
 
 ### Comparison to CSL 1.0 and BibLaTeX
 
@@ -81,7 +80,7 @@ In particular, it has been optimized for the Zotero use-case, where it provides 
 
 [CSL]: https://citationstyles.org/
 [CSLNJS]: https://github.com/bdarcus/csl-next
-[CSLNO]: https://github.com/bdarcus/csln/blob/main/style/src/options.rs
+[CSLNO]: https://github.com/bdarcus/csln/blob/main/csln/src/style/options.rs
 [CSLRS]: https://github.com/zotero/citeproc-rs
 [CSLO]: https://github.com/citation-style-language
 [CSL-spec]: https://docs.citationstyles.org/en/stable/specification.html
@@ -92,3 +91,5 @@ In particular, it has been optimized for the Zotero use-case, where it provides 
 [CSL-options]: https://docs.citationstyles.org/en/stable/specification.html#options
 [BLTX]: https://github.com/plk/biblatex
 [EDTF]: https://www.loc.gov/standards/datetime/
+[haya]: https://github.com/typst/hayagriva
+[sel]: https://github.com/typst/hayagriva/blob/main/docs/selectors.md
