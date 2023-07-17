@@ -12,6 +12,7 @@ use csln::style::options::{Config, MonthFormat, SortKey};
 use csln::style::template::{
     ContributorRole, DateForm, Dates, Numbers, TemplateComponent, TemplateContributor,
     TemplateDate, TemplateNumber, TemplateSimpleString, TemplateTitle, Titles, Variables,
+    WrapPunctuation,
 };
 use csln::style::Style;
 use icu::datetime::DateTimeFormatterOptions;
@@ -21,7 +22,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use std::fmt::Debug;
+use std::fmt::{self, Debug, Display, Formatter};
 use std::option::Option;
 
 /*
@@ -59,6 +60,58 @@ pub struct ProcTemplateComponent {
     pub template_component: TemplateComponent,
     /// The string to render.
     pub value: String,
+}
+
+#[test]
+fn test_proc_template_component() {
+    use csln::style::template::Rendering;
+    let template_component = TemplateComponent::SimpleString(TemplateSimpleString {
+        variable: Variables::Doi,
+        rendering: Some(Rendering {
+            emph: Some(true),
+            quote: Some(true),
+            strong: Some(true),
+            prefix: Some("doi: ".to_string()),
+            suffix: Some(" ||".to_string()),
+            wrap: Some(WrapPunctuation::Parentheses),
+        }),
+    });
+    let value = "10/1234".to_string();
+    let proc_template_component = ProcTemplateComponent::new(template_component, value);
+    assert_eq!(proc_template_component.to_string(), "(doi: 10/1234 ||)".to_string());
+}
+
+impl Display for ProcTemplateComponent {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let rendering = self.template_component.rendering().clone();
+        let prefix: String = rendering
+            .clone() // REVIEW this compiles, but too much cloning
+            .unwrap_or_default()
+            .prefix
+            .unwrap_or_default()
+            .to_string();
+        let suffix: String = rendering
+            .clone()
+            .unwrap_or_default()
+            .suffix
+            .unwrap_or_default()
+            .to_string();
+        let wrap: WrapPunctuation =
+            rendering.clone().unwrap_or_default().wrap.unwrap_or_default();
+        let wrap_punct: (String, String) = match wrap {
+            WrapPunctuation::None => ("".to_string(), "".to_string()),
+            WrapPunctuation::Parentheses => ("(".to_string(), ")".to_string()),
+            WrapPunctuation::Brackets => ("[".to_string(), "]".to_string()),
+        };
+        // REVIEW: is this where to plugin different renderers?
+        write!(f, "{}{}{}{}{}", wrap_punct.0, prefix, self.value, suffix, wrap_punct.1)
+    }
+}
+
+impl ProcTemplateComponent {
+    pub fn new(template_component: TemplateComponent, value: String) -> Self {
+        ProcTemplateComponent { template_component, value }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
@@ -227,7 +280,7 @@ impl RenderComponent for TemplateTitle {
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
-        _options: &RenderOptions, // TODO: implement title options
+        _options: &RenderOptions,
     ) -> Option<String> {
         match &self.title {
             Titles::ParentMonograph => {
