@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// Rendering instructions for a template component.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct Rendering {
     pub emph: Option<bool>,
     pub quote: Option<bool>,
@@ -13,12 +13,13 @@ pub struct Rendering {
 }
 
 /// The punctuation to wrap a template component in.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum WrapPunctuation {
     Parentheses,
     Brackets,
-    Braces,
+    #[default]
+    None,
 }
 
 /// The Template component model. Each item is for a specific datatype.
@@ -32,6 +33,19 @@ pub enum TemplateComponent {
     Title(TemplateTitle),
     Number(TemplateNumber),
     SimpleString(TemplateSimpleString),
+}
+
+impl TemplateComponent {
+    pub fn rendering(&self) -> Option<Rendering> {
+        match self {
+            TemplateComponent::Contributor(c) => c.rendering.clone(),
+            TemplateComponent::Date(d) => d.rendering.clone(),
+            TemplateComponent::List(_l) => None,
+            TemplateComponent::Title(t) => t.rendering.clone(),
+            TemplateComponent::Number(n) => n.rendering.clone(),
+            TemplateComponent::SimpleString(s) => s.rendering.clone(),
+        }
+    }
 }
 
 /// A simple string component, to render a string variable.
