@@ -1,3 +1,7 @@
+## Caveats
+
+This is not particularly close to ready for actual use, and needs more development, testing, and input.
+
 ## Vision
 
 This is a project to write the [CSL-Next][CSLNJS] typescript model and supporting libraries and tools in Rust, and convert to JSON Schema from there.
