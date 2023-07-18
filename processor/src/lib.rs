@@ -83,21 +83,16 @@ fn test_proc_template_component() {
 
 impl Display for ProcTemplateComponent {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let rendering = self.template_component.rendering().clone();
+        let rendering = self.template_component.rendering();
         let prefix: String = rendering
             .clone() // REVIEW this compiles, but too much cloning
             .unwrap_or_default()
             .prefix
-            .unwrap_or_default()
-            .to_string();
-        let suffix: String = rendering
-            .clone()
-            .unwrap_or_default()
-            .suffix
-            .unwrap_or_default()
-            .to_string();
+            .unwrap_or_default();
+        let suffix: String =
+            rendering.clone().unwrap_or_default().suffix.unwrap_or_default();
         let wrap: WrapPunctuation =
-            rendering.clone().unwrap_or_default().wrap.unwrap_or_default();
+            rendering.unwrap_or_default().wrap.unwrap_or_default();
         let wrap_punct: (String, String) = match wrap {
             WrapPunctuation::None => ("".to_string(), "".to_string()),
             WrapPunctuation::Parentheses => ("(".to_string(), ")".to_string()),
