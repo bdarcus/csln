@@ -185,8 +185,8 @@ pub trait Render<T> {
     ) -> String;
 }
 
-pub trait RenderComponent {
-    fn render(
+pub trait ComponentValue {
+    fn value(
         &self,
         reference: &InputReference,
         hints: &ProcHints,
@@ -194,8 +194,8 @@ pub trait RenderComponent {
     ) -> Option<String>;
 }
 
-impl RenderComponent for TemplateComponent {
-    fn render(
+impl ComponentValue for TemplateComponent {
+    fn value(
         &self,
         reference: &InputReference,
         hints: &ProcHints,
@@ -204,15 +204,15 @@ impl RenderComponent for TemplateComponent {
     ) -> Option<String> {
         match self {
             TemplateComponent::Title(title) => {
-                Some(title.render(reference, hints, options).unwrap_or_default())
+                Some(title.value(reference, hints, options).unwrap_or_default())
             }
             TemplateComponent::Contributor(contributor) => {
-                contributor.render(reference, hints, options)
+                contributor.value(reference, hints, options)
             }
-            TemplateComponent::Date(date) => date.render(reference, hints, options),
-            TemplateComponent::Number(number) => number.render(reference, hints, options),
+            TemplateComponent::Date(date) => date.value(reference, hints, options),
+            TemplateComponent::Number(number) => number.value(reference, hints, options),
             TemplateComponent::SimpleString(string) => {
-                string.render(reference, hints, options)
+                string.value(reference, hints, options)
             }
             TemplateComponent::List(_list) => todo!(),
             _ => None,
@@ -220,8 +220,8 @@ impl RenderComponent for TemplateComponent {
     }
 }
 
-impl RenderComponent for TemplateNumber {
-    fn render(
+impl ComponentValue for TemplateNumber {
+    fn value(
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
@@ -254,8 +254,8 @@ impl RenderComponent for TemplateNumber {
     }
 }
 
-impl RenderComponent for TemplateSimpleString {
-    fn render(
+impl ComponentValue for TemplateSimpleString {
+    fn value(
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
@@ -287,8 +287,8 @@ impl RenderComponent for TemplateSimpleString {
     }
 }
 
-impl RenderComponent for TemplateTitle {
-    fn render(
+impl ComponentValue for TemplateTitle {
+    fn value(
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
@@ -330,8 +330,8 @@ impl RenderComponent for TemplateTitle {
     }
 }
 
-impl RenderComponent for TemplateContributor {
-    fn render(
+impl ComponentValue for TemplateContributor {
+    fn value(
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
@@ -361,8 +361,8 @@ impl RenderComponent for TemplateContributor {
     }
 }
 
-impl RenderComponent for TemplateDate {
-    fn render(
+impl ComponentValue for TemplateDate {
+    fn value(
         &self,
         reference: &InputReference,
         hints: &ProcHints,
@@ -485,7 +485,7 @@ impl Processor {
         let hint: ProcHints =
             hints.get(&reference_id.unwrap()).cloned().unwrap_or_default();
         let options = self.get_render_options(self.style.clone(), self.locale.clone());
-        let value = component.render(reference, &hint, &options)?;
+        let value = component.value(reference, &hint, &options)?;
         let template_component = component.clone();
         if !value.is_empty() {
             Some(ProcTemplateComponent { template_component, value })
