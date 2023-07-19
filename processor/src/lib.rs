@@ -63,7 +63,7 @@ pub struct ProcTemplateComponent {
 }
 
 #[test]
-fn test_proc_template_component() {
+fn render_proc_template_component() {
     use csln::style::template::Rendering;
     let template_component = TemplateComponent::SimpleString(TemplateSimpleString {
         variable: Variables::Doi,
