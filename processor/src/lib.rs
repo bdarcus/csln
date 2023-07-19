@@ -35,6 +35,23 @@ The processor takes a style, a bibliography, and a locale, and renders the outpu
 The primary target is a JSON AST, represented by the ProcTemplateComponent struct.
  */
 
+// TODO: This will need to be generalized later. See:
+// https://github.com/bdarcus/csln/issues/105
+pub fn refs_to_string(proc_templates: Vec<ProcTemplate>) -> String {
+    proc_templates
+        .iter()
+        .map(|proc_template| {
+            proc_template
+                .iter()
+                .map(|proc_template_component| proc_template_component.to_string())
+                .collect::<Vec<String>>()
+                .join(". ")
+                + "."
+        })
+        .collect::<Vec<String>>()
+        .join("\n\n")
+}
+
 /// The processor struct, which takes a style, a bibliography, and a locale, and renders the output.
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Processor {
