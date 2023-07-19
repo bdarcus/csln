@@ -36,6 +36,8 @@ bibliography:
       form: long
     - date: issued
       form: year
+      rendering: # not a fan of this
+        wrap: parentheses
     - title: primary
     - title: parent-monograph
       prefix: In 
