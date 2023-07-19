@@ -176,13 +176,43 @@ pub struct RenderOptions {
     locale: Locale,
 }
 
-pub trait Render<T> {
-    fn render(
+/// The intermediate representation of a StyleTemplate, which is used to render the output.
+// FIXME this is not right; needs to be a template. Also, do we even need a trait here?
+pub trait ProcessTemplate<TemplateComponent> {
+    fn process(
+        &self,
+        reference: &InputReference,
+        components: &[TemplateComponent],
+        options: RenderOptions,
+    ) -> ProcTemplate;
+}
+
+// have input a trait here?
+impl ProcessTemplate<TemplateComponent> for Processor {
+    fn process(
+        &self,
+        reference: &InputReference,
+        components: &[TemplateComponent],
+        _options: RenderOptions,
+    ) -> ProcTemplate {
+        // FIXME
+        let mut _substituted: Option<String> = None;
+        let processed_components = components
+            .iter()
+            .filter_map(|component| self.render_template_component(component, reference))
+            .collect();
+        processed_components
+    }
+}
+
+/// The intermediate representation of a TemplateComponent, which is used to render the output.
+pub trait ProcessComponent<T> {
+    fn process(
         &self,
         reference: &InputReference,
         component: &T,
         options: RenderOptions,
-    ) -> String;
+    ) -> Option<ProcTemplateComponent>;
 }
 
 pub trait ComponentValue {
@@ -447,12 +477,15 @@ impl Processor {
         let sorted_references = self.sort_references(self.get_references());
         sorted_references
             .par_iter()
-            .map(|reference| self.render_reference(reference))
+            .map(|reference| self.process_reference(reference))
             .collect()
     }
 
     /// Render a reference to AST.
-    fn render_reference(&self, reference: &InputReference) -> Vec<ProcTemplateComponent> {
+    fn process_reference(
+        &self,
+        reference: &InputReference,
+    ) -> Vec<ProcTemplateComponent> {
         let bibliography_style = self.style.bibliography.clone();
         bibliography_style
             .map(|style| {
