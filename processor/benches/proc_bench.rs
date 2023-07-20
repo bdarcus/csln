@@ -25,7 +25,7 @@ fn proc_benchmark(c: &mut Criterion) {
     });
     c.bench_function("rendering references", |b| {
         b.iter(|| {
-            processor.render_references();
+            processor.process_references();
         })
     });
 }
