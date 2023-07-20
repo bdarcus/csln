@@ -176,35 +176,6 @@ pub struct RenderOptions {
     locale: Locale,
 }
 
-/// The intermediate representation of a StyleTemplate, which is used to render the output.
-// FIXME this is not right; needs to be a template. Also, do we even need a trait here?
-pub trait ProcessTemplate<TemplateComponent> {
-    fn process(
-        &self,
-        reference: &InputReference,
-        components: &[TemplateComponent],
-        options: RenderOptions,
-    ) -> ProcTemplate;
-}
-
-// have input a trait here?
-impl ProcessTemplate<TemplateComponent> for Processor {
-    fn process(
-        &self,
-        reference: &InputReference,
-        components: &[TemplateComponent],
-        _options: RenderOptions,
-    ) -> ProcTemplate {
-        // FIXME
-        let mut _substituted: Option<String> = None;
-        let processed_components = components
-            .iter()
-            .filter_map(|component| self.render_template_component(component, reference))
-            .collect();
-        processed_components
-    }
-}
-
 /// The intermediate representation of a TemplateComponent, which is used to render the output.
 pub trait ProcessComponent<T> {
     fn process(
@@ -473,7 +444,7 @@ impl ComponentValue for TemplateDate {
 impl Processor {
     /// Render references to AST.
     #[inline]
-    pub fn render_references(&self) -> Vec<ProcTemplate> {
+    pub fn process_references(&self) -> Vec<ProcTemplate> {
         let sorted_references = self.sort_references(self.get_references());
         sorted_references
             .par_iter()
@@ -487,17 +458,7 @@ impl Processor {
         reference: &InputReference,
     ) -> Vec<ProcTemplateComponent> {
         let bibliography_style = self.style.bibliography.clone();
-        bibliography_style
-            .map(|style| {
-                style
-                    .template
-                    .par_iter()
-                    .filter_map(|component| {
-                        self.render_template_component(component, reference)
-                    })
-                    .collect()
-            })
-            .unwrap_or_default()
+        self.process_template(reference, bibliography_style.unwrap().template.as_slice())
     }
 
     fn get_render_options(&self, style: Style, locale: Locale) -> RenderOptions {
@@ -508,10 +469,26 @@ impl Processor {
         }
     }
 
-    fn render_template_component(
+    fn process_template(
+        &self,
+        reference: &InputReference,
+        template: &[TemplateComponent],
+    ) -> ProcTemplate {
+        let substituted: Option<String> = None; // FIXME
+        template
+            .iter()
+            .filter_map(|component| {
+                // TODO if the below returns a substituted value, set substituted to that
+                self.process_template_component(component, reference, substituted.clone())
+            })
+            .collect()
+    }
+
+    fn process_template_component(
         &self,
         component: &TemplateComponent,
         reference: &InputReference,
+        _substituted: Option<String>, // FIXME
     ) -> Option<ProcTemplateComponent> {
         let hints = self.get_proc_hints();
         let reference_id: Option<RefID> = reference.id();
@@ -520,6 +497,7 @@ impl Processor {
         let options = self.get_render_options(self.style.clone(), self.locale.clone());
         let value = component.value(reference, &hint, &options)?;
         let template_component = component.clone();
+        // TODO add substitute here, and return the substitueted value if it exists
         if !value.is_empty() {
             Some(ProcTemplateComponent { template_component, value })
         } else {
