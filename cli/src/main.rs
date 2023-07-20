@@ -26,7 +26,7 @@ fn main() {
     let citations: Vec<Citation> = Vec::new();
     let locale = csln::style::locale::Locale::from_file(&opts.locale);
     let processor: Processor = Processor::new(style, bibliography, citations, locale);
-    let rendered_refs = processor.render_references();
+    let rendered_refs = processor.process_references();
     println!("{}", refs_to_string(rendered_refs));
     //println!("{}", serde_json::to_string_pretty(&rendered_refs).unwrap());
 }
