@@ -110,6 +110,7 @@ impl InputReference {
             // REVIEW: return string instead?
             InputReference::Monograph(r) => r.publisher.clone(),
             InputReference::MonographComponent(r) => r.parent.publisher.clone(),
+            InputReference::Collection(r) => r.publisher.clone(),
             _ => None,
         }
     }
