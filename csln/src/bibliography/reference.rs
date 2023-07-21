@@ -201,7 +201,7 @@ pub struct Collection {
     pub url: Option<Url>,
     pub accessed: Option<EdtfString>,
     pub note: Option<String>,
-    pub issn: Option<String>,
+    pub isbn: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]

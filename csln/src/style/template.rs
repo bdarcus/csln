@@ -23,7 +23,7 @@ pub enum WrapPunctuation {
 }
 
 /// The Template component model. Each item is for a specific datatype.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(untagged)]
 #[non_exhaustive]
 pub enum TemplateComponent {
@@ -46,16 +46,24 @@ impl TemplateComponent {
             TemplateComponent::SimpleString(s) => s.rendering.clone(),
         }
     }
+
+    // TODO do I need this?
+    pub fn is_author(&self) -> bool {
+        match self {
+            TemplateComponent::Contributor(c) => c.contributor == ContributorRole::Author,
+            _ => false,
+        }
+    }
 }
 
 /// A simple string component, to render a string variable.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct TemplateSimpleString {
     pub variable: Variables,
     pub rendering: Option<Rendering>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Variables {
     // TODO: add more variables
@@ -65,14 +73,14 @@ pub enum Variables {
 }
 
 /// A number component, to render a number.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct TemplateNumber {
     pub number: Numbers,
     pub form: Option<NumberForm>,
     pub rendering: Option<Rendering>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Numbers {
     Volume,
@@ -80,7 +88,7 @@ pub enum Numbers {
     Pages,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum NumberForm {
     #[default]
@@ -89,7 +97,7 @@ pub enum NumberForm {
 }
 
 /// To render is a list of more than one item; primarily to enable use of a delimiter to join the items.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct TemplateList {
     pub delimiter: Option<DelimiterPunctuation>,
     pub prefix: Option<String>,
@@ -99,7 +107,7 @@ pub struct TemplateList {
 }
 
 /// The punctuation to use as a delimiter between items in a list.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum DelimiterPunctuation {
     Comma,
@@ -116,21 +124,21 @@ pub enum DelimiterPunctuation {
 
 /// A contributor component, to render a list of contributors.
 // TODO incomplete
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct TemplateContributor {
     pub contributor: ContributorRole,
     pub form: ContributorForm,
     pub rendering: Option<Rendering>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum ContributorForm {
     Long,
     Short,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum ContributorRole {
     Author,
@@ -147,14 +155,14 @@ pub enum ContributorRole {
 }
 
 /// A date component, to render a date.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct TemplateDate {
     pub date: Dates,
     pub form: DateForm,
     pub rendering: Option<Rendering>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum Dates {
     Issued,
@@ -162,7 +170,7 @@ pub enum Dates {
     OriginalPublished,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum DateForm {
     Year,
@@ -172,14 +180,14 @@ pub enum DateForm {
 }
 
 /// A title component, to render a title.
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 pub struct TemplateTitle {
     pub title: Titles,
     pub form: Option<TitleForm>,
     pub rendering: Option<Rendering>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 #[non_exhaustive]
 pub enum Titles {
@@ -191,7 +199,7 @@ pub enum Titles {
     ParentSerial,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum TitleForm {
     Short,

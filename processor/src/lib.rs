@@ -3,12 +3,12 @@ SPDX-License-Identifier: MPL-2.0
 SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 */
 
+use csln::bibliography::reference::InputReference;
 use csln::bibliography::reference::{EdtfString, Name, RefID};
 use csln::bibliography::InputBibliography as Bibliography;
-use csln::bibliography::InputReference;
 use csln::citation::Citation;
 use csln::style::locale::Locale;
-use csln::style::options::{Config, MonthFormat, SortKey};
+use csln::style::options::{Config, MonthFormat, SortKey, SubstituteKey};
 use csln::style::template::{
     ContributorRole, DateForm, Dates, Numbers, TemplateComponent, TemplateContributor,
     TemplateDate, TemplateNumber, TemplateSimpleString, TemplateTitle, Titles, Variables,
@@ -77,6 +77,8 @@ pub struct ProcTemplateComponent {
     pub template_component: TemplateComponent,
     /// The string to render.
     pub value: String,
+    ///
+    pub substituted: Option<SubstituteKey>, // FIXME
 }
 
 #[test]
@@ -122,7 +124,7 @@ impl Display for ProcTemplateComponent {
 
 impl ProcTemplateComponent {
     pub fn new(template_component: TemplateComponent, value: String) -> Self {
-        ProcTemplateComponent { template_component, value }
+        ProcTemplateComponent { template_component, value, substituted: None }
     }
 }
 
@@ -166,7 +168,7 @@ impl Default for ProcHints {
     }
 }
 
-#[allow(unused)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct RenderOptions {
     // Options for the style, including default options.
     global: Config,
@@ -278,12 +280,7 @@ impl ComponentValue for TemplateSimpleString {
                 }
                 _ => None,
             },
-            Variables::Issn => match reference {
-                InputReference::Collection(collection) => {
-                    Some(collection.issn.as_ref()?.to_string())
-                }
-                _ => None,
-            },
+            _ => None, // TODO completes
         }
     }
 }
@@ -331,6 +328,66 @@ impl ComponentValue for TemplateTitle {
     }
 }
 
+// write a test to make sure author substition works
+#[test]
+fn author_substitution() {
+    use csln::bibliography::reference::{Collection, StructuredName};
+    let component = TemplateContributor {
+        contributor: ContributorRole::Author,
+        rendering: None,
+        form: csln::style::template::ContributorForm::Long,
+    };
+    let reference = Collection {
+        id: Some("test".to_string()),
+        editor: Some(csln::bibliography::reference::Contributor::StructuredName(
+            StructuredName {
+                family: "Editor".to_string(),
+                given: "Jane".to_string(),
+            },
+        )),
+        r#type: csln::bibliography::reference::CollectionType::EditedBook,
+        issued: EdtfString("2020".to_string()),
+        title: None,
+        url: None,
+        accessed: None,
+        translator: None,
+        publisher: None,
+        note: None,
+        issn: None,
+    };
+    (assert_eq!(
+        component.value(
+            &InputReference::Collection(reference),
+            &ProcHints::default(),
+            &RenderOptions::default()
+        ),
+        Some("Jane Editor".to_string())
+    ));
+}
+
+pub fn get_author_substitute(
+    reference: &InputReference,
+    options: &RenderOptions,
+) -> (String, SubstituteKey) {
+    let substitute_keys = options.global.substitute.clone().unwrap().template;
+    substitute_keys
+        .iter()
+        .find_map(|key| match key {
+            SubstituteKey::Editor => Some((
+                reference.editor()?.names(options.global.clone(), false),
+                SubstituteKey::Editor,
+            )),
+            SubstituteKey::Translator => Some((
+                reference.translator()?.names(options.global.clone(), false),
+                SubstituteKey::Translator,
+            )),
+            SubstituteKey::Title => {
+                Some((reference.title()?.to_string(), SubstituteKey::Title))
+            }
+        })
+        .unwrap()
+}
+
 impl ComponentValue for TemplateContributor {
     fn value(
         &self,
@@ -339,9 +396,16 @@ impl ComponentValue for TemplateContributor {
         options: &RenderOptions,
     ) -> Option<String> {
         match &self.contributor {
-            ContributorRole::Author => {
-                Some(reference.author()?.names(options.global.clone(), false))
-            }
+            ContributorRole::Author => match reference.author() {
+                Some(author) => Some(author.names(options.global.clone(), false)),
+                None => {
+                    let substitute = get_author_substitute(reference, options);
+                    let substitute_value = substitute.0;
+                    // TODO WTD with this? Maybe this needs to be moved to the template?
+                    let substitute_key = substitute.1;
+                    Some(substitute_value)
+                }
+            },
             ContributorRole::Editor => {
                 Some(reference.editor()?.names(options.global.clone(), false))
             }
@@ -474,12 +538,17 @@ impl Processor {
         reference: &InputReference,
         template: &[TemplateComponent],
     ) -> ProcTemplate {
-        let substituted: Option<String> = None; // FIXME
+        let mut author_substitution: Option<SubstituteKey> = None;
         template
             .iter()
             .filter_map(|component| {
-                // TODO if the below returns a substituted value, set substituted to that
-                self.process_template_component(component, reference, substituted.clone())
+                // if the below returns a substituted value, set substituted to that
+                let proc_template = self.process_template_component(component, reference);
+                let substituted = proc_template.as_ref()?.substituted.clone();
+                if substituted.is_some() {
+                    author_substitution = substituted
+                }
+                proc_template
             })
             .collect()
     }
@@ -488,18 +557,22 @@ impl Processor {
         &self,
         component: &TemplateComponent,
         reference: &InputReference,
-        _substituted: Option<String>, // FIXME
     ) -> Option<ProcTemplateComponent> {
         let hints = self.get_proc_hints();
         let reference_id: Option<RefID> = reference.id();
         let hint: ProcHints =
             hints.get(&reference_id.unwrap()).cloned().unwrap_or_default();
         let options = self.get_render_options(self.style.clone(), self.locale.clone());
-        let value = component.value(reference, &hint, &options)?;
+        let value = component.value(reference, &hint, &options)?; // FIXME substitution
+        let substituted = if component.is_author() && reference.author().is_none() {
+            Some(SubstituteKey::Editor) // FIXME run a get_substitute_key method here? What about the value below?
+        } else {
+            None
+        };
         let template_component = component.clone();
         // TODO add substitute here, and return the substitueted value if it exists
         if !value.is_empty() {
-            Some(ProcTemplateComponent { template_component, value })
+            Some(ProcTemplateComponent { template_component, value, substituted })
         } else {
             None
         }
