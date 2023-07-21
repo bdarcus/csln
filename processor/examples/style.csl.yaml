@@ -39,6 +39,8 @@ bibliography:
       rendering: # not a fan of this
         wrap: parentheses
     - title: primary
+    - contributor: editor
+      form: long
     - title: parent-monograph
       prefix: In 
       emph: true
@@ -47,6 +49,6 @@ bibliography:
       form: month-day
     - number: volume
     - variable: doi
-    - contributor: publisher
+    - contributor: publisher # location?
       form: long # make optional, with default?
       delimiter: colon # scope? delimiter vs item-delimiter?
