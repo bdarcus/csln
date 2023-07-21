@@ -3,12 +3,12 @@ SPDX-License-Identifier: MPL-2.0
 SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 */
 
+use csln::bibliography::reference::InputReference;
 use csln::bibliography::reference::{EdtfString, Name, RefID};
 use csln::bibliography::InputBibliography as Bibliography;
-use csln::bibliography::InputReference;
 use csln::citation::Citation;
 use csln::style::locale::Locale;
-use csln::style::options::{Config, MonthFormat, SortKey};
+use csln::style::options::{Config, MonthFormat, SortKey, SubstituteKey};
 use csln::style::template::{
     ContributorRole, DateForm, Dates, Numbers, TemplateComponent, TemplateContributor,
     TemplateDate, TemplateNumber, TemplateSimpleString, TemplateTitle, Titles, Variables,
@@ -20,7 +20,7 @@ use itertools::Itertools;
 use rayon::prelude::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
+//use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::option::Option;
@@ -166,7 +166,7 @@ impl Default for ProcHints {
     }
 }
 
-#[allow(unused)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct RenderOptions {
     // Options for the style, including default options.
     global: Config,
@@ -278,12 +278,7 @@ impl ComponentValue for TemplateSimpleString {
                 }
                 _ => None,
             },
-            Variables::Issn => match reference {
-                InputReference::Collection(collection) => {
-                    Some(collection.issn.as_ref()?.to_string())
-                }
-                _ => None,
-            },
+            _ => None, // TODO completes
         }
     }
 }
@@ -311,21 +306,18 @@ impl ComponentValue for TemplateTitle {
                     None
                 }
             }
-            Titles::Primary => {
-                if let InputReference::Monograph(monograph) = reference {
-                    Some(monograph.title.to_string())
-                } else if let InputReference::MonographComponent(monograph_component) =
-                    reference
-                {
-                    Some(monograph_component.title.as_ref()?.to_string())
-                } else if let InputReference::SerialComponent(serial_component) =
-                    reference
-                {
-                    Some(serial_component.title.as_ref()?.to_string())
-                } else {
-                    None
+            Titles::Primary => match reference {
+                InputReference::Monograph(monograph) => Some(monograph.title.to_string()),
+                InputReference::Collection(collection) => {
+                    Some(collection.title.as_ref()?.to_string())
                 }
-            }
+                InputReference::MonographComponent(monograph_component) => {
+                    Some(monograph_component.title.as_ref()?.to_string())
+                }
+                InputReference::SerialComponent(serial_component) => {
+                    Some(serial_component.title.as_ref()?.to_string())
+                }
+            },
             _ => None,
         }
     }
@@ -474,21 +466,42 @@ impl Processor {
         reference: &InputReference,
         template: &[TemplateComponent],
     ) -> ProcTemplate {
-        let substituted: Option<String> = None; // FIXME
         template
             .iter()
-            .filter_map(|component| {
-                // TODO if the below returns a substituted value, set substituted to that
-                self.process_template_component(component, reference, substituted.clone())
-            })
+            .filter_map(|component| self.process_template_component(component, reference))
             .collect()
+    }
+
+    fn suppress_component(
+        &self,
+        component: &TemplateComponent,
+        reference: &InputReference,
+    ) -> bool {
+        let author_substitute = self.get_author_substitute(reference);
+        match component {
+            TemplateComponent::Contributor(contributor) => {
+                let role = contributor.contributor.clone();
+                if role == ContributorRole::Editor {
+                    author_substitute.is_some()
+                } else {
+                    false
+                }
+            }
+            TemplateComponent::Title(title) => {
+                let title_type = title.title.clone();
+                // TODO need more logic here
+                (title_type == Titles::Primary && author_substitute.is_some())
+                    // FIXME causes a panic if sub is None
+                    && (author_substitute.unwrap().1 == SubstituteKey::Title)
+            }
+            _ => false, // This arm will match any value not covered by the above arms
+        }
     }
 
     fn process_template_component(
         &self,
         component: &TemplateComponent,
         reference: &InputReference,
-        _substituted: Option<String>, // FIXME
     ) -> Option<ProcTemplateComponent> {
         let hints = self.get_proc_hints();
         let reference_id: Option<RefID> = reference.id();
@@ -496,9 +509,10 @@ impl Processor {
             hints.get(&reference_id.unwrap()).cloned().unwrap_or_default();
         let options = self.get_render_options(self.style.clone(), self.locale.clone());
         let value = component.value(reference, &hint, &options)?;
+        let suppress = self.suppress_component(component, reference);
         let template_component = component.clone();
         // TODO add substitute here, and return the substitueted value if it exists
-        if !value.is_empty() {
+        if !value.is_empty() && !suppress {
             Some(ProcTemplateComponent { template_component, value })
         } else {
             None
@@ -583,11 +597,25 @@ impl Processor {
                     references.par_sort_by(|a, b| {
                         let a_author = match a.author() {
                             Some(author) => author.names(options.clone(), true),
-                            None => return Ordering::Equal,
+                            None => {
+                                let substitute = self.get_author_substitute(a);
+                                if substitute.is_some() {
+                                    substitute.unwrap().0 // FIXME clippy warning
+                                } else {
+                                    "".to_string()
+                                }
+                            }
                         };
                         let b_author = match b.author() {
                             Some(author) => author.names(options.clone(), true),
-                            None => return Ordering::Equal,
+                            None => {
+                                let substitute = self.get_author_substitute(b);
+                                if substitute.is_some() {
+                                    substitute.unwrap().0
+                                } else {
+                                    "".to_string()
+                                }
+                            }
                         };
                         a_author.to_lowercase().cmp(&b_author.to_lowercase())
                     });
@@ -672,6 +700,62 @@ impl Processor {
             .join(":");
         group_key
     }
+
+    pub fn get_author_substitute(
+        &self,
+        reference: &InputReference,
+    ) -> Option<(String, SubstituteKey)> {
+        let options = self.style.options.as_ref().unwrap().clone(); // FIXME default?
+        let substitute_config = options.substitute.clone(); // FIXME default? the below line panics
+        substitute_config
+            .unwrap_or_default()
+            .template
+            .iter()
+            .find_map(|substitute_key| match *substitute_key {
+                SubstituteKey::Editor => {
+                    let names = reference.editor()?.names(options.clone(), false);
+                    Some((names, substitute_key.clone()))
+                }
+                _ => None,
+            })
+    }
+
+    // // write a test for get_author_substitute
+    // #[cfg(test)]
+    // fn author_substitution() {
+    //     use csln::bibliography::reference::{Collection, StructuredName};
+    //     let component = TemplateContributor {
+    //         contributor: ContributorRole::Author,
+    //         rendering: None,
+    //         form: csln::style::template::ContributorForm::Long,
+    //     };
+    //     let reference = Collection {
+    //         id: Some("test".to_string()),
+    //         editor: Some(csln::bibliography::reference::Contributor::StructuredName(
+    //             StructuredName {
+    //                 family: "Editor".to_string(),
+    //                 given: "Jane".to_string(),
+    //             },
+    //         )),
+    //         r#type: csln::bibliography::reference::CollectionType::EditedBook,
+    //         issued: EdtfString("2020".to_string()),
+    //         title: None,
+    //         url: None,
+    //         accessed: None,
+    //         translator: None,
+    //         publisher: None,
+    //         note: None,
+    //         isbn: None,
+    //     };
+    //     (assert_eq!(
+    //         component.value(
+    //             &InputReference::Collection(reference),
+    //             &ProcHints::default(),
+    //             &RenderOptions::default()
+    //         ),
+    //         Some("Jane Editor".to_string())
+    //     ));
+    // }
 
     /// Group references according to instructions in the style.
     #[inline]

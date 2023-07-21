@@ -56,7 +56,7 @@ lamp:
   issue: 3
   pages: 263-269
 daum:
-  type: book
+  type: edited-book
   editor:
     family: Daum
     given: Meghan

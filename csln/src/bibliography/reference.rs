@@ -110,6 +110,7 @@ impl InputReference {
             // REVIEW: return string instead?
             InputReference::Monograph(r) => r.publisher.clone(),
             InputReference::MonographComponent(r) => r.parent.publisher.clone(),
+            InputReference::Collection(r) => r.publisher.clone(),
             _ => None,
         }
     }
@@ -201,7 +202,7 @@ pub struct Collection {
     pub url: Option<Url>,
     pub accessed: Option<EdtfString>,
     pub note: Option<String>,
-    pub issn: Option<String>,
+    pub isbn: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
