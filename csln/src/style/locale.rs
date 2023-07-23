@@ -9,6 +9,27 @@ pub struct Locale {
     // pub options: LocaleOptions,
     pub dates: DateTerms,
     //pub contributors: ContributorTerms,
+    pub terms: Terms, // TODO
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub struct Terms {
+    pub and: Option<String>,
+    pub and_symbol: Option<String>,
+    pub and_others: Option<String>,
+    pub anonymous: Option<String>,
+    pub anonymous_short: Option<String>,
+    pub at: Option<String>,
+    pub accessed: Option<String>,
+    pub available_at: Option<String>,
+    pub by: Option<String>,
+    pub circa: Option<String>,
+    pub circa_short: Option<String>,
+    pub cited: Option<String>,
+    pub et_al: Option<String>,
+    pub from: Option<String>,
+    pub ibid: Option<String>,
 }
 
 impl Locale {
@@ -23,6 +44,12 @@ impl Locale {
             panic!("Locale file must be in YAML or JSON format")
         }
     }
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+pub struct AndAs {
+    pub symbol: String,
+    pub text: String,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]

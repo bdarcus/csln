@@ -10,6 +10,7 @@ options:
       emph: true
   contributors:
     display_as_sort: first
+    and: symbol
 templates:
   title-apa:
     - title: primary
