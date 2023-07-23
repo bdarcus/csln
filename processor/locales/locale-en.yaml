@@ -1,5 +1,17 @@
 ---
 locale: en
+terms:
+  and: and
+  and-symbol: "&"
+  and-others: and others
+  anonymous: anonymous
+  at: at
+  accessed: accessed
+  available-at: available at
+  by: by
+  circa: circa
+  circa-short: c
+  et-al: et al
 dates:
   months:
     long:

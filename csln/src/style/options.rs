@@ -206,17 +206,24 @@ pub enum DelimiterLastOptions {
 pub struct ShortenListOptions {
     pub min: u8,
     pub use_first: u8,
-    pub et_al: AndOptions,
+    pub and_others: AndOtherOptions, // REVIEW wrong place?
     pub delimiter_precedes_last: DelimiterLastOptions,
+}
+
+#[derive(JsonSchema, Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
+pub enum AndOtherOptions {
+    #[default]
+    EtAl,
+    Text,
 }
 
 impl Default for ShortenListOptions {
     // REVIEW these defaults
     fn default() -> Self {
         Self {
-            min: 3,
-            use_first: 1,
-            et_al: AndOptions::default(),
+            min: 5,
+            use_first: 3,
+            and_others: AndOtherOptions::default(),
             delimiter_precedes_last: DelimiterLastOptions::default(),
         }
     }
