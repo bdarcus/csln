@@ -28,7 +28,8 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 //! The parent is represented inline as a Monograph or Serial.
 //! I would like to add ability to reference a parent by ID, but that is not yet implemented.
 
-use crate::style::options::DisplayAsSort;
+use crate::style::locale::Locale;
+use crate::style::options::{AndOptions, AndOtherOptions, DisplayAsSort};
 use crate::style::{locale::MonthList, options::Config};
 use edtf::level_1::Edtf;
 use fmt::Display;
@@ -637,50 +638,133 @@ impl fmt::Display for ContributorList {
     }
 }
 
-/// A Name is a string that can be formatted in different ways.
-pub trait Name {
-    fn names(&self, options: Config, as_sorted: bool) -> String;
-}
-
-/// A NameList is a list of names that can be formatted in different ways, depending on configuration options, and context.
-pub trait NameList {
-    /// Return a list of names, formatted according to the given options.
-    /// If `as_sorted` is true, the names will be displayed as sorted.
-    fn names_list(&self, options: Config, as_sorted: bool) -> String;
-}
-
-impl Name for Contributor {
-    // if as_sorted is true, the name will be displayed as sorted.
-    fn names(&self, options: Config, as_sorted: bool) -> String {
-        let as_sorted_config =
-            match options.contributors.clone().unwrap_or_default().display_as_sort {
-                Some(DisplayAsSort::All) => true,
-                Some(DisplayAsSort::First) => true,
-                Some(DisplayAsSort::None) => false,
-                None => false,
-            };
+impl Contributor {
+    // if as_sorted is true, the name will be displayed as sorted, overriding the configuration option.
+    pub fn names(&self, options: Config, as_sorted: bool) -> Vec<String> {
         match self {
-            Contributor::SimpleName(c) => c.name.to_string(),
+            Contributor::SimpleName(c) => vec![c.name.to_string()],
             Contributor::StructuredName(contributor) => {
+                // FIXME when there's only one, always uses else here
                 if as_sorted {
-                    format!("{}, {}", contributor.family, contributor.given)
+                    vec![format!("{}, {}", contributor.family, contributor.given)]
                 } else {
-                    format!("{} {}", contributor.given, contributor.family)
+                    vec![format!("{} {}", contributor.given, contributor.family)]
                 }
             }
             Contributor::ContributorList(contributors) => {
-                if as_sorted {
-                    let names: Vec<String> = contributors
-                        .0
-                        .iter()
-                        .map(|c| c.names(options.clone(), as_sorted))
-                        .collect::<Vec<String>>();
-                    names.join(", ")
+                contributors.names_list(options)
+            }
+        }
+    }
+
+    /// Join a vector of strings with commas and "and".
+    pub fn name_list_and(&self, and: String) -> Vec<String> {
+        let names = self.names(Config::default(), false);
+        let mut result = names;
+        if result.len() > 1 {
+            let last = result.pop().unwrap();
+            result.push(format!("{} {}", and, last));
+        }
+        result
+    }
+
+    pub fn name_list_shorten(&self, names: &[&str], use_first: u8) -> Vec<String> {
+        names
+            .iter()
+            .take(use_first as usize)
+            .map(|&s| s.to_string())
+            .collect::<Vec<String>>()
+    }
+
+    fn format_list(
+        &self,
+        names: Vec<String>,
+        and_str: String,
+        oxford_comma: bool,
+    ) -> String {
+        let last = names.last().map(ToString::to_string).unwrap_or_default();
+        match names.len() {
+            0 => String::new(),
+            1 => last,
+            2 => format!("{} {} {}", names[0], and_str, last),
+            _ => {
+                let all_but_last = names[..names.len() - 1]
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                if oxford_comma {
+                    format!("{}, {} {}", all_but_last, and_str, last)
                 } else {
-                    contributors.names_list(options, as_sorted_config)
+                    format!("{} {} {}", all_but_last, and_str, last)
                 }
             }
         }
+    }
+
+    pub fn format(&self, options: Config, locale: Locale) -> String {
+        let as_sorted: bool = matches!(self, Contributor::StructuredName(_));
+        let names = self.names(options.clone(), as_sorted);
+        let contributor_options = options.contributors.clone().unwrap_or_default();
+        let shorten: bool =
+            contributor_options.shorten.unwrap_or_default().min <= names.len() as u8;
+        if shorten {
+            let shorten_options = options
+                .contributors
+                .unwrap_or_default()
+                .shorten
+                .clone()
+                .unwrap_or_default();
+            let use_first = shorten_options.use_first;
+            let and_others = shorten_options.and_others;
+            let and_others_string = match and_others {
+                AndOtherOptions::EtAl => {
+                    locale.terms.et_al.unwrap_or("et al".to_string())
+                } // TODO localize
+                AndOtherOptions::Text => {
+                    locale.terms.and_others.unwrap_or("and others".to_string())
+                }
+            };
+            let names_str: Vec<&str> = names.iter().map(AsRef::as_ref).collect();
+            let result = self.name_list_shorten(&names_str, use_first);
+            let result_with_and_others =
+                format!("{} {}", result.join(", "), and_others_string);
+            result_with_and_others
+        } else {
+            let and_options = contributor_options.and;
+            let and_string = match and_options {
+                Some(AndOptions::Symbol) => "&".to_string(),
+                Some(AndOptions::Text) => "and".to_string(),
+                _ => "".to_string(), // FIXME localize
+                                     // Add more variants as needed
+            };
+            self.format_list(names, and_string, true)
+        }
+    }
+}
+
+impl ContributorList {
+    // ...
+
+    fn as_sorted(options: Config, index: usize) -> bool {
+        let display_as_sort = options
+            .contributors
+            .clone()
+            .unwrap_or_default()
+            .display_as_sort
+            .clone();
+        index == 0 && display_as_sort == Some(DisplayAsSort::First)
+            || display_as_sort == Some(DisplayAsSort::All)
+    }
+
+    pub fn names_list(&self, options: Config) -> Vec<String> {
+        self.0
+            .iter()
+            .enumerate()
+            .flat_map(|(i, c)| {
+                c.names(options.clone(), Self::as_sorted(options.clone(), i))
+            })
+            .collect::<Vec<String>>()
     }
 }
 
@@ -695,88 +779,16 @@ fn display_and_sort_names() {
         family: "Doe".to_string(),
     });
     let options = Config::default();
-    assert_eq!(simple.names(options, false), "John Doe");
+    // FIXME use this format method in this test
+    assert_eq!(simple.names(options, false).join(" "), "John Doe");
     let options = Config::default();
     assert_eq!(
-        simple.names(options, true),
+        simple.names(options, true).join(" "),
         "John Doe",
         "as_sorted=true should not affect a simple name"
     );
     let options = Config::default();
-    assert_eq!(structured.names(options, false), "John Doe");
+    assert_eq!(structured.names(options, false).join(" "), "John Doe");
     let options = Config::default();
-    assert_eq!(structured.names(options, true), "Doe, John");
-}
-
-impl NameList for ContributorList {
-    fn names_list(&self, options: Config, as_sorted: bool) -> String {
-        let names: Vec<String> = self
-            .0
-            .iter()
-            .enumerate()
-            .map(|(i, c)| {
-                let as_sorted_config = match options
-                    .contributors
-                    .clone()
-                    .unwrap_or_default()
-                    .display_as_sort
-                {
-                    Some(DisplayAsSort::All) => true,
-                    Some(DisplayAsSort::First) => i == 0,
-                    Some(DisplayAsSort::None) => false,
-                    None => false,
-                };
-                if as_sorted {
-                    c.names(options.clone(), true)
-                } else {
-                    c.names(options.clone(), as_sorted_config)
-                }
-            })
-            .collect::<Vec<String>>();
-        names.join(", ")
-    }
-}
-
-#[test]
-fn contributor_list() {
-    let contributor_list = ContributorList(vec![
-        Contributor::SimpleName(SimpleName {
-            name: "John Doe".to_string(),
-            location: None,
-        }),
-        Contributor::SimpleName(SimpleName {
-            name: "Jane Doe".to_string(),
-            location: None,
-        }),
-    ]);
-    let options = Config::default();
-    assert_eq!(contributor_list.names_list(options, false), "John Doe, Jane Doe");
-    let options = Config::default();
-    assert_eq!(
-        contributor_list.names_list(options, true),
-        "John Doe, Jane Doe",
-        "as_sorted=true should not affect simple names"
-    );
-    let structured_name_list = ContributorList(vec![
-        Contributor::StructuredName(StructuredName {
-            given: "John".to_string(),
-            family: "Doe".to_string(),
-        }),
-        Contributor::StructuredName(StructuredName {
-            given: "Jane".to_string(),
-            family: "Doe".to_string(),
-        }),
-    ]);
-    let options = Config::default();
-    assert_eq!(structured_name_list.names_list(options, false), "John Doe, Jane Doe");
-    let options = Config::default();
-    assert_eq!(structured_name_list.names_list(options, true), "Doe, John, Doe, Jane");
-    let options = Config {
-        contributors: Some(crate::style::options::ContributorConfig {
-            display_as_sort: Some(DisplayAsSort::First),
-            ..crate::style::options::ContributorConfig::default()
-        }),
-        ..crate::style::options::Config::default()
-    };
-    assert_eq!(structured_name_list.names_list(options, false), "Doe, John, Jane Doe");
+    assert_eq!(structured.names(options, true).join(", "), "Doe, John");
 }

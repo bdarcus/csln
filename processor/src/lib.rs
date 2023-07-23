@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 */
 
 use csln::bibliography::reference::InputReference;
-use csln::bibliography::reference::{EdtfString, Name, RefID};
+use csln::bibliography::reference::{EdtfString, RefID};
 use csln::bibliography::InputBibliography as Bibliography;
 use csln::citation::Citation;
 use csln::style::locale::Locale;
@@ -330,18 +330,19 @@ impl ComponentValue for TemplateContributor {
         _hints: &ProcHints,
         options: &RenderOptions,
     ) -> Option<String> {
+        let locale = options.locale.clone();
         match &self.contributor {
             ContributorRole::Author => {
-                Some(reference.author()?.names(options.global.clone(), false))
+                Some(reference.author()?.format(options.global.clone(), locale))
             }
             ContributorRole::Editor => {
-                Some(reference.editor()?.names(options.global.clone(), false))
+                Some(reference.editor()?.format(options.global.clone(), locale))
             }
             ContributorRole::Translator => {
-                Some(reference.translator()?.names(options.global.clone(), false))
+                Some(reference.translator()?.format(options.global.clone(), locale))
             }
             ContributorRole::Publisher => {
-                Some(reference.publisher()?.names(options.global.clone(), false))
+                Some(reference.publisher()?.format(options.global.clone(), locale))
             }
             ContributorRole::Director => todo!(),
             ContributorRole::Recipient => todo!(),
@@ -491,7 +492,6 @@ impl Processor {
                 let title_type = title.title.clone();
                 // TODO need more logic here
                 (title_type == Titles::Primary && author_substitute.is_some())
-                    // FIXME causes a panic if sub is None
                     && (author_substitute.unwrap().1 == SubstituteKey::Title)
             }
             _ => false, // This arm will match any value not covered by the above arms
@@ -596,7 +596,7 @@ impl Processor {
                 SortKey::Author => {
                     references.par_sort_by(|a, b| {
                         let a_author = match a.author() {
-                            Some(author) => author.names(options.clone(), true),
+                            Some(author) => author.names(options.clone(), true).join("-"),
                             None => {
                                 let substitute = self.get_author_substitute(a);
                                 if substitute.is_some() {
@@ -607,7 +607,7 @@ impl Processor {
                             }
                         };
                         let b_author = match b.author() {
-                            Some(author) => author.names(options.clone(), true),
+                            Some(author) => author.names(options.clone(), true).join("-"),
                             None => {
                                 let substitute = self.get_author_substitute(b);
                                 if substitute.is_some() {
@@ -687,7 +687,9 @@ impl Processor {
             .par_iter()
             .map(|key| match key {
                 SortKey::Author => match reference.author() {
-                    Some(author) => author.names(options.clone().unwrap(), as_sorted),
+                    Some(author) => {
+                        author.names(options.clone().unwrap(), as_sorted).join("-")
+                    }
                     None => "".to_string(),
                 },
                 SortKey::Year => {
@@ -713,7 +715,8 @@ impl Processor {
             .iter()
             .find_map(|substitute_key| match *substitute_key {
                 SubstituteKey::Editor => {
-                    let names = reference.editor()?.names(options.clone(), false);
+                    let names =
+                        reference.editor()?.format(options.clone(), self.locale.clone());
                     Some((names, substitute_key.clone()))
                 }
                 _ => None,
