@@ -331,12 +331,16 @@ impl ComponentValue for TemplateContributor {
         options: &RenderOptions,
     ) -> Option<String> {
         let locale = options.locale.clone();
+        let role = "ROLE"; // FIXME
         match &self.contributor {
             ContributorRole::Author => {
+                // If there's no author here, that method will return a substitute?
                 Some(reference.author()?.format(options.global.clone(), locale))
             }
             ContributorRole::Editor => {
-                Some(reference.editor()?.format(options.global.clone(), locale))
+                let editor = reference.editor()?.format(options.global.clone(), locale);
+                let result = format!("{} {}", editor, role);
+                Some(result)
             }
             ContributorRole::Translator => {
                 Some(reference.translator()?.format(options.global.clone(), locale))
@@ -511,7 +515,7 @@ impl Processor {
         let value = component.value(reference, &hint, &options)?;
         let suppress = self.suppress_component(component, reference);
         let template_component = component.clone();
-        // TODO add substitute here, and return the substitueted value if it exists
+        // TODO add role here if specified in the style
         if !value.is_empty() && !suppress {
             Some(ProcTemplateComponent { template_component, value })
         } else {
@@ -597,25 +601,18 @@ impl Processor {
                     references.par_sort_by(|a, b| {
                         let a_author = match a.author() {
                             Some(author) => author.names(options.clone(), true).join("-"),
-                            None => {
-                                let substitute = self.get_author_substitute(a);
-                                if substitute.is_some() {
-                                    substitute.unwrap().0 // FIXME clippy warning
-                                } else {
-                                    "".to_string()
-                                }
-                            }
+                            None => match self.get_author_substitute(a) {
+                                Some((substitute, _)) => substitute,
+                                None => "".to_string(),
+                            },
                         };
+
                         let b_author = match b.author() {
                             Some(author) => author.names(options.clone(), true).join("-"),
-                            None => {
-                                let substitute = self.get_author_substitute(b);
-                                if substitute.is_some() {
-                                    substitute.unwrap().0
-                                } else {
-                                    "".to_string()
-                                }
-                            }
+                            None => match self.get_author_substitute(b) {
+                                Some((substitute, _)) => substitute,
+                                None => "".to_string(),
+                            },
                         };
                         a_author.to_lowercase().cmp(&b_author.to_lowercase())
                     });
@@ -723,7 +720,6 @@ impl Processor {
             })
     }
 
-    // // write a test for get_author_substitute
     // #[cfg(test)]
     // fn author_substitution() {
     //     use csln::bibliography::reference::{Collection, StructuredName};

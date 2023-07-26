@@ -78,7 +78,7 @@ impl InputReference {
             InputReference::Monograph(r) => r.author.clone(),
             InputReference::MonographComponent(r) => r.author.clone(),
             InputReference::SerialComponent(r) => r.author.clone(),
-            InputReference::Collection(r) => r.editor.clone(),
+            InputReference::Collection(r) => r.editor.clone(), // TODO: so this isn't really using the substitution config
         }
     }
 
