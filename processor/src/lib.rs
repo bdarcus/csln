@@ -10,9 +10,9 @@ use csln::citation::Citation;
 use csln::style::locale::Locale;
 use csln::style::options::{Config, MonthFormat, SortKey, SubstituteKey};
 use csln::style::template::{
-    ContributorRole, DateForm, Dates, Numbers, TemplateComponent, TemplateContributor,
-    TemplateDate, TemplateNumber, TemplateSimpleString, TemplateTitle, Titles, Variables,
-    WrapPunctuation,
+    ContributorForm, ContributorRole, DateForm, Dates, Numbers, TemplateComponent,
+    TemplateContributor, TemplateDate, TemplateNumber, TemplateSimpleString,
+    TemplateTitle, Titles, Variables, WrapPunctuation,
 };
 use csln::style::Style;
 use icu::datetime::DateTimeFormatterOptions;
@@ -76,7 +76,19 @@ pub struct ProcTemplateComponent {
     /// The original input style template component, which provides rendering instructions.
     pub template_component: TemplateComponent,
     /// The string to render.
+    pub values: ProcValues,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+/// Holds one or more processed strings, ready for final rendering.
+pub struct ProcValues {
+    /// The primary string to render.
     pub value: String,
+    /// The prefix to render.
+    pub prefix: Option<String>,
+    /// The suffix to render.
+    pub suffix: Option<String>,
 }
 
 #[test]
@@ -94,7 +106,10 @@ fn render_proc_template_component() {
         }),
     });
     let value = "10/1234".to_string();
-    let proc_template_component = ProcTemplateComponent::new(template_component, value);
+    let proc_template_component = ProcTemplateComponent::new(
+        template_component,
+        ProcValues { value, prefix: None, suffix: None },
+    );
     assert_eq!(proc_template_component.to_string(), "(doi: 10/1234 ||)".to_string());
 }
 
@@ -116,13 +131,21 @@ impl Display for ProcTemplateComponent {
             WrapPunctuation::Brackets => ("[".to_string(), "]".to_string()),
         };
         // REVIEW: is this where to plugin different renderers?
-        write!(f, "{}{}{}{}{}", wrap_punct.0, prefix, self.value, suffix, wrap_punct.1)
+        // Also, how to handle the different affixes, including within the values?
+        let result = wrap_punct.0
+            + &prefix
+            + &self.values.prefix.clone().unwrap_or_default()
+            + &self.values.value
+            + &self.values.suffix.clone().unwrap_or_default()
+            + &suffix
+            + &wrap_punct.1;
+        write!(f, "{}", result)
     }
 }
 
 impl ProcTemplateComponent {
-    pub fn new(template_component: TemplateComponent, value: String) -> Self {
-        ProcTemplateComponent { template_component, value }
+    pub fn new(template_component: TemplateComponent, values: ProcValues) -> Self {
+        ProcTemplateComponent { template_component, values }
     }
 }
 
@@ -186,48 +209,50 @@ pub trait ProcessComponent<T> {
     ) -> Option<ProcTemplateComponent>;
 }
 
-pub trait ComponentValue {
-    fn value(
+pub trait ComponentValues {
+    fn values(
         &self,
         reference: &InputReference,
         hints: &ProcHints,
         options: &RenderOptions,
-    ) -> Option<String>;
+    ) -> Option<ProcValues>;
 }
 
-impl ComponentValue for TemplateComponent {
-    fn value(
+impl ComponentValues for TemplateComponent {
+    fn values(
         &self,
         reference: &InputReference,
         hints: &ProcHints,
         options: &RenderOptions,
-        // context: &RenderContext<T>,
-    ) -> Option<String> {
-        match self {
-            TemplateComponent::Title(title) => {
-                Some(title.value(reference, hints, options).unwrap_or_default())
-            }
+    ) -> Option<ProcValues> {
+        let proc_values = match self {
+            TemplateComponent::Title(title) => title.values(reference, hints, options),
             TemplateComponent::Contributor(contributor) => {
-                contributor.value(reference, hints, options)
+                contributor.values(reference, hints, options)
             }
-            TemplateComponent::Date(date) => date.value(reference, hints, options),
-            TemplateComponent::Number(number) => number.value(reference, hints, options),
+            TemplateComponent::Date(date) => date.values(reference, hints, options),
+            TemplateComponent::Number(number) => number.values(reference, hints, options),
             TemplateComponent::SimpleString(string) => {
-                string.value(reference, hints, options)
+                string.values(reference, hints, options)
             }
             TemplateComponent::List(_list) => todo!(),
             _ => None,
-        }
+        };
+        Some(ProcValues {
+            value: proc_values.as_ref()?.value.clone(),
+            prefix: proc_values.as_ref()?.prefix.clone(),
+            suffix: proc_values.as_ref()?.suffix.clone(),
+        })
     }
 }
 
-impl ComponentValue for TemplateNumber {
-    fn value(
+impl ComponentValues for TemplateNumber {
+    fn values(
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
         _options: &RenderOptions,
-    ) -> Option<String> {
+    ) -> Option<ProcValues> {
         let number: Option<String> = match &self.number {
             Numbers::Volume => match reference {
                 InputReference::SerialComponent(serial_component) => {
@@ -251,18 +276,22 @@ impl ComponentValue for TemplateNumber {
                 _ => None,
             },
         };
-        number
+        Some(ProcValues {
+            value: number.unwrap_or_default(),
+            prefix: None,
+            suffix: None,
+        })
     }
 }
 
-impl ComponentValue for TemplateSimpleString {
-    fn value(
+impl ComponentValues for TemplateSimpleString {
+    fn values(
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
         _options: &RenderOptions,
-    ) -> Option<String> {
-        match self.variable {
+    ) -> Option<ProcValues> {
+        let value = match self.variable {
             Variables::Doi => match reference {
                 InputReference::SerialComponent(serial_component) => {
                     Some(serial_component.doi.as_ref()?.to_string())
@@ -279,18 +308,23 @@ impl ComponentValue for TemplateSimpleString {
                 _ => None,
             },
             _ => None, // TODO completes
-        }
+        };
+        Some(ProcValues {
+            value: value.unwrap_or_default(),
+            prefix: None,
+            suffix: None,
+        })
     }
 }
 
-impl ComponentValue for TemplateTitle {
-    fn value(
+impl ComponentValues for TemplateTitle {
+    fn values(
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
         _options: &RenderOptions,
-    ) -> Option<String> {
-        match &self.title {
+    ) -> Option<ProcValues> {
+        let value = match &self.title {
             Titles::ParentMonograph => {
                 if let InputReference::MonographComponent(monograph_component) = reference
                 {
@@ -319,53 +353,110 @@ impl ComponentValue for TemplateTitle {
                 }
             },
             _ => None,
-        }
+        };
+        Some(ProcValues {
+            value: value.unwrap_or_default(),
+            prefix: None,
+            suffix: None,
+        })
     }
 }
 
-impl ComponentValue for TemplateContributor {
-    fn value(
+pub fn role_to_string(
+    role: &ContributorRole,
+    locale: Locale,
+    form: ContributorForm,
+    length: usize,
+) -> Option<String> {
+    let term = locale.roles.get(role)?; // FIXME causes panic
+    match form {
+        ContributorForm::Long => {
+            if length > 1 {
+                Some(term.plural.long.clone())
+            } else {
+                Some(term.singular.long.clone())
+            }
+        }
+        ContributorForm::Short => {
+            if length > 1 {
+                Some(term.plural.short.clone())
+            } else {
+                Some(term.singular.short.clone())
+            }
+        }
+        ContributorForm::Verb => Some(term.verb.long.clone()),
+        ContributorForm::VerbShort => Some(term.verb.short.clone()),
+    }
+}
+
+#[test]
+fn role_form_to_string() {
+    let locale = Locale::default();
+    let role = ContributorRole::Editor;
+    let form = ContributorForm::Long;
+    let length = 1;
+    let result = role_to_string(&role, locale, form, length);
+    assert_eq!(result, Some("editor".to_string()));
+}
+
+impl ComponentValues for TemplateContributor {
+    fn values(
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
         options: &RenderOptions,
-    ) -> Option<String> {
+    ) -> Option<ProcValues> {
         let locale = options.locale.clone();
-        let role = "ROLE"; // FIXME
         match &self.contributor {
             ContributorRole::Author => {
-                // If there's no author here, that method will return a substitute?
-                Some(reference.author()?.format(options.global.clone(), locale))
+                let add_role_form =
+                    options.global.substitute.clone().unwrap().contributor_role_form;
+                let author_length =
+                    reference.author()?.0.names(options.global.clone(), true).len();
+                // get the actual role returned by the author method; can be a substitution
+                let role = reference.author()?.1;
+                // get the role string; if it's in fact author, it will be None
+                let suffix = add_role_form.map(|role_form| {
+                    role_to_string(&role, locale.clone(), role_form, author_length)
+                });
+                Some(ProcValues {
+                    value: reference
+                        .author()?
+                        .0
+                        .format(options.global.clone(), locale.clone()), // REVIEW too many clones?
+                    prefix: None,
+                    // only return a suffix if it's something, but add a space before it
+                    suffix: suffix?.map(|s| format!(" {}", s)),
+                })
             }
-            ContributorRole::Editor => {
-                let editor = reference.editor()?.format(options.global.clone(), locale);
-                let result = format!("{} {}", editor, role);
-                Some(result)
-            }
-            ContributorRole::Translator => {
-                Some(reference.translator()?.format(options.global.clone(), locale))
-            }
-            ContributorRole::Publisher => {
-                Some(reference.publisher()?.format(options.global.clone(), locale))
-            }
-            ContributorRole::Director => todo!(),
-            ContributorRole::Recipient => todo!(),
-            ContributorRole::Interviewer => todo!(),
-            ContributorRole::Interviewee => todo!(),
-            ContributorRole::Composer => todo!(),
-            ContributorRole::Inventor => todo!(),
-            ContributorRole::Counsel => todo!(),
+            ContributorRole::Editor => Some(ProcValues {
+                value: reference.editor()?.format(options.global.clone(), locale),
+                prefix: None,
+                suffix: None,
+            }),
+            ContributorRole::Translator => Some(ProcValues {
+                value: reference.translator()?.format(options.global.clone(), locale),
+                prefix: None,
+                suffix: None,
+            }),
+            ContributorRole::Publisher => Some(ProcValues {
+                value: reference.publisher()?.format(options.global.clone(), locale),
+                prefix: None,
+                suffix: None,
+            }),
+            // TODO implement the rest
+            _ => None,
         }
     }
 }
 
-impl ComponentValue for TemplateDate {
-    fn value(
+impl ComponentValues for TemplateDate {
+    fn values(
         &self,
         reference: &InputReference,
         hints: &ProcHints,
         options: &RenderOptions,
-    ) -> Option<String> {
+    ) -> Option<ProcValues> {
         let locale: &Locale = &options.locale;
         let input_date: EdtfString = match &self.date {
             Dates::Issued => reference.issued()?,
@@ -413,8 +504,11 @@ impl ComponentValue for TemplateDate {
         } else {
             "".to_string()
         };
-
-        Some(formatted_date + &suffix)
+        Some(ProcValues {
+            value: formatted_date,
+            prefix: None,
+            suffix: Some(suffix), // put the suffix here, in case we need to do something with it
+        })
     }
 }
 
@@ -512,12 +606,19 @@ impl Processor {
         let hint: ProcHints =
             hints.get(&reference_id.unwrap()).cloned().unwrap_or_default();
         let options = self.get_render_options(self.style.clone(), self.locale.clone());
-        let value = component.value(reference, &hint, &options)?;
+        let values = component.values(reference, &hint, &options)?;
         let suppress = self.suppress_component(component, reference);
         let template_component = component.clone();
         // TODO add role here if specified in the style
-        if !value.is_empty() && !suppress {
-            Some(ProcTemplateComponent { template_component, value })
+        if !values.value.is_empty() && !suppress {
+            Some(ProcTemplateComponent {
+                template_component,
+                values: ProcValues {
+                    value: values.value,
+                    prefix: values.prefix,
+                    suffix: values.suffix,
+                },
+            })
         } else {
             None
         }
@@ -600,7 +701,9 @@ impl Processor {
                 SortKey::Author => {
                     references.par_sort_by(|a, b| {
                         let a_author = match a.author() {
-                            Some(author) => author.names(options.clone(), true).join("-"),
+                            Some(author) => {
+                                author.0.names(options.clone(), true).join("-")
+                            }
                             None => match self.get_author_substitute(a) {
                                 Some((substitute, _)) => substitute,
                                 None => "".to_string(),
@@ -608,7 +711,9 @@ impl Processor {
                         };
 
                         let b_author = match b.author() {
-                            Some(author) => author.names(options.clone(), true).join("-"),
+                            Some(author) => {
+                                author.0.names(options.clone(), true).join("-")
+                            }
                             None => match self.get_author_substitute(b) {
                                 Some((substitute, _)) => substitute,
                                 None => "".to_string(),
@@ -685,7 +790,7 @@ impl Processor {
             .map(|key| match key {
                 SortKey::Author => match reference.author() {
                     Some(author) => {
-                        author.names(options.clone().unwrap(), as_sorted).join("-")
+                        author.0.names(options.clone().unwrap(), as_sorted).join("-")
                     }
                     None => "".to_string(),
                 },

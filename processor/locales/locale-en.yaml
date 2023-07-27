@@ -4,14 +4,28 @@ terms:
   and: and
   and-symbol: "&"
   and-others: and others
-  anonymous: anonymous
+  anonymous: 
+    long: anonymous
+    short: anon
   at: at
   accessed: accessed
   available-at: available at
   by: by
-  circa: circa
-  circa-short: c
+  circa: 
+    long: circa
+    short: c
   et-al: et al
+roles:
+  editor:
+    singular:
+     long: editor
+     short: ed
+    plural:
+      long: editors # is this right?
+      short: eds
+    verb:
+      long: edited by
+      short: ed
 dates:
   months:
     long:

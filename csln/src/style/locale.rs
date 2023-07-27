@@ -1,6 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::{collections::HashMap, fs};
 //use unic_langid::LanguageIdentifier;
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
@@ -8,6 +8,7 @@ pub struct Locale {
     pub locale: String,
     // pub options: LocaleOptions,
     pub dates: DateTerms,
+    pub roles: HashMap<super::template::ContributorRole, ContributorTerm>,
     //pub contributors: ContributorTerms,
     pub terms: Terms, // TODO
 }
@@ -18,15 +19,12 @@ pub struct Terms {
     pub and: Option<String>,
     pub and_symbol: Option<String>,
     pub and_others: Option<String>,
-    pub anonymous: Option<String>,
-    pub anonymous_short: Option<String>,
+    pub anonymous: SimpleTerm,
     pub at: Option<String>,
     pub accessed: Option<String>,
     pub available_at: Option<String>,
     pub by: Option<String>,
-    pub circa: Option<String>,
-    pub circa_short: Option<String>,
-    pub cited: Option<String>,
+    pub circa: SimpleTerm,
     pub et_al: Option<String>,
     pub from: Option<String>,
     pub ibid: Option<String>,
@@ -61,25 +59,13 @@ pub struct SimpleTerm {
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct VerbTerm {
+pub struct ContributorTerm {
+    /// The long form of the term.
+    pub singular: SimpleTerm, // REVIEW maybe swap this?
+    /// The short form of the term.
+    pub plural: SimpleTerm,
+    /// The verb form of the term.
     pub verb: SimpleTerm,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
-pub struct ContributorTerms {
-    pub author: SimpleTerm,
-    pub collection_editor: SimpleTerm,
-    pub composer: SimpleTerm,
-    pub container_author: SimpleTerm,
-    pub director: SimpleTerm,
-    pub editor: SimpleTerm,
-    pub editorial_director: SimpleTerm,
-    pub interviewer: SimpleTerm,
-    pub illustrator: SimpleTerm,
-    pub original_author: SimpleTerm,
-    pub recipient: SimpleTerm,
-    pub reviewed_author: SimpleTerm,
-    pub translator: SimpleTerm,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
