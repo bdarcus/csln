@@ -22,7 +22,7 @@ hutt:
     main: Infinite Surprises
     sub: Value in the Creative Industries
   parent:
-    type: book
+    type: edited-book
     issued: "2011" # currerntly required in both places
     title: 
       main: The Worth of Goods
