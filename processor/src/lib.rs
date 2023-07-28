@@ -270,7 +270,7 @@ impl ComponentValues for TemplateNumber {
                 InputReference::SerialComponent(serial_component) => {
                     Some(serial_component.pages.as_ref()?.to_string())
                 }
-                InputReference::MonographComponent(monograph_component) => {
+                InputReference::CollectionComponent(monograph_component) => {
                     Some(monograph_component.pages.as_ref()?.to_string())
                 }
                 _ => None,
@@ -296,7 +296,7 @@ impl ComponentValues for TemplateSimpleString {
                 InputReference::SerialComponent(serial_component) => {
                     Some(serial_component.doi.as_ref()?.to_string())
                 }
-                InputReference::MonographComponent(monograph_component) => {
+                InputReference::CollectionComponent(monograph_component) => {
                     Some(monograph_component.doi.as_ref()?.to_string())
                 }
                 _ => None,
@@ -326,9 +326,10 @@ impl ComponentValues for TemplateTitle {
     ) -> Option<ProcValues> {
         let value = match &self.title {
             Titles::ParentMonograph => {
-                if let InputReference::MonographComponent(monograph_component) = reference
+                if let InputReference::CollectionComponent(collection_component) =
+                    reference
                 {
-                    Some(monograph_component.parent.title.to_string())
+                    Some(collection_component.parent.title.as_ref()?.to_string())
                 } else {
                     None
                 }
@@ -345,7 +346,7 @@ impl ComponentValues for TemplateTitle {
                 InputReference::Collection(collection) => {
                     Some(collection.title.as_ref()?.to_string())
                 }
-                InputReference::MonographComponent(monograph_component) => {
+                InputReference::CollectionComponent(monograph_component) => {
                     Some(monograph_component.title.as_ref()?.to_string())
                 }
                 InputReference::SerialComponent(serial_component) => {
@@ -635,9 +636,9 @@ impl Processor {
                     input_reference.set_id(key.clone());
                     input_reference
                 }
-                InputReference::MonographComponent(monograph_component) => {
+                InputReference::CollectionComponent(collection_component) => {
                     let mut input_reference =
-                        InputReference::MonographComponent(monograph_component.clone());
+                        InputReference::CollectionComponent(collection_component.clone());
                     input_reference.set_id(key.clone());
                     input_reference
                 }
@@ -756,8 +757,8 @@ impl Processor {
                         };
                         let ref_id = match reference {
                             InputReference::Monograph(monograph) => monograph.id.clone(),
-                            InputReference::MonographComponent(monograph_component) => {
-                                monograph_component.id.clone()
+                            InputReference::CollectionComponent(collection_component) => {
+                                collection_component.id.clone()
                             }
                             InputReference::SerialComponent(serial_component) => {
                                 serial_component.id.clone()
