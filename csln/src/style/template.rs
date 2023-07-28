@@ -136,9 +136,11 @@ pub struct TemplateContributor {
 pub enum ContributorForm {
     Long,
     Short,
+    Verb,
+    VerbShort,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
 pub enum ContributorRole {
     Author,

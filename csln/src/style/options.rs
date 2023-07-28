@@ -179,9 +179,7 @@ pub enum AndOptions {
 pub struct RoleOptions {
     /// Contributor roles for which to omit the role description.
     ///
-    /// The default value is `["author"]`, which omits the role for authors, including for any
-    /// author substitutions.
-    // TODO
+    /// The default value is `["author"]`, which omits the role for authors.
     pub omit: Vec<String>,
     pub form: String, // TODO
     pub rendering: Option<Rendering>,
@@ -260,12 +258,14 @@ pub struct Group {
 
 #[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Substitute {
+    pub contributor_role_form: Option<super::template::ContributorForm>,
     pub template: Vec<SubstituteKey>,
 }
 
 impl Default for Substitute {
     fn default() -> Self {
         Self {
+            contributor_role_form: None,
             template: vec![
                 SubstituteKey::Editor,
                 SubstituteKey::Title,
