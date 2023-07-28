@@ -49,7 +49,7 @@ pub enum InputReference {
     Monograph(Monograph),
     /// A component of a larger Monography, such as a chapter in a book.
     /// The parent monograph is referenced by its ID.
-    MonographComponent(MonographComponent),
+    CollectionComponent(CollectionComponent),
     /// A componet of a larger serial publication; for example a journal or newspaper article.
     /// The parent serial is referenced by its ID.
     SerialComponent(SerialComponent),
@@ -65,7 +65,7 @@ impl InputReference {
     pub fn id(&self) -> Option<RefID> {
         match self {
             InputReference::Monograph(r) => r.id.clone(),
-            InputReference::MonographComponent(r) => r.id.clone(),
+            InputReference::CollectionComponent(r) => r.id.clone(),
             InputReference::SerialComponent(r) => r.id.clone(),
             InputReference::Collection(r) => r.id.clone(),
         }
@@ -81,7 +81,7 @@ impl InputReference {
             InputReference::Monograph(r) => {
                 Some((r.author.clone()?, ContributorRole::Author))
             }
-            InputReference::MonographComponent(r) => {
+            InputReference::CollectionComponent(r) => {
                 Some((r.author.clone()?, ContributorRole::Author))
             }
             InputReference::SerialComponent(r) => {
@@ -96,6 +96,7 @@ impl InputReference {
         match self {
             // REVIEW: return string instead?
             InputReference::Collection(r) => r.editor.clone(),
+            InputReference::CollectionComponent(r) => r.parent.editor.clone(),
             _ => None,
         }
     }
@@ -106,7 +107,7 @@ impl InputReference {
         match self {
             // REVIEW: return string instead?
             InputReference::Monograph(r) => r.translator.clone(),
-            InputReference::MonographComponent(r) => r.translator.clone(),
+            InputReference::CollectionComponent(r) => r.translator.clone(),
             InputReference::SerialComponent(r) => r.translator.clone(),
             InputReference::Collection(r) => r.translator.clone(),
         }
@@ -118,7 +119,7 @@ impl InputReference {
         match self {
             // REVIEW: return string instead?
             InputReference::Monograph(r) => r.publisher.clone(),
-            InputReference::MonographComponent(r) => r.parent.publisher.clone(),
+            InputReference::CollectionComponent(r) => r.parent.publisher.clone(),
             InputReference::Collection(r) => r.publisher.clone(),
             _ => None,
         }
@@ -129,7 +130,7 @@ impl InputReference {
     pub fn title(&self) -> Option<Title> {
         match self {
             InputReference::Monograph(r) => Some(r.title.clone()),
-            InputReference::MonographComponent(r) => r.title.clone(),
+            InputReference::CollectionComponent(r) => r.title.clone(),
             InputReference::SerialComponent(r) => r.title.clone(),
             InputReference::Collection(r) => r.title.clone(),
         }
@@ -140,7 +141,7 @@ impl InputReference {
     pub fn issued(&self) -> Option<EdtfString> {
         match self {
             InputReference::Monograph(r) => Some(r.issued.clone()),
-            InputReference::MonographComponent(r) => Some(r.issued.clone()),
+            InputReference::CollectionComponent(r) => Some(r.issued.clone()),
             InputReference::SerialComponent(r) => Some(r.issued.clone()),
             InputReference::Collection(r) => Some(r.issued.clone()),
         }
@@ -149,7 +150,7 @@ impl InputReference {
     pub fn set_id(&mut self, id: String) {
         match self {
             InputReference::Monograph(monograph) => monograph.id = Some(id),
-            InputReference::MonographComponent(monograph_component) => {
+            InputReference::CollectionComponent(monograph_component) => {
                 monograph_component.id = Some(id)
             }
             InputReference::SerialComponent(serial_component) => {
@@ -305,7 +306,7 @@ pub enum MonographType {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema, PartialEq)]
 /// A component of a larger Monography, such as a chapter in a book.
 /// The parent monograph is referenced by its ID.
-pub struct MonographComponent {
+pub struct CollectionComponent {
     pub id: Option<RefID>,
     pub r#type: MonographComponentType,
     pub title: Option<Title>,
@@ -314,7 +315,7 @@ pub struct MonographComponent {
     pub issued: EdtfString,
     /// The parent work, as either a Monograph.
     // I would like to allow this to be either a Monograph or a RefID, but I can't figure out how to do that.
-    pub parent: Monograph,
+    pub parent: Collection,
     pub pages: Option<NumOrStr>,
     pub url: Option<Url>,
     pub accessed: Option<EdtfString>,
