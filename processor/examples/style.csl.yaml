@@ -2,6 +2,11 @@
 info:
   title: APA
 options: 
+  substitute: 
+    contributor_role_form: short
+    template:
+      - editor
+      - title
   processing: author-date # this sets sorting and grouping for author-date
   titles:
     component:
