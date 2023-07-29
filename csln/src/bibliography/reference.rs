@@ -30,7 +30,6 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 
 use crate::style::locale::Locale;
 use crate::style::options::{AndOptions, AndOtherOptions, DisplayAsSort};
-use crate::style::template::ContributorRole;
 use crate::style::{locale::MonthList, options::Config};
 use edtf::level_1::Edtf;
 use fmt::Display;
@@ -73,20 +72,12 @@ impl InputReference {
 
     /// Return the author.
     /// If the reference does not have an author, return None.
-    pub fn author(&self) -> Option<(Contributor, ContributorRole)> {
+    pub fn author(&self) -> Option<Contributor> {
         match self {
-            InputReference::Collection(r) => {
-                Some((r.editor.clone()?, ContributorRole::Editor))
-            }
-            InputReference::Monograph(r) => {
-                Some((r.author.clone()?, ContributorRole::Author))
-            }
-            InputReference::CollectionComponent(r) => {
-                Some((r.author.clone()?, ContributorRole::Author))
-            }
-            InputReference::SerialComponent(r) => {
-                Some((r.author.clone()?, ContributorRole::Author))
-            } // TODO: so this isn't really using the substitution config
+            InputReference::Monograph(r) => Some(r.author.clone()?),
+            InputReference::CollectionComponent(r) => Some(r.author.clone()?),
+            InputReference::SerialComponent(r) => Some(r.author.clone()?),
+            _ => None,
         }
     }
 
