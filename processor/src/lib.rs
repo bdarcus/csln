@@ -410,31 +410,73 @@ impl ComponentValues for TemplateContributor {
         let locale = options.locale.clone();
         match &self.contributor {
             ContributorRole::Author => {
-                let add_role_form =
-                    options.global.substitute.clone().unwrap().contributor_role_form;
-                let author_length =
-                    reference.author()?.0.names(options.global.clone(), true).len();
-                // get the actual role returned by the author method; can be a substitution
-                let role = reference.author()?.1;
-                // get the role string; if it's in fact author, it will be None
-                let suffix = add_role_form.map(|role_form| {
-                    role_to_string(&role, locale.clone(), role_form, author_length)
-                });
-                Some(ProcValues {
-                    value: reference
-                        .author()?
-                        .0
-                        .format(options.global.clone(), locale.clone()), // REVIEW too many clones?
-                    prefix: None,
-                    // only return a suffix if it's something, but add a space before it
-                    suffix: suffix?.map(|s| format!(" {}", s)),
-                })
+                let author = reference.author();
+                if author.is_some() {
+                    Some(ProcValues {
+                        value: author?.format(options.global.clone(), locale),
+                        prefix: None,
+                        suffix: None,
+                    })
+                } else {
+                    // TODO generalize the substitution
+                    let add_role_form =
+                        options.global.substitute.clone().unwrap().contributor_role_form;
+                    let editor = reference.editor()?;
+                    let editor_length = editor.names(options.global.clone(), true).len();
+                    // get the role string; if it's in fact author, it will be None
+                    let suffix = add_role_form.map(|role_form| {
+                        role_to_string(
+                            &ContributorRole::Editor,
+                            locale.clone(),
+                            role_form,
+                            editor_length,
+                        )
+                        .unwrap()
+                    });
+                    let suffix_padded = suffix.and_then(|s| {
+                        if s.is_empty() {
+                            None
+                        } else {
+                            Some(format!(" {}", s))
+                        }
+                    });
+                    Some(ProcValues {
+                        value: editor.format(options.global.clone(), locale),
+                        prefix: None,
+                        suffix: suffix_padded,
+                    })
+                }
             }
-            ContributorRole::Editor => Some(ProcValues {
-                value: reference.editor()?.format(options.global.clone(), locale),
-                prefix: None,
-                suffix: None,
-            }),
+            ContributorRole::Editor => {
+                // FIXME
+                match reference {
+                    &InputReference::Collection(_) => None,
+                    _ => {
+                        let editor = &reference.editor()?;
+                        let editor_length =
+                            editor.names(options.global.clone(), true).len();
+                        let suffix = options
+                            .global
+                            .substitute
+                            .clone()
+                            .unwrap()
+                            .contributor_role_form
+                            .map(|role_form| {
+                                role_to_string(
+                                    &self.contributor,
+                                    locale.clone(),
+                                    role_form,
+                                    editor_length,
+                                )
+                            });
+                        Some(ProcValues {
+                            value: editor.format(options.global.clone(), locale),
+                            prefix: None,
+                            suffix: suffix.unwrap(), // TODO handle None
+                        })
+                    }
+                }
+            }
             ContributorRole::Translator => Some(ProcValues {
                 value: reference.translator()?.format(options.global.clone(), locale),
                 prefix: None,
@@ -572,31 +614,6 @@ impl Processor {
             .collect()
     }
 
-    fn suppress_component(
-        &self,
-        component: &TemplateComponent,
-        reference: &InputReference,
-    ) -> bool {
-        let author_substitute = self.get_author_substitute(reference);
-        match component {
-            TemplateComponent::Contributor(contributor) => {
-                let role = contributor.contributor.clone();
-                if role == ContributorRole::Editor {
-                    author_substitute.is_some()
-                } else {
-                    false
-                }
-            }
-            TemplateComponent::Title(title) => {
-                let title_type = title.title.clone();
-                // TODO need more logic here
-                (title_type == Titles::Primary && author_substitute.is_some())
-                    && (author_substitute.unwrap().1 == SubstituteKey::Title)
-            }
-            _ => false, // This arm will match any value not covered by the above arms
-        }
-    }
-
     fn process_template_component(
         &self,
         component: &TemplateComponent,
@@ -608,10 +625,9 @@ impl Processor {
             hints.get(&reference_id.unwrap()).cloned().unwrap_or_default();
         let options = self.get_render_options(self.style.clone(), self.locale.clone());
         let values = component.values(reference, &hint, &options)?;
-        let suppress = self.suppress_component(component, reference);
         let template_component = component.clone();
         // TODO add role here if specified in the style
-        if !values.value.is_empty() && !suppress {
+        if !values.value.is_empty() {
             Some(ProcTemplateComponent {
                 template_component,
                 values: ProcValues {
@@ -702,9 +718,7 @@ impl Processor {
                 SortKey::Author => {
                     references.par_sort_by(|a, b| {
                         let a_author = match a.author() {
-                            Some(author) => {
-                                author.0.names(options.clone(), true).join("-")
-                            }
+                            Some(author) => author.names(options.clone(), true).join("-"),
                             None => match self.get_author_substitute(a) {
                                 Some((substitute, _)) => substitute,
                                 None => "".to_string(),
@@ -712,9 +726,7 @@ impl Processor {
                         };
 
                         let b_author = match b.author() {
-                            Some(author) => {
-                                author.0.names(options.clone(), true).join("-")
-                            }
+                            Some(author) => author.names(options.clone(), true).join("-"),
                             None => match self.get_author_substitute(b) {
                                 Some((substitute, _)) => substitute,
                                 None => "".to_string(),
@@ -791,7 +803,7 @@ impl Processor {
             .map(|key| match key {
                 SortKey::Author => match reference.author() {
                     Some(author) => {
-                        author.0.names(options.clone().unwrap(), as_sorted).join("-")
+                        author.names(options.clone().unwrap(), as_sorted).join("-")
                     }
                     None => "".to_string(),
                 },
