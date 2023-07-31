@@ -439,7 +439,7 @@ impl ComponentValues for TemplateContributor {
                         } else {
                             Some(format!(" {}", s))
                         }
-                    });
+                    }); // TODO extract this into separate method
                     Some(ProcValues {
                         value: editor.format(options.global.clone(), locale),
                         prefix: None,
@@ -448,32 +448,58 @@ impl ComponentValues for TemplateContributor {
                 }
             }
             ContributorRole::Editor => {
-                // FIXME
                 match reference {
                     &InputReference::Collection(_) => None,
                     _ => {
                         let editor = &reference.editor()?;
+                        let form = &self.form;
                         let editor_length =
                             editor.names(options.global.clone(), true).len();
-                        let suffix = options
-                            .global
-                            .substitute
-                            .clone()
-                            .unwrap()
-                            .contributor_role_form
-                            .map(|role_form| {
-                                role_to_string(
+                        // TODO handle verb and non-verb forms
+
+                        let proc_values = match form {
+                            ContributorForm::Verb | ContributorForm::VerbShort => {
+                                let prefix = role_to_string(
                                     &self.contributor,
                                     locale.clone(),
-                                    role_form,
+                                    form.clone(),
                                     editor_length,
-                                )
-                            });
-                        Some(ProcValues {
-                            value: editor.format(options.global.clone(), locale),
-                            prefix: None,
-                            suffix: suffix.unwrap(), // TODO handle None
-                        })
+                                );
+                                let prefix_padded = prefix.and_then(|s| {
+                                    if s.is_empty() {
+                                        None
+                                    } else {
+                                        Some(format!("{} ", s))
+                                    }
+                                });
+                                Some(ProcValues {
+                                    value: editor.format(options.global.clone(), locale),
+                                    prefix: prefix_padded,
+                                    suffix: None,
+                                })
+                            }
+                            _ => {
+                                let suffix = role_to_string(
+                                    &self.contributor,
+                                    locale.clone(),
+                                    form.clone(),
+                                    editor_length,
+                                );
+                                let suffix_padded = suffix.and_then(|s| {
+                                    if s.is_empty() {
+                                        None
+                                    } else {
+                                        Some(format!(" {}", s))
+                                    }
+                                });
+                                Some(ProcValues {
+                                    value: editor.format(options.global.clone(), locale),
+                                    prefix: None,
+                                    suffix: suffix_padded, // TODO handle None
+                                })
+                            }
+                        };
+                        return proc_values;
                     }
                 }
             }
