@@ -46,7 +46,7 @@ bibliography:
         wrap: parentheses
     - title: primary
     - contributor: editor
-      form: long
+      form: verb
     - title: parent-monograph
       prefix: In 
       emph: true
