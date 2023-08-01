@@ -1,6 +1,13 @@
-## Caveats
+## Caveats and Status
 
 This is not particularly close to ready for actual use, and needs more development, testing, and input.
+
+A very high-level summary of where this at ATM:
+
+- complete-ish draft models for bibliography, citations, styles, locales
+- YAML and JSON serialization and deserialization of these models, and a `csln-schemas` binary that will create JSON schemas to validate them
+- a processor which can create formatted string output using the above inputs, but which is designed for pluggable renderers (see #105); includes basic author substitution, basic EDTF date parsing and formatting, and a few other things I'm likely forgetting
+- a `csln` CLI that uses the above; it's Rust, so a single binary, and very fast.
 
 ## Vision
 
