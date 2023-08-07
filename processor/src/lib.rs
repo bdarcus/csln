@@ -653,6 +653,7 @@ impl Processor {
         let values = component.values(reference, &hint, &options)?;
         let template_component = component.clone();
         // TODO add role here if specified in the style
+        // TODO affixes from style?
         if !values.value.is_empty() {
             Some(ProcTemplateComponent {
                 template_component,
