@@ -607,6 +607,35 @@ impl fmt::Display for Contributor {
     }
 }
 
+impl StructuredName {
+    /// Return the initials of the name.
+    pub fn initials(&self, with: Option<String>) -> String {
+        let with = with.unwrap_or_default();
+        let initials = self
+            .given
+            .split_whitespace()
+            .map(|name| name.chars().next().unwrap_or_default())
+            .collect::<Vec<char>>();
+        let initials_string = initials
+            .iter()
+            .map(|&c| c.to_string())
+            .collect::<Vec<String>>()
+            .join(&with)
+            + &with;
+        initials_string
+    }
+}
+
+#[test]
+fn initials() {
+    let name = StructuredName {
+        given: "Jane Mary".to_string(),
+        family: "Smith".to_string(),
+    };
+    assert_eq!(name.initials(None), "JM");
+    assert_eq!(name.initials(Some(".".to_string())), "J.M.");
+}
+
 #[test]
 fn contributor_name() {
     let contributor =
