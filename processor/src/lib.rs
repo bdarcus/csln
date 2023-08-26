@@ -392,7 +392,25 @@ pub fn role_to_string(
 
 #[test]
 fn role_form_to_string() {
-    let locale = Locale::default();
+    use csln::style::locale::{ContributorTerm, Locale, SimpleTerm};
+    let mut locale = Locale::default();
+    locale.roles.insert(
+        ContributorRole::Editor,
+        ContributorTerm {
+            singular: SimpleTerm {
+                long: "editor".to_string(),
+                short: "ed".to_string(),
+            },
+            plural: SimpleTerm {
+                long: "editors".to_string(),
+                short: "eds".to_string(),
+            },
+            verb: SimpleTerm {
+                long: "edited by".to_string(),
+                short: "ed".to_string(),
+            },
+        },
+    );
     let role = ContributorRole::Editor;
     let form = ContributorForm::Long;
     let length = 1;
