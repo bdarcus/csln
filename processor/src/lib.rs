@@ -475,7 +475,7 @@ impl ComponentValues for TemplateContributor {
                             editor.names(options.global.clone(), true).len();
                         // TODO handle verb and non-verb forms
 
-                        let proc_values = match form {
+                        match form {
                             ContributorForm::Verb | ContributorForm::VerbShort => {
                                 let prefix = role_to_string(
                                     &self.contributor,
@@ -516,8 +516,7 @@ impl ComponentValues for TemplateContributor {
                                     suffix: suffix_padded, // TODO handle None
                                 })
                             }
-                        };
-                        proc_values
+                        }
                     }
                 }
             }
