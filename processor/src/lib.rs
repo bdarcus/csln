@@ -517,7 +517,7 @@ impl ComponentValues for TemplateContributor {
                                 })
                             }
                         };
-                        return proc_values;
+                        proc_values
                     }
                 }
             }
