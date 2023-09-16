@@ -1,4 +1,8 @@
 ---
+- mode: non-integral
+  references:
+    - refId: "doe1"
+    - refId: "doe2"
 - mode: integral
   references:
     - refId: "doe2"
