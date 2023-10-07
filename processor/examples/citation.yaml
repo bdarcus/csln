@@ -1,13 +1,13 @@
 ---
 - mode: non-integral
-  references:
+  citation_items:
     - refId: "doe1"
     - refId: "doe2"
 - mode: integral
-  references:
+  citation_items:
     - refId: "doe2"
       suffix: ["page 42"]
 - mode: non-integral
   prefix: "see "
-  references:
+  citation_items:
     - refId: "doe3"
