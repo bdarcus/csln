@@ -6,16 +6,34 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct CitationList(pub Vec<Citation>);
 
+/* data Citation a =
+  Citation { citationId         :: Maybe Text
+           , citationNoteNumber :: Maybe Int
+           , citationItems      :: [CitationItem a] }
+
+data CitationItem a =
+  CitationItem
+  { citationItemId             :: ItemId
+  , citationItemLabel          :: Maybe Text
+  , citationItemLocator        :: Maybe Text
+  , citationItemType           :: CitationItemType
+  , citationItemPrefix         :: Maybe a
+  , citationItemSuffix         :: Maybe a
+  , citationItemData           :: Maybe (Reference a)
+  } */
+
 #[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct Citation {
+    pub note_number: Option<i32>,
+    pub id: Option<String>,
     /// Local citation rendering option; aka command or style.
-    /// Both are more general than author-date styles, and can apply to any citation style.
+    /// These are more general than author-date styles, and can apply to any citation style.
     pub mode: CitationModeType,
     /// The string that prefaces a list of citation references.
     pub prefix: Option<String>,
-    /// A vector of CitatoinReference objects.
-    pub references: Vec<CitationReference>,
-    /// A string that follows a list of citation references.
+    /// A vector of CitationItem objects.
+    pub citation_items: Vec<CitationItem>,
+    /// A string that follows a list of qcitation references.
     pub suffix: Option<String>,
 }
 
@@ -31,7 +49,8 @@ pub enum CitationModeType {
 
 #[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-pub struct CitationReference {
+pub struct CitationItem {
+    pub label: Option<String>,
     /// A string that prefaces the citation reference.
     pub prefix: Option<String>,
     /// The unique identifier token for the citation reference.

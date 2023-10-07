@@ -449,6 +449,7 @@ impl ComponentValues for TemplateContributor {
                             role_form,
                             editor_length,
                         )
+                        // FIXME
                         .unwrap()
                     });
                     let suffix_padded = suffix.and_then(|s| {
@@ -739,7 +740,7 @@ impl Processor {
         self.citations
             .iter()
             .flat_map(|c| {
-                c.references
+                c.citation_items
                     .iter()
                     .map(|cr| cr.ref_id.clone())
                     .collect::<Vec<String>>()
