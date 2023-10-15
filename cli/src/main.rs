@@ -3,7 +3,7 @@ use csln::bibliography::HasFile;
 use csln::bibliography::InputBibliography as Bibliography;
 use csln::citation::Citation;
 use csln::style::Style;
-use processor::{refs_to_string, Processor};
+use processor::Processor;
 
 #[derive(Parser, Default, Debug)]
 #[clap(author = "Bruce D'Arcus", version, about = "A CLI for CSLN")]
@@ -27,6 +27,6 @@ fn main() {
     let locale = csln::style::locale::Locale::from_file(&opts.locale);
     let processor: Processor = Processor::new(style, bibliography, citations, locale);
     let rendered_refs = processor.process_references();
-    println!("{}", refs_to_string(rendered_refs));
-    //println!("{}", serde_json::to_string_pretty(&rendered_refs).unwrap());
+    //println!("{}", refs_to_string(rendered_refs));
+    println!("{}", serde_json::to_string_pretty(&rendered_refs).unwrap());
 }
