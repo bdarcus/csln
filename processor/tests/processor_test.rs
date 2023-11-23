@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use csln::bibliography::HasFile;
     use csln::citation::Citation;
+    use csln::HasFile;
     // create tests for Processor::get_proc_references and Processor::sort_proc_references
     #[test]
     fn sorts_references() {

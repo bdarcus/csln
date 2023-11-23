@@ -1,8 +1,8 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use csln::bibliography::HasFile;
 use csln::bibliography::InputBibliography as Bibliography;
 use csln::citation::Citation;
 use csln::style::Style;
+use csln::HasFile;
 use csln_processor::Processor;
 use std::time::Duration;
 
