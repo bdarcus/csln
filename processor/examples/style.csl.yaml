@@ -36,6 +36,8 @@ citation:
   template:
     - contributor: author
       form: short
+    - date: issued
+      form: year
 bibliography: 
   template:
     - contributor: author
