@@ -6,7 +6,7 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 use csln::bibliography::reference::InputReference;
 use csln::bibliography::reference::{EdtfString, RefID};
 use csln::bibliography::InputBibliography as Bibliography;
-use csln::citation::{Citation, CitationItem};
+use csln::citation::{Citation, CitationItem, Citations};
 use csln::style::locale::Locale;
 use csln::style::options::{Config, MonthFormat, SortKey, SubstituteKey};
 use csln::style::template::{
@@ -60,7 +60,7 @@ pub struct Processor {
     /// The input bibliography.
     bibliography: Bibliography,
     /// The input citations.
-    citations: Vec<Citation>,
+    citations: Citations,
     /// The output locale.
     locale: Locale,
 }
@@ -622,47 +622,48 @@ impl ComponentValues for TemplateDate {
 /// The intermediate representation of renderered citations and bibliography..
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct ProcReferences {
-    pub bibliography: Vec<ProcTemplate>,
-    pub citations: Option<Vec<ProcTemplate>>,
+    pub bibliography: ProcBibliography,
+    pub citations: ProcCitations,
 }
+
+pub type ProcBibliography = Vec<ProcTemplate>;
+pub type ProcCitationItem = Vec<ProcTemplateComponent>;
+pub type ProcCitation = Vec<ProcCitationItem>;
+pub type ProcCitations = Vec<ProcCitation>;
 
 impl Processor {
     /// Render references to AST.
     #[inline]
     pub fn process_references(&self) -> ProcReferences {
         let sorted_references = self.sort_references(self.get_references());
-        let bibliography = sorted_references
+        let bibliography: ProcBibliography = sorted_references
             .par_iter()
             .map(|reference| self.process_reference(reference))
             .collect();
-        let citations = self.process_citations(&self.citations);
-        ProcReferences { bibliography, citations: Some(citations) }
+        let citations: ProcCitations = self.process_citations(&self.citations);
+        ProcReferences { bibliography, citations }
     }
 
-    fn process_citations(
-        &self,
-        citations: &[Citation],
-    ) -> Vec<Vec<ProcTemplateComponent>> {
+    fn process_citations(&self, citations: &[Citation]) -> ProcCitations {
         citations
             .iter()
             .map(|citation| self.process_citation(citation))
             .collect()
     }
 
-    fn process_citation(&self, citation: &Citation) -> Vec<ProcTemplateComponent> {
-        // map the citation items to a vector of ProcTemplateComponents
+    fn process_citation(&self, citation: &Citation) -> ProcCitation {
+        // map citation_items to a ProcCitation
         citation
             .citation_items
             .iter()
             .filter_map(|citation_item| self.process_citation_item(citation_item))
-            .flatten() // Flatten the nested vectors
             .collect()
     }
 
     fn process_citation_item(
         &self,
         citation_item: &CitationItem,
-    ) -> Option<Vec<ProcTemplateComponent>> {
+    ) -> Option<ProcCitationItem> {
         let citation_style = self.style.citation.clone();
         let reference = self.get_reference(&citation_item.ref_id)?;
         let proc_template =
@@ -976,7 +977,7 @@ impl Processor {
     pub fn new(
         style: Style,
         bibliography: Bibliography,
-        citations: Vec<Citation>,
+        citations: Citations,
         locale: Locale,
     ) -> Processor {
         Processor { style, bibliography, citations, locale }

@@ -1,8 +1,8 @@
 use clap::Parser;
-use csln::bibliography::HasFile;
 use csln::bibliography::InputBibliography as Bibliography;
-use csln::citation::Citation;
+use csln::citation::Citations;
 use csln::style::Style;
+use csln::HasFile;
 use processor::Processor;
 
 #[derive(Parser, Default, Debug)]
@@ -15,6 +15,9 @@ pub struct Opts {
     /// The path to the CSLN bibliography file
     bibliography: String,
     #[clap(short, long)]
+    /// The optional path to the CSLN citation file
+    citation: Option<String>,
+    #[clap(short, long)]
     /// The path to the CSLN locale file
     locale: String,
 }
@@ -23,7 +26,8 @@ fn main() {
     let opts = Opts::parse();
     let style: Style = Style::from_file(&opts.style);
     let bibliography: Bibliography = Bibliography::from_file(&opts.bibliography);
-    let citations: Vec<Citation> = Vec::new();
+    // TODO load citations from file
+    let citations: Citations = Citations::from_file(&opts.citation.unwrap_or_default());
     let locale = csln::style::locale::Locale::from_file(&opts.locale);
     let processor: Processor = Processor::new(style, bibliography, citations, locale);
     let rendered_refs = processor.process_references();
