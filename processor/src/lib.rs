@@ -644,7 +644,7 @@ impl Processor {
         ProcReferences { bibliography, citations }
     }
 
-    fn process_citations(&self, citations: &[Citation]) -> ProcCitations {
+    fn process_citations(&self, citations: &Citations) -> ProcCitations {
         citations
             .iter()
             .map(|citation| self.process_citation(citation))
@@ -652,7 +652,6 @@ impl Processor {
     }
 
     fn process_citation(&self, citation: &Citation) -> ProcCitation {
-        // map citation_items to a ProcCitation
         citation
             .citation_items
             .iter()
@@ -660,7 +659,7 @@ impl Processor {
             .collect()
     }
 
-    fn process_citation_item(
+    pub fn process_citation_item(
         &self,
         citation_item: &CitationItem,
     ) -> Option<ProcCitationItem> {
@@ -677,6 +676,7 @@ impl Processor {
         reference: &InputReference,
     ) -> Vec<ProcTemplateComponent> {
         let bibliography_style = self.style.bibliography.clone();
+        // TODO bibliography should probably be Optional
         self.process_template(reference, bibliography_style.unwrap().template.as_slice())
     }
 

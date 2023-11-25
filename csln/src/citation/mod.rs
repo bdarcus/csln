@@ -39,7 +39,7 @@ data CitationItem a =
   , citationItemData           :: Maybe (Reference a)
   } */
 
-#[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct Citation {
     pub note_number: Option<i32>,
     pub id: Option<String>,
@@ -54,7 +54,7 @@ pub struct Citation {
     pub suffix: Option<String>,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum CitationModeType {
     /// Places the author inline in the text; also known as "narrative" or "in text" citations.
@@ -64,7 +64,7 @@ pub enum CitationModeType {
     NonIntegral,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CitationItem {
     pub label: Option<String>,
@@ -78,7 +78,7 @@ pub struct CitationItem {
 
 #[allow(clippy::large_enum_variant)] // REVIEW is this a problem?
 /// A key-value object, or a string.
-#[derive(Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(untagged)]
 pub enum Locator {
     KeyValue(LocatorKeyValue),
@@ -87,7 +87,7 @@ pub enum Locator {
 
 pub type LocatorKeyValue = (LocatorTerm, String);
 
-#[derive(Debug, Default, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum LocatorTerm {
     Book,
