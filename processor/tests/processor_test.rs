@@ -1,43 +1,79 @@
 #[cfg(test)]
 mod tests {
-    use csln::citation::Citation;
+    use csln::citation::{Citation, CitationItem, Citations};
     use csln::HasFile;
-    // create tests for Processor::get_proc_references and Processor::sort_proc_references
-    #[test]
-    fn sorts_references() {
+
+    #[allow(dead_code)]
+    // FIXME why these warnings?
+    struct TestFixture {
+        style: csln::style::Style,
+        locale: csln::style::locale::Locale,
+        bibliography: csln::bibliography::InputBibliography,
+        citations: Vec<Citation>,
+        processor: csln_processor::Processor,
+    }
+
+    fn setup() -> TestFixture {
         let style = csln::style::Style::from_file("examples/style.csl.yaml");
         let locale = csln::style::locale::Locale::from_file("locales/locale-en.yaml");
         let bibliography =
             csln::bibliography::InputBibliography::from_file("examples/ex1.bib.yaml");
-        let citations: Vec<Citation> = Vec::new();
-        let processor =
-            csln_processor::Processor::new(style, bibliography, citations, locale);
-        let refs = processor.get_references();
-        let sorted_refs = processor.sort_references(refs);
+        let citations: Citations =
+            csln::citation::Citations::from_file("examples/citation.yaml");
+        let processor = csln_processor::Processor::new(
+            style.clone(),
+            bibliography.clone(),
+            citations.clone(),
+            locale.clone(),
+        );
+
+        TestFixture { style, locale, bibliography, citations, processor }
+    }
+
+    #[test]
+    fn gets_references() {
+        let fixture = setup();
+        assert_eq!(fixture.processor.get_references().len(), 36);
+        assert!(fixture.processor.get_reference("doe1").is_some());
+        assert!(fixture.processor.get_proc_hints().contains_key("doe1"));
+    }
+
+    #[test]
+    fn sorts_references() {
+        let fixture = setup();
+        let refs = fixture.processor.get_references();
+        let sorted_refs = fixture.processor.sort_references(refs);
         assert_eq!(sorted_refs.len(), 36);
         assert_eq!(sorted_refs.last().unwrap().title().unwrap().to_string(), "Title 4");
     }
 
     #[test]
+    fn process_citation_item() {
+        let fixture = setup();
+        let citation_item = CitationItem {
+            ref_id: "doe1".to_string(),
+            label: None,
+            prefix: Some("Prefix".to_string()),
+            suffix: None,
+        };
+        let result = fixture.processor.process_citation_item(&citation_item);
+        assert_eq!(result.unwrap()[0].values.value.to_string(), "Doe, John".to_string());
+    }
+
+    #[test]
     fn derives_proc_hints() {
-        let style = csln::style::Style::from_file("examples/style.csl.yaml");
-        let locale = csln::style::locale::Locale::from_file("locales/locale-en.yaml");
-        let citations: Vec<Citation> = Vec::new();
-        let bibliography =
-            csln::bibliography::InputBibliography::from_file("examples/ex1.bib.yaml");
-        let processor =
-            csln_processor::Processor::new(style, bibliography, citations, locale);
-        let proc_hints = processor.get_proc_hints();
+        let fixture = setup();
+        let proc_hints = fixture.processor.get_proc_hints();
         assert_eq!(proc_hints["doe7"].group_index, 1);
         assert_eq!(proc_hints["doe7"].group_length, 1);
     }
 
     #[test]
     fn loads_and_parses_locale_file() {
-        let locale = csln::style::locale::Locale::from_file("locales/locale-en.yaml");
-        assert_eq!(locale.dates.months.long[0], "January");
-        assert_eq!(locale.dates.months.long[11], "December");
-        assert_eq!(locale.dates.months.short[0], "Jan");
-        assert_eq!(locale.dates.months.short[11], "Dec");
+        let fixture = setup();
+        assert_eq!(fixture.locale.dates.months.long[0], "January");
+        assert_eq!(fixture.locale.dates.months.long[11], "December");
+        assert_eq!(fixture.locale.dates.months.short[0], "Jan");
+        assert_eq!(fixture.locale.dates.months.short[11], "Dec");
     }
 }
