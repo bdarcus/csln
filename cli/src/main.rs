@@ -26,8 +26,11 @@ fn main() {
     let opts = Opts::parse();
     let style: Style = Style::from_file(&opts.style);
     let bibliography: Bibliography = Bibliography::from_file(&opts.bibliography);
-    // TODO load citations from file
-    let citations: Citations = Citations::from_file(&opts.citation.unwrap_or_default());
+    let citations: Citations = if opts.citation.is_none() {
+        Citations::default()
+    } else {
+        Citations::from_file(&opts.citation.unwrap_or_default())
+    };
     let locale = csln::style::locale::Locale::from_file(&opts.locale);
     let processor: Processor = Processor::new(style, bibliography, citations, locale);
     let rendered_refs = processor.process_references();
