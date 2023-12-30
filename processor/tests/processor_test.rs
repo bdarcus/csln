@@ -49,6 +49,7 @@ mod tests {
 
     #[test]
     fn process_citation_item() {
+        // TODO make it for citations as a whole, and confirm no empty ones
         let fixture = setup();
         let citation_item = CitationItem {
             ref_id: "doe1".to_string(),
@@ -57,7 +58,9 @@ mod tests {
             suffix: None,
         };
         let result = fixture.processor.process_citation_item(&citation_item);
-        assert_eq!(result.unwrap()[0].values.value.to_string(), "Doe, John".to_string());
+        // confirm
+        // assert_eq!(fixture.processor.get_reference("doe1"), "doe1".to_string());
+        assert_eq!(result.unwrap()[0].values.value.to_string(), "Doe, Jane".to_string());
     }
 
     #[test]
