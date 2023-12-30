@@ -623,7 +623,8 @@ impl ComponentValues for TemplateDate {
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 pub struct ProcReferences {
     pub bibliography: ProcBibliography,
-    pub citations: ProcCitations,
+    /// Process the citations, if there are any.
+    pub citations: Option<ProcCitations>,
 }
 
 pub type ProcBibliography = Vec<ProcTemplate>;
@@ -640,7 +641,11 @@ impl Processor {
             .par_iter()
             .map(|reference| self.process_reference(reference))
             .collect();
-        let citations: ProcCitations = self.process_citations(&self.citations);
+        let citations = if self.citations.is_empty() {
+            None
+        } else {
+            Some(self.process_citations(&self.citations))
+        };
         ProcReferences { bibliography, citations }
     }
 
@@ -652,6 +657,7 @@ impl Processor {
     }
 
     fn process_citation(&self, citation: &Citation) -> ProcCitation {
+        // TODO handle the prefix and suffix, though am uncertain how to best do that
         citation
             .citation_items
             .iter()
@@ -707,7 +713,8 @@ impl Processor {
         let hints = self.get_proc_hints();
         let reference_id: Option<RefID> = reference.id();
         let hint: ProcHints =
-            hints.get(&reference_id.unwrap()).cloned().unwrap_or_default();
+            // TODO why would reference_id be None?
+            hints.get(&reference_id.unwrap_or_default()).cloned().unwrap_or_default();
         let options = self.get_render_options(self.style.clone(), self.locale.clone());
         let values = component.values(reference, &hint, &options)?;
         let template_component = component.clone();
