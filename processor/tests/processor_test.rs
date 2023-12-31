@@ -34,7 +34,7 @@ mod tests {
     fn gets_references() {
         let fixture = setup();
         assert_eq!(fixture.processor.get_references().len(), 36);
-        assert!(fixture.processor.get_reference("doe1").is_some());
+        assert!(fixture.processor.get_reference("doe1").is_ok());
         assert_eq!(
             fixture.processor.get_reference("doe1").unwrap().title(),
             Some(csln::bibliography::reference::Title::Single("Title 2".to_string()))
