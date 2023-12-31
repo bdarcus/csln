@@ -35,6 +35,10 @@ mod tests {
         let fixture = setup();
         assert_eq!(fixture.processor.get_references().len(), 36);
         assert!(fixture.processor.get_reference("doe1").is_some());
+        assert_eq!(
+            fixture.processor.get_reference("doe1").unwrap().title(),
+            Some(csln::bibliography::reference::Title::Single("Title 2".to_string()))
+        );
         assert!(fixture.processor.get_proc_hints().contains_key("doe1"));
     }
 
