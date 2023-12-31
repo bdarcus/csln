@@ -658,11 +658,13 @@ impl Processor {
 
     fn process_citation(&self, citation: &Citation) -> ProcCitation {
         // TODO handle the prefix and suffix, though am uncertain how to best do that
-        citation
+        let pcitation = citation
             .citation_items
             .iter()
             .filter_map(|citation_item| self.process_citation_item(citation_item))
-            .collect()
+            .collect();
+        println!("pcitation: {:?}", pcitation);
+        pcitation
     }
 
     pub fn process_citation_item(
@@ -670,9 +672,11 @@ impl Processor {
         citation_item: &CitationItem,
     ) -> Option<ProcCitationItem> {
         let citation_style = self.style.citation.clone();
-        let reference = self.get_reference(&citation_item.ref_id)?;
+        // FIXME below is returning None
+        let reference = self.get_reference(&citation_item.ref_id).unwrap();
         let proc_template =
             self.process_template(&reference, citation_style?.template.as_slice());
+        println!("proc_template: {:?}", proc_template);
         Some(proc_template)
     }
 
@@ -768,15 +772,17 @@ impl Processor {
     }
 
     /// Get a reference from the bibliography by id/citekey.
-    pub fn get_reference(&self, id: &str) -> Option<InputReference> {
-        self.bibliography.get(id).cloned()
+    pub fn get_reference(&self, id: &str) -> Result<InputReference, String> {
+        match self.bibliography.get(id) {
+            Some(reference) => Ok(reference.clone()),
+            None => Err(format!("Invalid reference ID: {}", id)),
+        }
     }
 
     pub fn get_cited_references(&self) -> Vec<InputReference> {
         let mut cited_references = Vec::new();
         for key in &self.get_cited_keys() {
-            let reference = self.get_reference(key);
-            if let Some(reference) = reference {
+            if let Ok(reference) = self.get_reference(key) {
                 cited_references.push(reference);
             }
         }
