@@ -30,7 +30,7 @@ More concretely, the goal is a suite of models, libraries and tools that make ex
 For the `Style` model:
 
 1. As with [CSL 1.0][CSL], styling is agnostic of input and output formats, including whether one is using an author-date citation style, numeric, or note-based. 
-2. Keep the template language as simple as possible, in the hopes we can keep it stable going forward, while still enabling innnovation.
+2. Keep the template language as simple as possible, in the hopes we can keep it stable going forward, while still enabling innnovation. In a GUI, behavior (sorting, substitution, etc) would be configured in those options, and not in the templates.
 3. Add new functionality primarily via option groups.
 
 For the `InputReference` and `Citation` models:
