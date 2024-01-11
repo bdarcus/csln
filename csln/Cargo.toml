@@ -30,3 +30,6 @@ rayon = "1.7.0"
 #icu_testdata = { version = "1.2.0", features = ["icu_datetime_experimental"] }
 #indexmap = { version = "2.0.0", features = ["std"] }
 
+[lints]
+workspace = true
+

@@ -5,3 +5,17 @@ members = [
     "csln",
     "processor",
 ]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+# not sure on what to turn on and off
+complexity = "allow"
+expect_used = "warn"
+large_enum_variant = "allow"
+needless_borrow = "warn"
+needless_question_mark = "warn"
+needless_return = "warn"
+style = "allow"
+unwrap_used = "warn"
