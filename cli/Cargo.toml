@@ -21,3 +21,6 @@ serde_json = "1.0"
 csln = { path = "../csln", package = "csln" }
 processor = { path = "../processor", package = "csln-processor" }
 
+[lints]
+workspace = true
+
