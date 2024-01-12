@@ -1,21 +1,5 @@
-use crate::HasFile;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::fs;
-
-impl HasFile for Citations {
-    fn from_file(citations_path: &str) -> Citations {
-        let contents =
-            fs::read_to_string(citations_path).expect("Failed to read citations file");
-        if citations_path.ends_with(".json") {
-            serde_json::from_str(&contents).expect("Failed to parse JSON")
-        } else if citations_path.ends_with(".yaml") || citations_path.ends_with(".yml") {
-            serde_yaml::from_str(&contents).expect("Failed to parse YAML")
-        } else {
-            panic!("Citations file must be in YAML or JSON format")
-        }
-    }
-}
 
 pub type Citations = Vec<Citation>;
 

@@ -1,9 +1,8 @@
+use anyhow::Context;
 use clap::Parser;
-use csln::bibliography::InputBibliography as Bibliography;
 use csln::citation::Citations;
-use csln::style::Style;
-use csln::HasFile;
-use processor::Processor;
+use csln::from_file;
+use processor::{ProcReferences, Processor};
 
 #[derive(Parser, Default, Debug)]
 #[clap(author = "Bruce D'Arcus", version, about = "A CLI for CSLN")]
@@ -16,7 +15,7 @@ pub struct Opts {
     bibliography: String,
     #[clap(short, long)]
     /// The optional path to the CSLN citation file
-    citation: Option<String>,
+    citations: Option<String>,
     #[clap(short, long)]
     /// The path to the CSLN locale file
     locale: String,
@@ -24,16 +23,26 @@ pub struct Opts {
 
 fn main() {
     let opts = Opts::parse();
-    let style: Style = Style::from_file(&opts.style);
-    let bibliography: Bibliography = Bibliography::from_file(&opts.bibliography);
-    let citations: Citations = if opts.citation.is_none() {
+    let style = from_file(&opts.style).context("Style file?");
+    let bibliography = from_file(&opts.bibliography).context("Bibliography file?");
+    let citations: Citations = if opts.citations.is_none() {
         Citations::default()
     } else {
-        Citations::from_file(&opts.citation.unwrap_or_default())
+        from_file(opts.citations.unwrap()).unwrap_or_default()
     };
-    let locale = csln::style::locale::Locale::from_file(&opts.locale);
-    let processor: Processor = Processor::new(style, bibliography, citations, locale);
-    let rendered_refs = processor.process_references();
+    let locale = from_file(&opts.locale).context("Locale file?");
+    let processor: Processor = Processor::new(
+        style.expect("msg"), // REVIEW why?
+        bibliography.expect("msg"),
+        citations,
+        locale.expect("msg"),
+    );
+    let rendered_refs: ProcReferences = processor.process_references();
+    let serialized_refs = serde_json::to_string_pretty(&rendered_refs);
     //println!("{}", refs_to_string(rendered_refs));
-    println!("{}", serde_json::to_string_pretty(&rendered_refs).unwrap());
+    if serialized_refs.is_err() {
+        println!("Error: {:?}", serialized_refs);
+    } else {
+        println!("{}", serialized_refs.unwrap());
+    }
 }
