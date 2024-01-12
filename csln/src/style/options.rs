@@ -99,7 +99,7 @@ fn author_date_config() {
     let sort = config.sort.unwrap_or_default();
     assert_eq!(sort.template[0].key, SortKey::Author);
     assert_eq!(sort.template[1].key, SortKey::Year);
-    assert!(config.disambiguate.unwrap().year_suffix);
+    assert!(config.disambiguate.unwrap_or_default().year_suffix);
 }
 
 #[derive(JsonSchema, Debug, PartialEq, Clone, Serialize, Deserialize)]

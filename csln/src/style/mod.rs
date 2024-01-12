@@ -6,7 +6,6 @@ SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs;
 
 pub mod locale;
 pub mod options;
@@ -14,20 +13,6 @@ use options::Config;
 
 pub mod template;
 use template::TemplateComponent;
-
-impl Style {
-    /// Load and parse a YAML or JSON style file.
-    pub fn from_file(style_path: &str) -> Style {
-        let contents = fs::read_to_string(style_path).expect("Failed to read style file");
-        if style_path.ends_with(".json") {
-            serde_json::from_str(&contents).expect("Failed to parse JSON")
-        } else if style_path.ends_with(".yaml") || style_path.ends_with(".yml") {
-            serde_yaml::from_str(&contents).expect("Failed to parse YAML")
-        } else {
-            panic!("Style file must be in YAML or JSON format")
-        }
-    }
-}
 
 /// The Style model.
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
