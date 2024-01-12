@@ -1,6 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs};
+use std::collections::HashMap;
 //use unic_langid::LanguageIdentifier;
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
@@ -28,20 +28,6 @@ pub struct Terms {
     pub et_al: Option<String>,
     pub from: Option<String>,
     pub ibid: Option<String>,
-}
-
-impl Locale {
-    pub fn from_file(locale_path: &str) -> Locale {
-        let contents =
-            fs::read_to_string(locale_path).expect("Failed to read locale file");
-        if locale_path.ends_with(".json") {
-            serde_json::from_str(&contents).expect("Failed to parse JSON")
-        } else if locale_path.ends_with(".yaml") || locale_path.ends_with(".yml") {
-            serde_yaml::from_str(&contents).expect("Failed to parse YAML")
-        } else {
-            panic!("Locale file must be in YAML or JSON format")
-        }
-    }
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]

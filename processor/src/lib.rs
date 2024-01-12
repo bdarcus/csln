@@ -21,6 +21,7 @@ use rayon::prelude::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 //use std::cmp::Ordering;
+//use anyhow::Result;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::option::Option;
@@ -151,6 +152,8 @@ impl ProcTemplateComponent {
 
 #[derive(Debug, Deserialize, Serialize, Clone, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
+/// Holds the intermediate processing hints for a reference that can be used
+/// to render the output; particularly for disambiguation.
 pub struct ProcHints {
     /// Whether or not the reference needs to be disambiguated.
     pub disamb_condition: bool,
@@ -190,6 +193,7 @@ impl Default for ProcHints {
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+/// Configuration options.
 pub struct RenderOptions {
     // Options for the style, including default options.
     global: Config,
@@ -438,7 +442,8 @@ impl ComponentValues for TemplateContributor {
                 } else {
                     // TODO generalize the substitution
                     let add_role_form =
-                        options.global.substitute.clone().unwrap().contributor_role_form;
+                        // REVIEW is this correct?
+                        options.global.substitute.clone()?.contributor_role_form;
                     let editor = reference.editor()?;
                     let editor_length = editor.names(options.global.clone(), true).len();
                     // get the role string; if it's in fact author, it will be None
@@ -449,16 +454,8 @@ impl ComponentValues for TemplateContributor {
                             role_form,
                             editor_length,
                         )
-                        // FIXME
-                        .unwrap()
                     });
-                    let suffix_padded = suffix.and_then(|s| {
-                        if s.is_empty() {
-                            None
-                        } else {
-                            Some(format!(" {}", s))
-                        }
-                    }); // TODO extract this into separate method
+                    let suffix_padded = suffix.and_then(|s| Some(format!(" {}", s?))); // TODO extract this into separate method
                     Some(ProcValues {
                         value: editor.format(options.global.clone(), locale),
                         prefix: None,
@@ -565,7 +562,11 @@ impl ComponentValues for TemplateDate {
 
         // TODO: implement this along with localized dates
         fn _config_fmt(options: &RenderOptions) -> DateTimeFormatterOptions {
-            match options.global.dates.as_ref().unwrap().month {
+            let date_options = match options.global.dates.clone() {
+                Some(dates) => dates,
+                None => return DateTimeFormatterOptions::default(), // or handle the None case accordingly
+            };
+            match date_options.month {
                 MonthFormat::Long => todo!("long"),
                 MonthFormat::Short => todo!("short"),
                 MonthFormat::Numeric => todo!("numeric"),
@@ -584,7 +585,7 @@ impl ComponentValues for TemplateDate {
             // TODO need to check form here also
             // && self.form == style::template::DateForm::Year
             // REVIEW: ugly, and needs to be smarter
-            && options.global.processing.clone().unwrap().config().disambiguate.unwrap().year_suffix
+            && options.global.processing.clone().unwrap_or_default().config().disambiguate.unwrap_or_default().year_suffix
             && formatted_date.len() == 4
         {
             int_to_letter((hints.group_index % 26) as u32)
@@ -673,7 +674,10 @@ impl Processor {
     ) -> Option<ProcCitationItem> {
         let citation_style = self.style.citation.clone();
         // FIXME below is returning None
-        let reference = self.get_reference(&citation_item.ref_id).unwrap();
+        let reference = match self.get_reference(&citation_item.ref_id) {
+            Ok(reference) => reference,
+            Err(_) => return None, // or handle the error in a different way
+        };
         let proc_template =
             self.process_template(&reference, citation_style?.template.as_slice());
         println!("proc_template: {:?}", proc_template);
@@ -685,9 +689,9 @@ impl Processor {
         &self,
         reference: &InputReference,
     ) -> Vec<ProcTemplateComponent> {
-        let bibliography_style = self.style.bibliography.clone();
+        let bibliography_style = self.style.bibliography.clone().unwrap();
         // TODO bibliography should probably be Optional
-        self.process_template(reference, bibliography_style.unwrap().template.as_slice())
+        self.process_template(reference, bibliography_style.template.as_slice())
     }
 
     fn get_render_options(&self, style: Style, locale: Locale) -> RenderOptions {

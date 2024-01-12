@@ -26,6 +26,7 @@ chrono = { version = "0.4", features = ["unstable-locales"] }
 unic-langid = { version = "0.9.1", features = ["serde"] }
 itertools = "0.11.0"
 rayon = "1.7.0"
+anyhow = "1.0.79"
 #icu = { version = "1.2.0", features = ["icu_datetime_experimental"] }
 #icu_testdata = { version = "1.2.0", features = ["icu_datetime_experimental"] }
 #indexmap = { version = "2.0.0", features = ["std"] }

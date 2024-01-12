@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use csln::citation::{Citation, CitationItem, Citations};
-    use csln::HasFile;
+    use csln::from_file;
 
     #[allow(dead_code)]
     // FIXME why these warnings?
@@ -14,18 +14,13 @@ mod tests {
     }
 
     fn setup() -> TestFixture {
-        let style = csln::style::Style::from_file("examples/style.csl.yaml");
-        let locale = csln::style::locale::Locale::from_file("locales/locale-en.yaml");
-        let bibliography =
-            csln::bibliography::InputBibliography::from_file("examples/ex1.bib.yaml");
+        let style = from_file("examples/style.csl.yaml");
+        let locale = from_file("locales/locale-en.yaml");
+        let bibliography = from_file("examples/ex1.bib.yaml");
         let citations: Citations =
-            csln::citation::Citations::from_file("examples/citation.yaml");
-        let processor = csln_processor::Processor::new(
-            style.clone(),
-            bibliography.clone(),
-            citations.clone(),
-            locale.clone(),
-        );
+            from_file("examples/citation.yaml").context("Citation file?");
+        let processor =
+            csln_processor::Processor::new(style, bibliography, citations, locale);
 
         TestFixture { style, locale, bibliography, citations, processor }
     }

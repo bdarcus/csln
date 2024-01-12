@@ -9,7 +9,7 @@ use csln::style::locale::Locale;
 use csln::style::Style;
 
 fn main() {
-    fs::create_dir_all("schemas").unwrap();
+    fs::create_dir_all("schemas").expect("Failed to create directory 'schemas'");
 
     let style_schema = schema_for!(Style);
     let citation_schema = schema_for!(CitationList);
