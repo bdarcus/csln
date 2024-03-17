@@ -19,3 +19,8 @@ needless_question_mark = "warn"
 needless_return = "warn"
 style = "allow"
 unwrap_used = "warn"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
