@@ -1,17 +1,8 @@
-## Caveats and Status
-
-This is not particularly close to ready for actual use, and needs more development, testing, and input.
-
-A very high-level summary of where this at ATM:
-
-- complete-ish draft models for bibliography, citations, styles, locales
-- YAML and JSON serialization and deserialization of these models, and a `csln-schemas` binary that will create JSON schemas to validate them
-- a processor which can create formatted string output using the above inputs, but which is designed for pluggable renderers (see [#105](https://github.com/bdarcus/csln/issues/105)); includes basic author substitution, basic EDTF date parsing and formatting, and a few other things I'm likely forgetting
-- a `csln` CLI that uses the above; it's Rust, so a single binary, and very fast.
-
 ## Vision
 
-At a high-level, the vision of the project is to:
+At a high-level, the vision of the project is to provide a simpler, easier-to-extend, and more featureful successor to CSL, with a model defined in Rust code, and JSON schemas generated from it.
+
+More specifically, the idea is to:
 
 1. Adapt what we've learned in almost 20 years of experience with [CSL 1.0][CSL] to modern programming idioms and formats.
 2. Simplify the template part of the language, and put more, and extensible, logic in option groups, so it's easier to work with for users, style editors, and developers alike.
@@ -37,6 +28,17 @@ For the `InputReference` and `Citation` models:
 
 3. No string-parsing, with the sole exception of the [EDTF date format][EDTF], which is now ISO-standardized as an extension profile of ISO 8601, with well-defined parsing rules, and parsing libraries available in multiple languages.
 4. Provide structure where needed, but offer alternatives where not. EDTF is available for diverse date-time encoding, but dates fields will fallback to a plain string. Likewise, the `Contributor` model offers similar flexibility, and power where needed.
+
+## Caveats and Status
+
+This is not particularly close to ready for actual use, and needs more development, testing, and input.
+
+A very high-level summary of where this at ATM:
+
+- complete-ish draft models for bibliography, citations, styles, locales
+- YAML and JSON serialization and deserialization of these models, and a `csln-schemas` binary that will create JSON schemas to validate them
+- a processor which can create formatted string output using the above inputs, but which is designed for pluggable renderers (see [#105](https://github.com/bdarcus/csln/issues/105)); includes basic author substitution, basic EDTF date parsing and formatting, and a few other things I'm likely forgetting
+- a `csln` CLI that uses the above; it's Rust, so a single binary, and very fast.
 
 ## The model
 
