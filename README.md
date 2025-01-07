@@ -70,8 +70,8 @@ On the citation end, CSL in general has been most akin to the BibLaTeX `autocite
 I've separated the code into discrete crates, with the intention to ultimately publish them.
 
 I'm hoping to have demonstrated enough so far that this is a promising direction for the future of CSL, at least on the technical end, that folks might be willing to help build this out. 
-Ideally, I want to develop one or both of these projects sufficiently to move them to the [GitHub CSL org][CSLO] for further development and future maintenance. 
-Doing so, however, will require sorting out details of how that process is managed and funded.
+Ideally, I want to develop this project sufficiently to move it to the [GitHub CSL org][CSLO] for further development and future maintenance. 
+Doing so, however, will require sorting out details of how that process is managed and funded going forward.
 
 ## Contribution
 
