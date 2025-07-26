@@ -73,9 +73,42 @@ I'm hoping to have demonstrated enough so far that this is a promising direction
 Ideally, I want to develop this project sufficiently to move it to the [GitHub CSL org][CSLO] for further development and future maintenance. 
 Doing so, however, will require sorting out details of how that process is managed and funded going forward.
 
-## Contribution
+## Contributing
 
 I would _love_ to have help on this, both because I'm an amateur programmer and a Rust newbie, and because the vision I am sketching out here will take a lot of work to realize.
+
+### Getting Started
+
+To build and test the project:
+
+```bash
+# Clone the repository
+git clone https://github.com/bdarcus/csln.git
+cd csln
+
+# Build the project
+cargo build
+
+# Run tests
+cargo test
+
+# Run clippy for code quality checks
+cargo clippy --all-targets --all-features
+
+# Format code
+cargo fmt
+
+# Generate JSON schemas
+cargo run --bin csln-schemas
+```
+
+### Project Structure
+
+- `csln/` - Core library with data models for styles, bibliography, and citations
+- `cli/` - Command-line interface for processing citations
+- `processor/` - Citation and bibliography processing engine
+
+### How to Help
 
 Please contact me via discussions or the issue tracker, or by email, if you'd like to contribute.
 
