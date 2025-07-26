@@ -21,28 +21,20 @@ pub struct Opts {
     locale: String,
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let opts = Opts::parse();
-    let style = from_file(&opts.style).context("Style file?");
-    let bibliography = from_file(&opts.bibliography).context("Bibliography file?");
-    let citations: Citations = if opts.citations.is_none() {
+    let style = from_file(&opts.style).context("Failed to load style file")?;
+    let bibliography = from_file(&opts.bibliography).context("Failed to load bibliography file")?;
+    let citations: Citations = if let Some(citation_path) = opts.citations {
+        from_file(&citation_path).context("Failed to load citation file")?
+    } else {
         Citations::default()
-    } else {
-        from_file(opts.citations.unwrap()).unwrap_or_default()
     };
-    let locale = from_file(&opts.locale).context("Locale file?");
-    let processor: Processor = Processor::new(
-        style.expect("msg"), // REVIEW why?
-        bibliography.expect("msg"),
-        citations,
-        locale.expect("msg"),
-    );
+    let locale = from_file(&opts.locale).context("Failed to load locale file")?;
+    let processor: Processor = Processor::new(style, bibliography, citations, locale);
     let rendered_refs: ProcReferences = processor.process_references();
-    let serialized_refs = serde_json::to_string_pretty(&rendered_refs);
-    //println!("{}", refs_to_string(rendered_refs));
-    if serialized_refs.is_err() {
-        println!("Error: {:?}", serialized_refs);
-    } else {
-        println!("{}", serialized_refs.unwrap());
-    }
+    let serialized_refs = serde_json::to_string_pretty(&rendered_refs)
+        .context("Failed to serialize references")?;
+    println!("{}", serialized_refs);
+    Ok(())
 }
