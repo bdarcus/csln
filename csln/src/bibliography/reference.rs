@@ -394,7 +394,7 @@ impl EdtfString {
 
     fn component_to_u32(&self, component: Option<edtf::level_1::Component>) -> u32 {
         match component {
-            Some(component) => component.value().unwrap(),
+            Some(component) => component.value().unwrap_or(0),
             None => 0,
         }
     }
@@ -691,7 +691,7 @@ impl Contributor {
         let names = self.names(Config::default(), false);
         let mut result = names;
         if result.len() > 1 {
-            let last = result.pop().unwrap();
+            let last = result.pop().expect("List should have at least one element");
             result.push(format!("{} {}", and, last));
         }
         result
