@@ -375,7 +375,7 @@ impl Processor {
 mod tests {
     use super::*;
     use csln::bibliography::reference::{Monograph, StructuredName, Contributor, EdtfString, Title};
-    use csln::style::options::SortKey;
+
 
     fn mock_reference(id: &str, family: &str, year: &str) -> InputReference {
         let name = StructuredName {
