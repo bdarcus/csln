@@ -1,3 +1,4 @@
+#![allow(clippy::expect_used)]
 use criterion::{criterion_group, criterion_main, Criterion};
 use csln::bibliography::InputBibliography as Bibliography;
 use csln::citation::Citation;
