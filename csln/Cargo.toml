@@ -11,7 +11,7 @@ test = true
 doctest = true
 bench = true
 doc = true
-edition = "2021" 
+
 crate-type = ["lib"] 
 
 [dependencies]
