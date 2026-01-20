@@ -11,7 +11,7 @@ test = true
 doctest = true
 bench = true
 doc = true
-edition = "2021"       # The edition of the target.
+
 crate-type = ["lib"]   # The crate types to generate.
 
 [dependencies]
