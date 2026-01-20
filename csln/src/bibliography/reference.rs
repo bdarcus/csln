@@ -691,8 +691,9 @@ impl Contributor {
         let names = self.names(Config::default(), false);
         let mut result = names;
         if result.len() > 1 {
-            let last = result.pop().expect("List should have at least one element");
-            result.push(format!("{} {}", and, last));
+            if let Some(last) = result.pop() {
+                result.push(format!("{} {}", and, last));
+            }
         }
         result
     }
