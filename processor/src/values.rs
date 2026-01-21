@@ -14,6 +14,7 @@ use csln::style::template::{
 };
 use icu::datetime::DateTimeFormatterOptions;
 
+/// Trait to extract values from template components based on reference data.
 pub trait ComponentValues {
     fn values(
         &self,
@@ -168,6 +169,7 @@ impl ComponentValues for TemplateTitle {
     }
 }
 
+/// Convert a contributor role to its string representation.
 pub fn role_to_string(
     role: &ContributorRole,
     locale: Locale,

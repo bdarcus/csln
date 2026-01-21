@@ -34,6 +34,7 @@ pub struct Processor {
 }
 
 impl Processor {
+    /// Create a new Processor instance.
     pub fn new(
         style: Style,
         bibliography: Bibliography,
@@ -82,6 +83,7 @@ impl Processor {
         pcitation
     }
 
+    /// Process a single citation item.
     pub fn process_citation_item(
         &self,
         citation_item: &CitationItem,
@@ -199,6 +201,7 @@ impl Processor {
         }
     }
 
+    /// Get all cited references from the inputs.
     pub fn get_cited_references(&self) -> Vec<InputReference> {
         let mut cited_references = Vec::new();
         for key in &self.get_cited_keys() {
@@ -336,6 +339,7 @@ impl Processor {
         group_key
     }
 
+    /// Get the substitute author name and key for a reference if the primary author is missing.
     pub fn get_author_substitute(
         &self,
         reference: &InputReference,

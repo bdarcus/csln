@@ -107,6 +107,11 @@ cargo run --bin csln-schemas
 - `csln/` - Core library with data models for styles, bibliography, and citations
 - `cli/` - Command-line interface for processing citations
 - `processor/` - Citation and bibliography processing engine
+  - `src/lib.rs` - Library entry point
+  - `src/processor.rs` - Main processor logic
+  - `src/types.rs` - Core data types
+  - `src/values.rs` - Value extraction logic
+  - `src/render.rs` - Rendering logic
 
 ### How to Help
 
