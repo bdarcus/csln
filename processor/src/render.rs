@@ -9,6 +9,7 @@ use std::fmt::{self, Display, Formatter};
 
 // TODO: This will need to be generalized later. See:
 // https://github.com/bdarcus/csln/issues/105
+/// Render processed templates into a final string.
 pub fn refs_to_string(proc_templates: Vec<ProcTemplate>) -> String {
     proc_templates
         .iter()
