@@ -1,3 +1,8 @@
+//! Core Citation Style Language Next (CSLN) library.
+//!
+//! Provides the primary data models and parsing utilities for CSLN styles,
+//! bibliographies, and citations.
+
 pub mod style;
 use std::path::Path;
 
@@ -14,12 +19,14 @@ use anyhow::{Context, Result};
 
 pub mod citation;
 
+/// Trait marking types that can be parsed from style or data files.
 pub trait Parsable: DeserializeOwned {}
 impl Parsable for Style {}
 impl Parsable for Locale {}
 impl Parsable for InputBibliography {}
 impl Parsable for citation::Citations {}
 
+/// Parse a CSLN object from a JSON or YAML file.
 pub fn from_file<T: Parsable, P: AsRef<Path>>(path: P) -> Result<T> {
     let path = path.as_ref();
     let contents = fs::read_to_string(path)
