@@ -11,6 +11,11 @@ pub use style::Style;
 
 use std::fs;
 
+/*
+SPDX-License-Identifier: MPL-2.0
+SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
+*/
+
 pub mod bibliography;
 pub use bibliography::InputBibliography;
 use style::locale::Locale;

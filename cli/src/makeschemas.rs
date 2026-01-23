@@ -1,3 +1,8 @@
+/*
+SPDX-License-Identifier: MPL-2.0
+SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
+*/
+
 use schemars::schema_for;
 use std::fs;
 use std::fs::File;

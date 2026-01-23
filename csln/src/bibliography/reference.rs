@@ -1,6 +1,6 @@
 /*
 SPDX-License-Identifier: MPL-2.0
-SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
+SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 */
 
 //! A reference is a bibliographic item, such as a book, article, or web page.
