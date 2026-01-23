@@ -2,3 +2,4 @@ Cargo.lock
 target
 schemas
 *.bak
+.agent/*
