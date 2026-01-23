@@ -28,6 +28,7 @@ icu = "1.2.0"
 icu_testdata = "1.2.0"
 icu_datetime = "1.2.1"
 chrono = "0.4.26"
+thiserror = "2.0.18"
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }

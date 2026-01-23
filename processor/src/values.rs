@@ -20,7 +20,7 @@ pub trait ComponentValues {
         &self,
         reference: &InputReference,
         hints: &ProcHints,
-        options: &RenderOptions,
+        options: &RenderOptions<'_>,
     ) -> Option<ProcValues>;
 }
 
@@ -29,7 +29,7 @@ impl ComponentValues for TemplateComponent {
         &self,
         reference: &InputReference,
         hints: &ProcHints,
-        options: &RenderOptions,
+        options: &RenderOptions<'_>,
     ) -> Option<ProcValues> {
         let proc_values = match self {
             TemplateComponent::Title(title) => title.values(reference, hints, options),
@@ -57,7 +57,7 @@ impl ComponentValues for TemplateNumber {
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
-        _options: &RenderOptions,
+        _options: &RenderOptions<'_>,
     ) -> Option<ProcValues> {
         let number: Option<String> = match &self.number {
             Numbers::Volume => match reference {
@@ -95,7 +95,7 @@ impl ComponentValues for TemplateSimpleString {
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
-        _options: &RenderOptions,
+        _options: &RenderOptions<'_>,
     ) -> Option<ProcValues> {
         let value = match self.variable {
             Variables::Doi => match reference {
@@ -128,7 +128,7 @@ impl ComponentValues for TemplateTitle {
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
-        _options: &RenderOptions,
+        _options: &RenderOptions<'_>,
     ) -> Option<ProcValues> {
         let value = match &self.title {
             Titles::ParentMonograph => {
@@ -172,7 +172,7 @@ impl ComponentValues for TemplateTitle {
 /// Convert a contributor role to its string representation.
 pub fn role_to_string(
     role: &ContributorRole,
-    locale: Locale,
+    locale: &Locale,
     form: ContributorForm,
     length: usize,
 ) -> Option<String> {
@@ -221,7 +221,7 @@ fn role_form_to_string() {
     let role = ContributorRole::Editor;
     let form = ContributorForm::Long;
     let length = 1;
-    let result = role_to_string(&role, locale, form, length);
+    let result = role_to_string(&role, &locale, form, length);
     assert_eq!(result, Some("editor".to_string()));
 }
 
@@ -230,15 +230,15 @@ impl ComponentValues for TemplateContributor {
         &self,
         reference: &InputReference,
         _hints: &ProcHints,
-        options: &RenderOptions,
+        options: &RenderOptions<'_>,
     ) -> Option<ProcValues> {
-        let locale = options.locale.clone();
+        let locale = options.locale;
         match &self.contributor {
             ContributorRole::Author => {
                 let author = reference.author();
                 if author.is_some() {
                     Some(ProcValues {
-                        value: author?.format(options.global.clone(), locale),
+                        value: author?.format(options.global.clone(), locale.clone()),
                         prefix: None,
                         suffix: None,
                     })
@@ -253,7 +253,7 @@ impl ComponentValues for TemplateContributor {
                     let suffix = add_role_form.map(|role_form| {
                         role_to_string(
                             &ContributorRole::Editor,
-                            locale.clone(),
+                            locale,
                             role_form,
                             editor_length,
                         )
@@ -264,7 +264,7 @@ impl ComponentValues for TemplateContributor {
                     })); // TODO fix this matching logic
                     
                     Some(ProcValues {
-                        value: editor.format(options.global.clone(), locale),
+                        value: editor.format(options.global.clone(), locale.clone()),
                         prefix: None,
                         suffix: suffix_padded,
                     })
@@ -284,7 +284,7 @@ impl ComponentValues for TemplateContributor {
                             ContributorForm::Verb | ContributorForm::VerbShort => {
                                 let prefix = role_to_string(
                                     &self.contributor,
-                                    locale.clone(),
+                                    locale,
                                     form.clone(),
                                     editor_length,
                                 );
@@ -296,7 +296,7 @@ impl ComponentValues for TemplateContributor {
                                     }
                                 });
                                 Some(ProcValues {
-                                    value: editor.format(options.global.clone(), locale),
+                                    value: editor.format(options.global.clone(), locale.clone()),
                                     prefix: prefix_padded,
                                     suffix: None,
                                 })
@@ -304,7 +304,7 @@ impl ComponentValues for TemplateContributor {
                             _ => {
                                 let suffix = role_to_string(
                                     &self.contributor,
-                                    locale.clone(),
+                                    locale,
                                     form.clone(),
                                     editor_length,
                                 );
@@ -316,7 +316,7 @@ impl ComponentValues for TemplateContributor {
                                     }
                                 });
                                 Some(ProcValues {
-                                    value: editor.format(options.global.clone(), locale),
+                                    value: editor.format(options.global.clone(), locale.clone()),
                                     prefix: None,
                                     suffix: suffix_padded, // TODO handle None
                                 })
@@ -326,12 +326,12 @@ impl ComponentValues for TemplateContributor {
                 }
             }
             ContributorRole::Translator => Some(ProcValues {
-                value: reference.translator()?.format(options.global.clone(), locale),
+                value: reference.translator()?.format(options.global.clone(), locale.clone()),
                 prefix: None,
                 suffix: None,
             }),
             ContributorRole::Publisher => Some(ProcValues {
-                value: reference.publisher()?.format(options.global.clone(), locale),
+                value: reference.publisher()?.format(options.global.clone(), locale.clone()),
                 prefix: None,
                 suffix: None,
             }),
@@ -346,16 +346,16 @@ impl ComponentValues for TemplateDate {
         &self,
         reference: &InputReference,
         hints: &ProcHints,
-        options: &RenderOptions,
+        options: &RenderOptions<'_>,
     ) -> Option<ProcValues> {
-        let locale: &Locale = &options.locale;
+        let locale: &Locale = options.locale;
         let input_date: EdtfString = match &self.date {
             Dates::Issued => reference.issued()?,
             Dates::OriginalPublished => todo!("original-published"),
             Dates::Accessed => todo!("accessed"),
         };
         let parsed_date = input_date.parse();
-        //print!("date form: {:?}", reference.issued);
+
         let formatted_date: String = match self.form {
             DateForm::Year => parsed_date
                 .year() // this line causes a panic if the date is not a year
@@ -368,7 +368,8 @@ impl ComponentValues for TemplateDate {
         };
 
         // TODO: implement this along with localized dates
-        fn _config_fmt(options: &RenderOptions) -> DateTimeFormatterOptions {
+        // TODO: implement this along with localized dates
+        fn _config_fmt(options: &RenderOptions<'_>) -> DateTimeFormatterOptions {
             let date_options = match options.global.dates.clone() {
                 Some(dates) => dates,
                 None => return DateTimeFormatterOptions::default(), // or handle the None case accordingly

@@ -87,15 +87,15 @@ impl Default for ProcHints {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Debug, Clone)]
 /// Configuration options.
-pub struct RenderOptions {
+pub struct RenderOptions<'a> {
     // Options for the style, including default options.
-    pub global: Config,
+    pub global: &'a Config,
     // Options for the citaton or bibliography, that may override the style options.
-    pub local: Config,
+    pub local: &'a Config,
     // Locale for the output.
-    pub locale: Locale,
+    pub locale: &'a Locale,
 }
 
 /// The intermediate representation of rendered citations and bibliography.
