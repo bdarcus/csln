@@ -24,8 +24,7 @@ pub fn refs_to_string(proc_templates: Vec<ProcTemplate>) -> String {
             if j > 0 {
                 output.push_str(". ");
             }
-            // we can unwrap here because writing to String never fails
-            write!(&mut output, "{}", component).unwrap();
+            let _ = write!(&mut output, "{}", component);
         }
         output.push('.');
     }
