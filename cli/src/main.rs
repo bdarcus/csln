@@ -29,7 +29,8 @@ pub struct Opts {
 fn main() -> anyhow::Result<()> {
     let opts = Opts::parse();
     let style = from_file(&opts.style).context("Failed to load style file")?;
-    let bibliography = from_file(&opts.bibliography).context("Failed to load bibliography file")?;
+    let bibliography =
+        from_file(&opts.bibliography).context("Failed to load bibliography file")?;
     let citations: Citations = if let Some(citation_path) = opts.citations {
         from_file(&citation_path).context("Failed to load citation file")?
     } else {

@@ -3,10 +3,10 @@ SPDX-License-Identifier: MPL-2.0
 SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 */
 
-use crate::types::{ProcHints, RenderOptions, ProcValues};
-use csln::bibliography::reference::{InputReference, EdtfString};
+use crate::types::{ProcHints, ProcValues, RenderOptions};
+use csln::bibliography::reference::{EdtfString, InputReference};
 use csln::style::locale::Locale;
-use csln::style::options::{MonthFormat};
+use csln::style::options::MonthFormat;
 use csln::style::template::{
     ContributorForm, ContributorRole, DateForm, Dates, Numbers, TemplateComponent,
     TemplateContributor, TemplateDate, TemplateNumber, TemplateSimpleString,
@@ -258,11 +258,13 @@ impl ComponentValues for TemplateContributor {
                             editor_length,
                         )
                     });
-                    let suffix_padded = suffix.and_then(|s| Some(match s {
-                        Some(val) => format!(" {}", val),
-                        None => return None
-                    })); // TODO fix this matching logic
-                    
+                    let suffix_padded = suffix.and_then(|s| {
+                        Some(match s {
+                            Some(val) => format!(" {}", val),
+                            None => return None,
+                        })
+                    }); // TODO fix this matching logic
+
                     Some(ProcValues {
                         value: editor.format(options.global.clone(), locale.clone()),
                         prefix: None,
@@ -296,7 +298,8 @@ impl ComponentValues for TemplateContributor {
                                     }
                                 });
                                 Some(ProcValues {
-                                    value: editor.format(options.global.clone(), locale.clone()),
+                                    value: editor
+                                        .format(options.global.clone(), locale.clone()),
                                     prefix: prefix_padded,
                                     suffix: None,
                                 })
@@ -316,7 +319,8 @@ impl ComponentValues for TemplateContributor {
                                     }
                                 });
                                 Some(ProcValues {
-                                    value: editor.format(options.global.clone(), locale.clone()),
+                                    value: editor
+                                        .format(options.global.clone(), locale.clone()),
                                     prefix: None,
                                     suffix: suffix_padded, // TODO handle None
                                 })
@@ -326,12 +330,16 @@ impl ComponentValues for TemplateContributor {
                 }
             }
             ContributorRole::Translator => Some(ProcValues {
-                value: reference.translator()?.format(options.global.clone(), locale.clone()),
+                value: reference
+                    .translator()?
+                    .format(options.global.clone(), locale.clone()),
                 prefix: None,
                 suffix: None,
             }),
             ContributorRole::Publisher => Some(ProcValues {
-                value: reference.publisher()?.format(options.global.clone(), locale.clone()),
+                value: reference
+                    .publisher()?
+                    .format(options.global.clone(), locale.clone()),
                 prefix: None,
                 suffix: None,
             }),

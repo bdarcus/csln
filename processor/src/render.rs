@@ -64,7 +64,9 @@ impl Display for ProcTemplateComponent {
 #[test]
 fn render_proc_template_component() {
     use crate::types::ProcValues;
-    use csln::style::template::{TemplateComponent, TemplateSimpleString, Rendering, Variables};
+    use csln::style::template::{
+        Rendering, TemplateComponent, TemplateSimpleString, Variables,
+    };
     let template_component = TemplateComponent::SimpleString(TemplateSimpleString {
         variable: Variables::Doi,
         rendering: Some(Rendering {
