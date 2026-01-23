@@ -102,6 +102,19 @@ cargo fmt
 cargo run --bin csln-schemas
 ```
 
+### Development Standards
+
+To maintain code quality and a clean history, please follow these guidelines:
+
+1.  **Commit Messages**: Use [Conventional Commits](https://www.conventionalcommits.org/).
+    - Subject: Max 50 characters.
+    - Body: Wrapped at 72 characters.
+    - DCO: All commits must be signed-off (`git commit -s`).
+    - Format: Use plain text only (no backsticks or Markdown) in commit bodies.
+2.  **Code Quality**: Ensure `cargo fmt` and `cargo clippy --workspace` pass before submitting.
+3.  **Performance**: For performance-related changes, provide before/after benchmark results from `cargo bench -p csln-processor`.
+4.  **Licensing**: New files must include the SPDX license header (MPL-2.0).
+
 ### Project Structure
 
 - `csln/` - Core library with data models for styles, bibliography, and citations

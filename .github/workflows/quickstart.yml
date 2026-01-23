@@ -21,7 +21,6 @@ jobs:
 
       - name: Run cargo check
         run: cargo check
-        continue-on-error: true  # WARNING: only for this example, remove it!
 
   test:
     name: Test Suite
@@ -35,7 +34,6 @@ jobs:
 
       - name: Run cargo test
         run: cargo test
-        continue-on-error: true  # WARNING: only for this example, remove it!
 
   lints:
     name: Lints
@@ -51,8 +49,6 @@ jobs:
 
       - name: Run cargo fmt
         run: cargo fmt --all -- --check
-        continue-on-error: true  # WARNING: only for this example, remove it!
 
       - name: Run cargo clippy
         run: cargo clippy -- -D warnings
-        continue-on-error: true  # WARNING: only for this example, remove it!
