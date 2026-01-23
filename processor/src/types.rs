@@ -3,15 +3,12 @@ SPDX-License-Identifier: MPL-2.0
 SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 */
 
-
-
 use csln::style::locale::Locale;
 use csln::style::options::Config;
 use csln::style::template::TemplateComponent;
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
 
 /// The intermediate representation of a StyleTemplate, which is used to render the output.
 pub type ProcTemplate = Vec<ProcTemplateComponent>;

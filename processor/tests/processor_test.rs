@@ -16,13 +16,21 @@ mod tests {
     }
 
     fn setup() -> TestFixture {
-        let style: csln::style::Style = from_file("examples/style.csl.yaml").expect("Failed to load style file");
-        let locale: csln::style::locale::Locale = from_file("locales/locale-en.yaml").expect("Failed to load locale file");
-        let bibliography: csln::bibliography::InputBibliography = from_file("examples/ex1.bib.yaml").expect("Failed to load bibliography file");
-        let citations: Citations =
-            from_file("examples/citation.yaml").context("Citation file?").unwrap_or_default();
-        let processor =
-            csln_processor::Processor::new(style.clone(), bibliography.clone(), citations.clone(), locale.clone());
+        let style: csln::style::Style =
+            from_file("examples/style.csl.yaml").expect("Failed to load style file");
+        let locale: csln::style::locale::Locale =
+            from_file("locales/locale-en.yaml").expect("Failed to load locale file");
+        let bibliography: csln::bibliography::InputBibliography =
+            from_file("examples/ex1.bib.yaml").expect("Failed to load bibliography file");
+        let citations: Citations = from_file("examples/citation.yaml")
+            .context("Citation file?")
+            .unwrap_or_default();
+        let processor = csln_processor::Processor::new(
+            style.clone(),
+            bibliography.clone(),
+            citations.clone(),
+            locale.clone(),
+        );
 
         TestFixture { style, locale, bibliography, citations, processor }
     }

@@ -3,11 +3,11 @@ SPDX-License-Identifier: MPL-2.0
 SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 */
 
+use crate::error::ProcessorError;
 use crate::types::{
     ProcBibliography, ProcCitation, ProcCitationItem, ProcCitations, ProcHints,
     ProcReferences, ProcTemplate, ProcTemplateComponent, ProcValues, RenderOptions,
 };
-use crate::error::ProcessorError;
 use crate::values::ComponentValues;
 use csln::bibliography::reference::{InputReference, RefID};
 use csln::bibliography::InputBibliography as Bibliography;
@@ -84,13 +84,13 @@ impl Processor {
             .iter()
             .map(|citation_item| {
                 match self.process_citation_item(citation_item) {
-                     Ok(item) => item,
-                     Err(e) => {
-                         // Fallback for error rendering
-                         // TODO: Makes this configurable?
-                         eprintln!("Citation processing error: {}", e);
-                         vec![] 
-                     }
+                    Ok(item) => item,
+                    Err(e) => {
+                        // Fallback for error rendering
+                        // TODO: Makes this configurable?
+                        eprintln!("Citation processing error: {}", e);
+                        vec![]
+                    }
                 }
             })
             .collect();
@@ -104,7 +104,7 @@ impl Processor {
     ) -> Result<ProcCitationItem, ProcessorError> {
         let citation_style = self.style.citation.clone();
         let reference = self.get_reference(&citation_item.ref_id)?;
-        
+
         let template = citation_style.map(|cs| cs.template).unwrap_or_default();
         let proc_template = self.process_template(&reference, &template);
         Ok(proc_template)
@@ -116,9 +116,9 @@ impl Processor {
         reference: &InputReference,
     ) -> Vec<ProcTemplateComponent> {
         if let Some(bibliography_style) = &self.style.bibliography {
-             self.process_template(reference, &bibliography_style.template)
+            self.process_template(reference, &bibliography_style.template)
         } else {
-             Vec::new()
+            Vec::new()
         }
     }
 
@@ -269,8 +269,10 @@ impl Processor {
                 }
                 SortKey::Year => {
                     references.par_sort_by(|a: &InputReference, b: &InputReference| {
-                        let a_year = a.issued().as_ref().map(|d| d.year()).unwrap_or_default();
-                        let b_year = b.issued().as_ref().map(|d| d.year()).unwrap_or_default();
+                        let a_year =
+                            a.issued().as_ref().map(|d| d.year()).unwrap_or_default();
+                        let b_year =
+                            b.issued().as_ref().map(|d| d.year()).unwrap_or_default();
                         b_year.cmp(&a_year)
                     });
                 }
@@ -325,7 +327,14 @@ impl Processor {
             Some(ref options) => options.clone(),
             None => Config::default(), // TODO is this right?
         };
-        let group_template = options.processing.unwrap_or_default().config().group.as_ref().map(|g| g.template.clone()).unwrap_or_default();
+        let group_template = options
+            .processing
+            .unwrap_or_default()
+            .config()
+            .group
+            .as_ref()
+            .map(|g| g.template.clone())
+            .unwrap_or_default();
         let options = self.style.options.clone();
         let as_sorted = false;
         let group_key = group_template
@@ -333,15 +342,19 @@ impl Processor {
             .par_iter()
             .map(|key| match key {
                 SortKey::Author => match reference.author() {
-                    Some(author) => {
-                        author.names(options.clone().unwrap_or_default(), as_sorted).join("-")
-                    }
+                    Some(author) => author
+                        .names(options.clone().unwrap_or_default(), as_sorted)
+                        .join("-"),
                     None => "".to_string(),
                 },
-                SortKey::Year => {
-                    reference.issued().as_ref().map(|d| d.parse().year().to_string()).unwrap_or_default()
+                SortKey::Year => reference
+                    .issued()
+                    .as_ref()
+                    .map(|d| d.parse().year().to_string())
+                    .unwrap_or_default(),
+                SortKey::Title => {
+                    reference.title().as_ref().map(|t| t.to_string()).unwrap_or_default()
                 }
-                SortKey::Title => reference.title().as_ref().map(|t| t.to_string()).unwrap_or_default(),
                 _ => "".to_string(), // REVIEW is this right?
             })
             .collect::<Vec<String>>()
@@ -388,28 +401,29 @@ impl Processor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use csln::bibliography::reference::{Monograph, StructuredName, Contributor, EdtfString, Title};
-
+    use csln::bibliography::reference::{
+        Contributor, EdtfString, Monograph, StructuredName, Title,
+    };
 
     fn mock_reference(id: &str, family: &str, year: &str) -> InputReference {
         let name = StructuredName {
-             family: family.to_string(),
-             given: "Given".to_string(),
+            family: family.to_string(),
+            given: "Given".to_string(),
         };
         InputReference::Monograph(Monograph {
-             id: Some(id.to_string()),
-             r#type: csln::bibliography::reference::MonographType::Book,
-             author: Some(Contributor::StructuredName(name)),
-             issued: EdtfString(year.to_string()),
-             title: Title::Single("Title".to_string()),
-             publisher: None,
-             url: None,
-             accessed: None,
-             note: None,
-             isbn: None,
-             doi: None,
-             edition: None,
-             translator: None,
+            id: Some(id.to_string()),
+            r#type: csln::bibliography::reference::MonographType::Book,
+            author: Some(Contributor::StructuredName(name)),
+            issued: EdtfString(year.to_string()),
+            title: Title::Single("Title".to_string()),
+            publisher: None,
+            url: None,
+            accessed: None,
+            note: None,
+            isbn: None,
+            doi: None,
+            edition: None,
+            translator: None,
         })
     }
 
