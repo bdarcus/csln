@@ -12,10 +12,13 @@ SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 //! The processor is designed to be pluggable with different renderers and supports
 //! advanced features like disambiguation, sorting, and localization.
 
+pub mod error;
 pub mod processor;
 pub mod render;
 pub mod types;
 pub mod values;
+
+pub use error::ProcessorError;
 
 pub use processor::Processor;
 pub use render::refs_to_string;

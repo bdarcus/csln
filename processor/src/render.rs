@@ -9,20 +9,27 @@ use std::fmt::{self, Display, Formatter};
 
 // TODO: This will need to be generalized later. See:
 // https://github.com/bdarcus/csln/issues/105
+use std::fmt::Write;
+
 /// Render processed templates into a final string.
 pub fn refs_to_string(proc_templates: Vec<ProcTemplate>) -> String {
-    proc_templates
-        .iter()
-        .map(|proc_template| {
-            proc_template
-                .iter()
-                .map(|proc_template_component| proc_template_component.to_string())
-                .collect::<Vec<String>>()
-                .join(". ")
-                + "."
-        })
-        .collect::<Vec<String>>()
-        .join("\n\n")
+    let mut output = String::new();
+    // Optimized: Use a loop and write! to avoid multiple intermediate string allocations
+    // that would occur with a map/collect/join chain.
+    for (i, proc_template) in proc_templates.iter().enumerate() {
+        if i > 0 {
+            output.push_str("\n\n");
+        }
+        for (j, component) in proc_template.iter().enumerate() {
+            if j > 0 {
+                output.push_str(". ");
+            }
+            // we can unwrap here because writing to String never fails
+            write!(&mut output, "{}", component).unwrap();
+        }
+        output.push('.');
+    }
+    output
 }
 
 impl Display for ProcTemplateComponent {

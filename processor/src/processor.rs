@@ -7,6 +7,7 @@ use crate::types::{
     ProcBibliography, ProcCitation, ProcCitationItem, ProcCitations, ProcHints,
     ProcReferences, ProcTemplate, ProcTemplateComponent, ProcValues, RenderOptions,
 };
+use crate::error::ProcessorError;
 use crate::values::ComponentValues;
 use csln::bibliography::reference::{InputReference, RefID};
 use csln::bibliography::InputBibliography as Bibliography;
@@ -31,6 +32,9 @@ pub struct Processor {
     citations: Citations,
     /// The output locale.
     locale: Locale,
+    /// Default configuration for reference.
+    #[serde(skip)]
+    default_config: Config,
 }
 
 impl Processor {
@@ -46,6 +50,7 @@ impl Processor {
             bibliography,
             citations,
             locale,
+            default_config: Config::default(),
         }
     }
 
@@ -77,9 +82,18 @@ impl Processor {
         let pcitation = citation
             .citation_items
             .iter()
-            .filter_map(|citation_item| self.process_citation_item(citation_item))
+            .map(|citation_item| {
+                match self.process_citation_item(citation_item) {
+                     Ok(item) => item,
+                     Err(e) => {
+                         // Fallback for error rendering
+                         // TODO: Makes this configurable?
+                         eprintln!("Citation processing error: {}", e);
+                         vec![] 
+                     }
+                }
+            })
             .collect();
-        println!("pcitation: {:?}", pcitation);
         pcitation
     }
 
@@ -87,17 +101,13 @@ impl Processor {
     pub fn process_citation_item(
         &self,
         citation_item: &CitationItem,
-    ) -> Option<ProcCitationItem> {
+    ) -> Result<ProcCitationItem, ProcessorError> {
         let citation_style = self.style.citation.clone();
-        // FIXME below is returning None
-        let reference = match self.get_reference(&citation_item.ref_id) {
-            Ok(reference) => reference,
-            Err(_) => return None, // or handle the error in a different way
-        };
-        let proc_template =
-            self.process_template(&reference, citation_style?.template.as_slice());
-        println!("proc_template: {:?}", proc_template);
-        Some(proc_template)
+        let reference = self.get_reference(&citation_item.ref_id)?;
+        
+        let template = citation_style.map(|cs| cs.template).unwrap_or_default();
+        let proc_template = self.process_template(&reference, &template);
+        Ok(proc_template)
     }
 
     /// Render a reference to AST.
@@ -112,11 +122,11 @@ impl Processor {
         }
     }
 
-    fn get_render_options(&self, style: Style, locale: Locale) -> RenderOptions {
+    fn get_render_options<'a>(&'a self) -> RenderOptions<'a> {
         RenderOptions {
-            global: style.options.unwrap_or_default(),
-            local: Config::default(),
-            locale,
+            global: self.style.options.as_ref().unwrap_or(&self.default_config),
+            local: &self.default_config,
+            locale: &self.locale,
         }
     }
 
@@ -141,7 +151,7 @@ impl Processor {
         let hint: ProcHints =
             // TODO why would reference_id be None?
             hints.get(&reference_id.unwrap_or_default()).cloned().unwrap_or_default();
-        let options = self.get_render_options(self.style.clone(), self.locale.clone());
+        let options = self.get_render_options();
         let values = component.values(reference, &hint, &options)?;
         let template_component = component.clone();
         // TODO add role here if specified in the style
@@ -194,10 +204,10 @@ impl Processor {
     }
 
     /// Get a reference from the bibliography by id/citekey.
-    pub fn get_reference(&self, id: &str) -> Result<InputReference, String> {
+    pub fn get_reference(&self, id: &str) -> Result<InputReference, ProcessorError> {
         match self.bibliography.get(id) {
             Some(reference) => Ok(reference.clone()),
-            None => Err(format!("Invalid reference ID: {}", id)),
+            None => Err(ProcessorError::ReferenceNotFound(id.to_string())),
         }
     }
 
