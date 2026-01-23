@@ -1,6 +1,6 @@
 /*
 SPDX-License-Identifier: MPL-2.0
-SPDX-FileCopyrightText: © 2023 Bruce D'Arcus
+SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 */
 
 //! This submodule defines the configuration groups and options available in CSLN styles.
