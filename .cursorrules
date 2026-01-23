@@ -4,6 +4,7 @@
 - **Format**: Use Conventional Commits (e.g., `feat:`, `fix:`, `perf:`, `refactor:`, `chore:`, `test:`, `docs:`).
 - **Subject Line**: Maximum 50 characters.
 - **Body Wrap**: Wrap at 72 characters.
+- **DCO**: Use `Signed-off-by` line in all commits (`git commit -s`).
 - **Restrictions**: Do NOT use backticks (`), backslashes (\), or Markdown formatting in the commit body.
 - **Rationale**: The body should focus on the "why" of the change, providing context for future maintainers.
 - **Atomic Commits**: Keep commits small and logically focused.
@@ -25,3 +26,4 @@
 ## Workflow
 - **Pre-task**: Always run `.agent/workflows/pre_task_check.md` before starting a new task to ensure a clean state and record baselines.
 - **Validation**: Ensure all tests (`cargo test --workspace`) pass before completing any task.
+- **Changelog**: For significant user-facing changes, ensure the `CHANGELOG.md` is updated (the project uses `git-chglog`).
