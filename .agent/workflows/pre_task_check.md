@@ -21,9 +21,11 @@ description: Standard pre-task and pre-commit checks for csln
     - Run benchmarks again: `cargo bench -p csln-processor`
     - Compare with baseline and include a summary in the commit body.
 5.  **License**: Ensure new files have the SPDX header (MPL-2.0) and correct year (2023-2026).
+6.  **Changelog**: If this is a significant feature, update `CHANGELOG.md` using `git-chglog`.
 
 ## Commit Quality
 - **Subject**: Max 50 characters, conventional commit format (e.g., `feat:`, `perf:`).
 - **Body**: Wrap at 72 characters.
+- **DCO**: Ensure `Signed-off-by` is present (`git commit -s`).
 - **Content**: Explain the *why*, not just the *what*.
 - **Restriction**: NO backticks, backslashes, or Markdown formatting in the commit body.
