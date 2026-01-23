@@ -1,0 +1,27 @@
+# csln Project Rules
+
+## Git Commit Standards
+- **Format**: Use Conventional Commits (e.g., `feat:`, `fix:`, `perf:`, `refactor:`, `chore:`, `test:`, `docs:`).
+- **Subject Line**: Maximum 50 characters.
+- **Body Wrap**: Wrap at 72 characters.
+- **Restrictions**: Do NOT use backticks (`), backslashes (\), or Markdown formatting in the commit body.
+- **Rationale**: The body should focus on the "why" of the change, providing context for future maintainers.
+- **Atomic Commits**: Keep commits small and logically focused.
+
+## Performance & Optimization
+- **Benchmarking**: For any refactoring intended to improve performance, run benchmarks BEFORE and AFTER the changes.
+- **Command**: Use `cargo bench -p csln-processor` to run benchmarks.
+- **Reporting**: Include a brief performance comparison in the commit message if significant.
+
+## Rust Development
+- **Consistency**: Always run `cargo fmt --all` and `cargo clippy --workspace` before proposing changes.
+- **Workspace**: This is a workspace project. Ensure commands are run with `--workspace` or against specific crates (`cli`, `csln`, `processor`).
+- **Safety**: Follow the root `Cargo.toml` which forbids unsafe code.
+
+## SPDX & Licensing
+- **Headers**: Every source file must include an SPDX license header: `SPDX-License-Identifier: MPL-2.0`.
+- **Copyright**: Ensure the copyright year range is up to date (e.g., `CopyrightText: 2023-2026 Bruce D'Arcus`).
+
+## Workflow
+- **Pre-task**: Always run `.agent/workflows/pre_task_check.md` before starting a new task to ensure a clean state and record baselines.
+- **Validation**: Ensure all tests (`cargo test --workspace`) pass before completing any task.
