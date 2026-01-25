@@ -669,7 +669,7 @@ impl fmt::Display for ContributorList {
 
 impl Contributor {
     // if as_sorted is true, the name will be displayed as sorted, overriding the configuration option.
-    pub fn names(&self, options: Config, as_sorted: bool) -> Vec<String> {
+    pub fn names(&self, options: &Config, as_sorted: bool) -> Vec<String> {
         match self {
             Contributor::SimpleName(c) => vec![c.name.to_string()],
             Contributor::StructuredName(contributor) => {
@@ -688,7 +688,7 @@ impl Contributor {
 
     /// Join a vector of strings with commas and "and".
     pub fn name_list_and(&self, and: String) -> Vec<String> {
-        let names = self.names(Config::default(), false);
+        let names = self.names(&Config::default(), false);
         let mut result = names;
         if result.len() > 1 {
             if let Some(last) = result.pop() {
@@ -732,15 +732,16 @@ impl Contributor {
         }
     }
 
-    pub fn format(&self, options: Config, locale: Locale) -> String {
+    pub fn format(&self, options: &Config, locale: &Locale) -> String {
         let as_sorted: bool = matches!(self, Contributor::StructuredName(_));
-        let names = self.names(options.clone(), as_sorted);
+        let names = self.names(options, as_sorted);
         let contributor_options = options.contributors.clone().unwrap_or_default();
         let shorten: bool =
             contributor_options.shorten.unwrap_or_default().min <= names.len() as u8;
         if shorten {
             let shorten_options = options
                 .contributors
+                .clone()
                 .unwrap_or_default()
                 .shorten
                 .clone()
@@ -749,10 +750,10 @@ impl Contributor {
             let and_others = shorten_options.and_others;
             let and_others_string = match and_others {
                 AndOtherOptions::EtAl => {
-                    locale.terms.et_al.unwrap_or("et al".to_string())
+                    locale.terms.et_al.clone().unwrap_or("et al".to_string())
                 } // TODO localize
                 AndOtherOptions::Text => {
-                    locale.terms.and_others.unwrap_or("and others".to_string())
+                    locale.terms.and_others.clone().unwrap_or("and others".to_string())
                 }
             };
             let names_str: Vec<&str> = names.iter().map(AsRef::as_ref).collect();
@@ -776,7 +777,7 @@ impl Contributor {
 impl ContributorList {
     // ...
 
-    fn as_sorted(options: Config, index: usize) -> bool {
+    fn as_sorted(options: &Config, index: usize) -> bool {
         let display_as_sort = options
             .contributors
             .clone()
@@ -787,13 +788,11 @@ impl ContributorList {
             || display_as_sort == Some(DisplayAsSort::All)
     }
 
-    pub fn names_list(&self, options: Config) -> Vec<String> {
+    pub fn names_list(&self, options: &Config) -> Vec<String> {
         self.0
             .iter()
             .enumerate()
-            .flat_map(|(i, c)| {
-                c.names(options.clone(), Self::as_sorted(options.clone(), i))
-            })
+            .flat_map(|(i, c)| c.names(options, Self::as_sorted(options, i)))
             .collect::<Vec<String>>()
     }
 }
@@ -810,15 +809,15 @@ fn display_and_sort_names() {
     });
     let options = Config::default();
     // FIXME use this format method in this test
-    assert_eq!(simple.names(options, false).join(" "), "John Doe");
+    assert_eq!(simple.names(&options, false).join(" "), "John Doe");
     let options = Config::default();
     assert_eq!(
-        simple.names(options, true).join(" "),
+        simple.names(&options, true).join(" "),
         "John Doe",
         "as_sorted=true should not affect a simple name"
     );
     let options = Config::default();
-    assert_eq!(structured.names(options, false).join(" "), "John Doe");
+    assert_eq!(structured.names(&options, false).join(" "), "John Doe");
     let options = Config::default();
-    assert_eq!(structured.names(options, true).join(", "), "Doe, John");
+    assert_eq!(structured.names(&options, true).join(", "), "Doe, John");
 }
