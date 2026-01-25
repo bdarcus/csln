@@ -1,0 +1,8 @@
+{
+  "track_id": "yaml_tests_20260125",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-25T09:15:00Z",
+  "updated_at": "2026-01-25T09:15:00Z",
+  "description": "Implement a YAML-based integration test suite for the processor to verify citation rendering across different styles and input types."
+}
