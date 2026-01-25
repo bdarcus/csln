@@ -34,30 +34,29 @@ pub fn refs_to_string(proc_templates: Vec<ProcTemplate>) -> String {
 impl Display for ProcTemplateComponent {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let rendering = self.template_component.rendering();
-        let prefix: String = rendering
-            .clone() // REVIEW this compiles, but too much cloning
-            .unwrap_or_default()
-            .prefix
-            .unwrap_or_default();
-        let suffix: String =
-            rendering.clone().unwrap_or_default().suffix.unwrap_or_default();
-        let wrap: WrapPunctuation =
-            rendering.unwrap_or_default().wrap.unwrap_or_default();
-        let wrap_punct: (String, String) = match wrap {
-            WrapPunctuation::None => ("".to_string(), "".to_string()),
-            WrapPunctuation::Parentheses => ("(".to_string(), ")".to_string()),
-            WrapPunctuation::Brackets => ("[".to_string(), "]".to_string()),
+        let r = rendering.as_ref();
+
+        let prefix = r.and_then(|r| r.prefix.as_deref()).unwrap_or_default();
+        let suffix = r.and_then(|r| r.suffix.as_deref()).unwrap_or_default();
+        let wrap = r.and_then(|r| r.wrap.as_ref()).unwrap_or(&WrapPunctuation::None);
+
+        let wrap_punct: (&str, &str) = match wrap {
+            WrapPunctuation::None => ("", ""),
+            WrapPunctuation::Parentheses => ("(", ")"),
+            WrapPunctuation::Brackets => ("[", "]"),
         };
-        // REVIEW: is this where to plugin different renderers?
-        // Also, how to handle the different affixes, including within the values?
-        let result = wrap_punct.0
-            + &prefix
-            + &self.values.prefix.clone().unwrap_or_default()
-            + &self.values.value
-            + &self.values.suffix.clone().unwrap_or_default()
-            + &suffix
-            + &wrap_punct.1;
-        write!(f, "{}", result)
+
+        write!(
+            f,
+            "{}{}{}{}{}{}{}",
+            wrap_punct.0,
+            prefix,
+            self.values.prefix.as_deref().unwrap_or_default(),
+            self.values.value,
+            self.values.suffix.as_deref().unwrap_or_default(),
+            suffix,
+            wrap_punct.1
+        )
     }
 }
 

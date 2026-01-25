@@ -238,17 +238,19 @@ impl ComponentValues for TemplateContributor {
                 let author = reference.author();
                 if author.is_some() {
                     Some(ProcValues {
-                        value: author?.format(options.global.clone(), locale.clone()),
+                        value: author?.format(options.global, locale),
                         prefix: None,
                         suffix: None,
                     })
                 } else {
                     // TODO generalize the substitution
-                    let add_role_form =
-                        // REVIEW is this correct?
-                        options.global.substitute.clone()?.contributor_role_form;
+                    let add_role_form = options
+                        .global
+                        .substitute
+                        .as_ref()
+                        .and_then(|s| s.contributor_role_form.clone());
                     let editor = reference.editor()?;
-                    let editor_length = editor.names(options.global.clone(), true).len();
+                    let editor_length = editor.names(options.global, true).len();
                     // get the role string; if it's in fact author, it will be None
                     let suffix = add_role_form.map(|role_form| {
                         role_to_string(
@@ -258,15 +260,11 @@ impl ComponentValues for TemplateContributor {
                             editor_length,
                         )
                     });
-                    let suffix_padded = suffix.and_then(|s| {
-                        Some(match s {
-                            Some(val) => format!(" {}", val),
-                            None => return None,
-                        })
-                    }); // TODO fix this matching logic
+                    let suffix_padded =
+                        suffix.and_then(|s| s.map(|val| format!(" {}", val))); // TODO fix this matching logic
 
                     Some(ProcValues {
-                        value: editor.format(options.global.clone(), locale.clone()),
+                        value: editor.format(options.global, locale),
                         prefix: None,
                         suffix: suffix_padded,
                     })
@@ -278,8 +276,7 @@ impl ComponentValues for TemplateContributor {
                     _ => {
                         let editor = &reference.editor()?;
                         let form = &self.form;
-                        let editor_length =
-                            editor.names(options.global.clone(), true).len();
+                        let editor_length = editor.names(options.global, true).len();
                         // TODO handle verb and non-verb forms
 
                         match form {
@@ -298,8 +295,7 @@ impl ComponentValues for TemplateContributor {
                                     }
                                 });
                                 Some(ProcValues {
-                                    value: editor
-                                        .format(options.global.clone(), locale.clone()),
+                                    value: editor.format(options.global, locale),
                                     prefix: prefix_padded,
                                     suffix: None,
                                 })
@@ -319,8 +315,7 @@ impl ComponentValues for TemplateContributor {
                                     }
                                 });
                                 Some(ProcValues {
-                                    value: editor
-                                        .format(options.global.clone(), locale.clone()),
+                                    value: editor.format(options.global, locale),
                                     prefix: None,
                                     suffix: suffix_padded, // TODO handle None
                                 })
@@ -330,16 +325,12 @@ impl ComponentValues for TemplateContributor {
                 }
             }
             ContributorRole::Translator => Some(ProcValues {
-                value: reference
-                    .translator()?
-                    .format(options.global.clone(), locale.clone()),
+                value: reference.translator()?.format(options.global, locale),
                 prefix: None,
                 suffix: None,
             }),
             ContributorRole::Publisher => Some(ProcValues {
-                value: reference
-                    .publisher()?
-                    .format(options.global.clone(), locale.clone()),
+                value: reference.publisher()?.format(options.global, locale),
                 prefix: None,
                 suffix: None,
             }),
