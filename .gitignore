@@ -2,4 +2,10 @@ Cargo.lock
 target
 schemas
 *.bak
-.agent/*
+# Agent internal state
+.agent/brain/
+.agent/tmp/
+.agent/memory/
+
+
+
