@@ -70,3 +70,24 @@ pub enum Category {
     #[serde(rename = "social science")]
     SocialScience,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_style_deserialization_minimal() {
+        let json = r#"
+        {
+            "info": {
+                "title": "Minimal Style",
+                "id": "http://example.com/styles/minimal"
+            }
+        }
+        "#;
+        let style: Style = serde_json::from_str(json).unwrap();
+        assert_eq!(style.info.title.as_ref().unwrap(), "Minimal Style");
+        assert!(style.bibliography.is_none());
+        assert!(style.citation.is_none());
+    }
+}

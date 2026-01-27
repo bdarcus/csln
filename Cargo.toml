@@ -11,13 +11,13 @@ unsafe_code = "forbid"
 
 [workspace.lints.clippy]
 # not sure on what to turn on and off
-complexity = { level = "allow", priority = -1 }
+complexity = { level = "warn", priority = -1 }
 expect_used = "warn"
 large_enum_variant = "allow"
 needless_borrow = "warn"
 needless_question_mark = "warn"
 needless_return = "warn"
-style = { level = "allow", priority = -1 }
+style = { level = "warn", priority = -1 }
 unwrap_used = "warn"
 
 [profile.release]

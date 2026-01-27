@@ -75,56 +75,8 @@ Doing so, however, will require sorting out details of how that process is manag
 
 ## Contributing
 
-I would _love_ to have help on this, both because I'm an amateur programmer and a Rust newbie, and because the vision I am sketching out here will take a lot of work to realize.
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to build, test, and help with the project.
 
-### Getting Started
-
-To build and test the project:
-
-```bash
-# Clone the repository
-git clone https://github.com/bdarcus/csln.git
-cd csln
-
-# Build the project
-cargo build
-
-# Run tests
-cargo test
-
-# Run clippy for code quality checks
-cargo clippy --all-targets --all-features
-
-# Format code
-cargo fmt
-
-# Generate JSON schemas
-cargo run --bin csln-schemas
-```
-
-### Development Standards
-
-To maintain code quality and a clean history, please follow these guidelines:
-
-1.  **Commit Messages**: Use [Conventional Commits](https://www.conventionalcommits.org/).
-    - Subject: Max 50 characters.
-    - Body: Wrapped at 72 characters.
-    - DCO: All commits must be signed-off (`git commit -s`).
-    - Format: Use plain text only (no backsticks or Markdown) in commit bodies.
-2.  **Code Quality**: Ensure `cargo fmt` and `cargo clippy --workspace` pass before submitting.
-3.  **Performance**: For performance-related changes, provide before/after benchmark results from `cargo bench -p csln-processor`.
-4.  **Licensing**: New files must include the SPDX license header (MPL-2.0).
-
-### Project Structure
-
-- `csln/` - Core library with data models for styles, bibliography, and citations
-- `cli/` - Command-line interface for processing citations
-- `processor/` - Citation and bibliography processing engine
-  - `src/lib.rs` - Library entry point
-  - `src/processor.rs` - Main processor logic
-  - `src/types.rs` - Core data types
-  - `src/values.rs` - Value extraction logic
-  - `src/render.rs` - Rendering logic
 
 ### How to Help
 
