@@ -406,3 +406,178 @@ impl ComponentValues for TemplateDate {
         })
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::RenderOptions;
+    use csln::bibliography::reference::{
+        EdtfString, InputReference, Monograph, MonographType, NumOrStr, Serial,
+        SerialComponent, SerialComponentType, SerialType, Title,
+    };
+    use csln::style::options::Config;
+
+    fn mock_monograph() -> Monograph {
+        Monograph {
+            id: None,
+            r#type: MonographType::Book,
+            title: Title::Single("Title".to_string()),
+            author: None,
+            issued: EdtfString("2023".to_string()),
+            publisher: None,
+            url: None,
+            accessed: None,
+            note: None,
+            isbn: None,
+            doi: None,
+            edition: None,
+            translator: None,
+        }
+    }
+
+    fn mock_serial_component() -> SerialComponent {
+        SerialComponent {
+            id: None,
+            r#type: SerialComponentType::Article,
+            title: Some(Title::Single("Article".to_string())),
+            author: None,
+            issued: EdtfString("2023".to_string()),
+            parent: Serial {
+                r#type: SerialType::AcademicJournal,
+                title: Title::Single("Journal".to_string()),
+            },
+            url: None,
+            accessed: None,
+            note: None,
+            doi: None,
+            pages: None,
+            volume: None,
+            issue: None,
+            translator: None,
+        }
+    }
+
+    #[test]
+    fn test_simple_string_values() {
+        let config = Config::default();
+        let locale = Locale::default();
+        let options = RenderOptions { global: &config, local: &config, locale: &locale };
+        let hints = ProcHints::default();
+
+        let template_doi =
+            TemplateSimpleString { variable: Variables::Doi, rendering: None };
+        let mut serial = mock_serial_component();
+        serial.doi = Some("10.1234/5678".to_string());
+        let ref_doi = InputReference::SerialComponent(serial);
+        let values = template_doi.values(&ref_doi, &hints, &options).unwrap();
+        assert_eq!(values.value, "10.1234/5678");
+
+        let template_isbn =
+            TemplateSimpleString { variable: Variables::Isbn, rendering: None };
+        let mut monograph = mock_monograph();
+        monograph.isbn = Some("978-3-16-148410-0".to_string());
+        let ref_isbn = InputReference::Monograph(monograph);
+        let values = template_isbn.values(&ref_isbn, &hints, &options).unwrap();
+        assert_eq!(values.value, "978-3-16-148410-0");
+    }
+
+    #[test]
+    fn test_number_values() {
+        let config = Config::default();
+        let locale = Locale::default();
+        let options = RenderOptions { global: &config, local: &config, locale: &locale };
+        let hints = ProcHints::default();
+
+        let template_vol = TemplateNumber {
+            number: Numbers::Volume,
+            form: None,
+            rendering: None,
+        };
+        let mut serial = mock_serial_component();
+        serial.volume = Some(NumOrStr::Number(42));
+        let ref_vol = InputReference::SerialComponent(serial);
+        let values = template_vol.values(&ref_vol, &hints, &options).unwrap();
+        assert_eq!(values.value, "42");
+    }
+
+    #[test]
+    fn test_title_values() {
+        let config = Config::default();
+        let locale = Locale::default();
+        let options = RenderOptions { global: &config, local: &config, locale: &locale };
+        let hints = ProcHints::default();
+
+        let template_primary = TemplateTitle {
+            title: Titles::Primary,
+            form: None,
+            rendering: None,
+        };
+        let monograph = mock_monograph();
+        let ref_mono = InputReference::Monograph(monograph);
+        let values = template_primary.values(&ref_mono, &hints, &options).unwrap();
+        assert_eq!(values.value, "Title");
+    }
+
+    #[test]
+    fn test_contributor_values() {
+        let config = Config::default();
+        let locale = Locale::default();
+        let options = RenderOptions { global: &config, local: &config, locale: &locale };
+        let hints = ProcHints::default();
+        use csln::bibliography::reference::{Contributor, SimpleName};
+
+        let template_author = TemplateContributor {
+            contributor: ContributorRole::Author,
+            form: ContributorForm::Long,
+            rendering: None,
+        };
+        let mut monograph = mock_monograph();
+        monograph.author = Some(Contributor::SimpleName(SimpleName {
+            name: "John Smith".to_string(),
+            location: None,
+        }));
+        let ref_mono = InputReference::Monograph(monograph);
+        let values = template_author.values(&ref_mono, &hints, &options).unwrap();
+        assert_eq!(values.value, "John Smith");
+    }
+
+    #[test]
+    fn test_date_disambiguation() {
+        use csln::style::options::{Disambiguation, Processing, ProcessingCustom};
+
+        let mut config_inner = Config::default();
+        config_inner.processing = Some(Processing::Custom(ProcessingCustom {
+            disambiguate: Some(Disambiguation {
+                year_suffix: true,
+                ..Default::default()
+            }),
+            ..Default::default()
+        }));
+
+        let locale = Locale::default();
+        let options = RenderOptions {
+            global: &config_inner,
+            local: &config_inner,
+            locale: &locale,
+        };
+
+        let mut hints = ProcHints::default();
+        hints.disamb_condition = true;
+        hints.group_index = 1; // 'a'
+
+        let template_date = TemplateDate {
+            date: Dates::Issued,
+            form: DateForm::Year,
+            rendering: None,
+        };
+        let monograph = mock_monograph();
+        let ref_mono = InputReference::Monograph(monograph);
+
+        let values = template_date.values(&ref_mono, &hints, &options).unwrap();
+        assert_eq!(values.value, "2023");
+        assert_eq!(values.suffix, Some("a".to_string()));
+
+        hints.group_index = 2; // 'b'
+        let values = template_date.values(&ref_mono, &hints, &options).unwrap();
+        assert_eq!(values.suffix, Some("b".to_string()));
+    }
+}
