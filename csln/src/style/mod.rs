@@ -90,4 +90,32 @@ mod tests {
         assert!(style.bibliography.is_none());
         assert!(style.citation.is_none());
     }
+
+    #[test]
+    fn test_style_deserialization_complex() {
+        let json = r#"
+        {
+            "info": {
+                "title": "Complex Style",
+                "id": "http://example.com/styles/complex"
+            },
+            "bibliography": {
+                "template": [
+                    {
+                        "contributor": "author",
+                        "form": "long"
+                    },
+                    {
+                        "date": "issued",
+                        "form": "year"
+                    }
+                ]
+            }
+        }
+        "#;
+        let style: Style = serde_json::from_str(json).unwrap();
+        assert_eq!(style.info.title.as_ref().unwrap(), "Complex Style");
+        let bib = style.bibliography.unwrap();
+        assert_eq!(bib.template.len(), 2);
+    }
 }

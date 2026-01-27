@@ -269,3 +269,39 @@ pub enum LocalizedTermNameMisc {
 
     WorkingPaper,
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_locale_deserialization() {
+        let json = r#"
+        {
+            "locale": "en-US",
+            "dates": {
+                "months": {
+                    "long": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+                    "short": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                },
+                "seasons": ["Spring", "Summer", "Autumn", "Winter"]
+            },
+            "roles": {},
+            "terms": {
+                "and": "and",
+                "anonymous": {
+                    "long": "anonymous",
+                    "short": "anon"
+                },
+                "circa": {
+                    "long": "circa",
+                    "short": "c."
+                }
+            }
+        }
+        "#;
+        let locale: Locale = serde_json::from_str(json).unwrap();
+        assert_eq!(locale.locale, "en-US");
+        assert_eq!(locale.dates.months.long[0], "January");
+        assert_eq!(locale.terms.and.as_ref().unwrap(), "and");
+    }
+}
