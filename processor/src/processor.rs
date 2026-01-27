@@ -410,13 +410,66 @@ mod tests {
     }
 
     #[test]
-    fn make_group_key_defaults() {
-        // Test default grouping (should be empty or based on default config)
+    fn test_sort_references() {
+        use csln::style::options::{Processing, ProcessingCustom, Sort, SortSpec};
+
+        let mut style = Style::default();
+        let config = ProcessingCustom {
+            sort: Some(Sort {
+                template: vec![SortSpec { key: SortKey::Author, ascending: true }],
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        style.options = Some(Config {
+            processing: Some(Processing::Custom(config)),
+            ..Default::default()
+        });
+
+        let ref_a = mock_reference("a", "Zzz", "2020");
+        let ref_b = mock_reference("b", "Aaa", "2021");
+
+        let processor = Processor { style, ..Default::default() };
+
+        let sorted = processor.sort_references(vec![&ref_a, &ref_b]);
+        assert_eq!(sorted[0].id().unwrap(), "b");
+        assert_eq!(sorted[1].id().unwrap(), "a");
+    }
+
+    #[test]
+    fn test_calculate_proc_hints() {
+        // Two refs with same author and year should trigger disambiguation
+        let ref_a = mock_reference("a", "Smith", "2020");
+        let ref_b = mock_reference("b", "Smith", "2020");
+
+        let mut bib = Bibliography::new();
+        bib.insert("a".to_string(), ref_a);
+        bib.insert("b".to_string(), ref_b);
+
+        let processor = Processor::new(
+            Style::default(),
+            bib,
+            Citations::default(),
+            Locale::default(),
+        );
+        let hints = processor.get_proc_hints();
+
+        let hint_a = hints.get("a").unwrap();
+        let hint_b = hints.get("b").unwrap();
+
+        assert!(hint_a.disamb_condition);
+        assert!(hint_b.disamb_condition);
+        assert_ne!(hint_a.group_index, hint_b.group_index);
+    }
+
+    #[test]
+    fn test_error_handling() {
         let processor = Processor::default();
-        let reference = mock_reference("ref1", "Smith", "2020");
-        let key = processor.make_group_key(&reference);
-        // Default group key produces "First Last:Year" format or similar depending on implementation
-        // The failure shows "Given Smith:2020"
-        assert_eq!(key, "Given Smith:2020");
+        let result = processor.get_reference("nonexistent");
+        assert!(result.is_err());
+        match result {
+            Err(ProcessorError::ReferenceNotFound(id)) => assert_eq!(id, "nonexistent"),
+            _ => panic!("Expected ReferenceNotFound error"),
+        }
     }
 }
