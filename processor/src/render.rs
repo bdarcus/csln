@@ -84,3 +84,39 @@ fn render_proc_template_component() {
     );
     assert_eq!(proc_template_component.to_string(), "(doi: 10/1234 ||)".to_string());
 }
+
+#[test]
+fn test_refs_to_string() {
+    use crate::types::{ProcTemplateComponent, ProcValues};
+    use csln::style::template::{TemplateComponent, TemplateSimpleString, Variables};
+
+    let comp1 = TemplateComponent::SimpleString(TemplateSimpleString {
+        variable: Variables::Doi,
+        rendering: None,
+    });
+    let proc1 = ProcTemplateComponent::new(
+        comp1,
+        ProcValues {
+            value: "10.1".to_string(),
+            prefix: None,
+            suffix: None,
+        },
+    );
+
+    let comp2 = TemplateComponent::SimpleString(TemplateSimpleString {
+        variable: Variables::Isbn,
+        rendering: None,
+    });
+    let proc2 = ProcTemplateComponent::new(
+        comp2,
+        ProcValues {
+            value: "1234".to_string(),
+            prefix: None,
+            suffix: None,
+        },
+    );
+
+    let template = vec![proc1, proc2];
+    let output = refs_to_string(vec![template]);
+    assert_eq!(output, "10.1. 1234.");
+}
