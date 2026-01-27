@@ -20,6 +20,7 @@ description: Test-Driven Development workflow with high safety and auditable res
 ## 4. Verification & Coverage
 - Ensure code coverage is >80% for new logic.
 - Run linters: `cargo clippy`.
+- Run formatters: `cargo fmt`.
 
 ## 5. Commit & Audit
 - **Commit Message**: Use conventional commits (e.g., `feat:`, `fix:`).

@@ -97,3 +97,30 @@ pub enum LocatorTerm {
     Verse,
     Volume,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_citation_deserialization() {
+        let json = r#"
+        {
+            "citation_items": [
+                {
+                    "refId": "ITEM-1"
+                }
+            ],
+            "mode": "integral"
+        }
+        "#;
+        let citation: Citation = serde_json::from_str(json).unwrap();
+        assert_eq!(citation.citation_items.len(), 1);
+        assert_eq!(citation.citation_items[0].ref_id, "ITEM-1");
+        // Check enum matches integral
+        match citation.mode {
+            CitationModeType::Integral => (),
+            _ => panic!("Expected Integral mode"),
+        }
+    }
+}

@@ -76,7 +76,7 @@ impl Processor {
         let sorted_references = self.sort_references(self.get_references());
         let bibliography: ProcBibliography = sorted_references
             .par_iter()
-            .map(|reference| self.process_reference(*reference))
+            .map(|reference| self.process_reference(reference))
             .collect();
         let citations = if self.citations.is_empty() {
             None
