@@ -29,5 +29,3 @@ description: Test-Driven Development workflow with high safety and auditable res
 - **Git Note**: Attach a summary of the task using `git notes add -m "<summary>" <hash>`.
 - **Note Content**: Task name, changes, files modified, and "why".
 
-## 6. Documentation Updates
-- Update `PLAN.md` or track plans with the commit SHA and status `[x]`.
