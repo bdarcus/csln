@@ -1,3 +1,5 @@
+This was an initial prototype that provided the foundation for [Citum](https://github.com/citum/citum-core). While that project was built out with LLM assistance, this code was not.
+
 ## Vision
 
 At a high-level, the vision of the project is to provide a simpler, easier-to-extend, and more featureful successor to CSL, with a model defined in Rust code, and JSON schemas generated from it.
